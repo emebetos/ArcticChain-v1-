@@ -1,19 +1,19 @@
 //! WASM entry point. Every method returns JSON so the dashboard stays a thin view over
 //! the exact Rust code that the firmware tests exercise.
 
-use monolith_compositor::eink::{Content, Region};
-use monolith_compositor::imu::ImuSample;
-use monolith_compositor::projection::ProjectorConfig;
-use monolith_compositor::Compositor;
-use monolith_hal::allocator::AllocState;
-use monolith_hal::auth::Manufacturer;
-use monolith_hal::harvest::{simulate_day, HarvestDaemon};
-use monolith_hal::privacy::{PrivacyConfig, PrivacyController, Vec3};
-use monolith_hal::sim::{Fault, SimModule, SimState};
-use monolith_hal::tactile::{keyboard_layout, SurfaceConfig, TactileDriver, UiElement};
-use monolith_hal::{Hal, HalConfig, ModuleClass};
-use monolith_mesh::network::MeshNetwork;
-use monolith_mesh::Phy;
+use arcticchain_compositor::eink::{Content, Region};
+use arcticchain_compositor::imu::ImuSample;
+use arcticchain_compositor::projection::ProjectorConfig;
+use arcticchain_compositor::Compositor;
+use arcticchain_hal::allocator::AllocState;
+use arcticchain_hal::auth::Manufacturer;
+use arcticchain_hal::harvest::{simulate_day, HarvestDaemon};
+use arcticchain_hal::privacy::{PrivacyConfig, PrivacyController, Vec3};
+use arcticchain_hal::sim::{Fault, SimModule, SimState};
+use arcticchain_hal::tactile::{keyboard_layout, SurfaceConfig, TactileDriver, UiElement};
+use arcticchain_hal::{Hal, HalConfig, ModuleClass};
+use arcticchain_mesh::network::MeshNetwork;
+use arcticchain_mesh::Phy;
 use serde::Serialize;
 use serde_json::json;
 use std::cell::RefCell;

@@ -1,5 +1,5 @@
 [package]
-name = "monolith-hal"
+name = "arcticchain-hal"
 description = "Hot-swap optical bus HAL, energy-harvesting daemon and programmable-surface drivers for Project Monolith"
 version.workspace = true
 edition.workspace = true

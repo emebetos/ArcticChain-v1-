@@ -1,11 +1,11 @@
 //! Hardware-in-the-loop style tests: real OBP frames, real Ed25519 auth, simulated modules.
 
-use monolith_hal::allocator::AllocState;
-use monolith_hal::auth::Manufacturer;
-use monolith_hal::hotplug::{Hal, HalConfig, HalEvent};
-use monolith_hal::protocol::RejectReason;
-use monolith_hal::sim::{Fault, SimModule};
-use monolith_hal::ModuleClass::{self, *};
+use arcticchain_hal::allocator::AllocState;
+use arcticchain_hal::auth::Manufacturer;
+use arcticchain_hal::hotplug::{Hal, HalConfig, HalEvent};
+use arcticchain_hal::protocol::RejectReason;
+use arcticchain_hal::sim::{Fault, SimModule};
+use arcticchain_hal::ModuleClass::{self, *};
 use rand_chacha::ChaCha8Rng;
 use rand_core::{RngCore, SeedableRng};
 use std::time::Instant;
@@ -18,7 +18,7 @@ fn setup() -> (Manufacturer, Hal) {
     (mfr, hal)
 }
 
-fn plug(hal: &mut Hal, mfr: &Manufacturer, slot: u8, uid: u64, class: ModuleClass) -> monolith_hal::AttachReport {
+fn plug(hal: &mut Hal, mfr: &Manufacturer, slot: u8, uid: u64, class: ModuleClass) -> arcticchain_hal::AttachReport {
     let r = hal.attach(slot, SimModule::new(mfr, uid, class).boxed()).unwrap();
     hal.check_invariants().unwrap();
     r
@@ -34,7 +34,7 @@ fn single_module_attaches_under_50ms() {
     assert!(wall.elapsed().as_millis() < 50, "host-side negotiation too slow");
     let g = r.grant.unwrap();
     assert_eq!((g.power_mw, g.mbps, g.lanes), (1200, 12_000, 2));
-    assert!(hal.device_tree().to_dts().contains("monolith,camera-tri-v1"));
+    assert!(hal.device_tree().to_dts().contains("arcticchain,camera-tri-v1"));
 }
 
 #[test]

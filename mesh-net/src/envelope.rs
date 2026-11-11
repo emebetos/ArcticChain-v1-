@@ -46,7 +46,7 @@ fn signed_bytes(e: &Envelope) -> Vec<u8> {
 
 fn derive_key(shared: &[u8; 32], a: &NodeId, b: &NodeId) -> Key {
     let (lo, hi) = if a <= b { (a, b) } else { (b, a) };
-    let k = Sha256::new().chain_update(b"monolith-e2e-key").chain_update(shared).chain_update(lo.0).chain_update(hi.0).finalize();
+    let k = Sha256::new().chain_update(b"arcticchain-e2e-key").chain_update(shared).chain_update(lo.0).chain_update(hi.0).finalize();
     *Key::from_slice(&k)
 }
 

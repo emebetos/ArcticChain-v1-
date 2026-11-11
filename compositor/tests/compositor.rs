@@ -1,7 +1,7 @@
-use monolith_compositor::eink::{Content, EinkScheduler, Panel, Region, Waveform};
-use monolith_compositor::imu::ImuSample;
-use monolith_compositor::projection::{apply, detect_touch, homography, ProjectorConfig};
-use monolith_compositor::{Compositor, DisplayState};
+use arcticchain_compositor::eink::{Content, EinkScheduler, Panel, Region, Waveform};
+use arcticchain_compositor::imu::ImuSample;
+use arcticchain_compositor::projection::{apply, detect_touch, homography, ProjectorConfig};
+use arcticchain_compositor::{Compositor, DisplayState};
 
 fn settle(c: &mut Compositor, t0: u64, ms: u64, tilt: f32, face_up: bool) -> u64 {
     let mut t = t0;

@@ -39,12 +39,12 @@ impl ModuleClass {
 
     pub fn compatible(self) -> &'static str {
         match self {
-            ModuleClass::BatteryBlock => "monolith,ss-battery-v1",
-            ModuleClass::NeuromorphicCore => "monolith,npu-snn-v1",
-            ModuleClass::CameraSensor => "monolith,camera-tri-v1",
-            ModuleClass::SatelliteTransceiver => "monolith,satcom-ntn-v1",
-            ModuleClass::ProjectorEngine => "monolith,laser-mems-v1",
-            ModuleClass::MeshRadio => "monolith,lora-mmwave-v1",
+            ModuleClass::BatteryBlock => "arcticchain,ss-battery-v1",
+            ModuleClass::NeuromorphicCore => "arcticchain,npu-snn-v1",
+            ModuleClass::CameraSensor => "arcticchain,camera-tri-v1",
+            ModuleClass::SatelliteTransceiver => "arcticchain,satcom-ntn-v1",
+            ModuleClass::ProjectorEngine => "arcticchain,laser-mems-v1",
+            ModuleClass::MeshRadio => "arcticchain,lora-mmwave-v1",
         }
     }
 }

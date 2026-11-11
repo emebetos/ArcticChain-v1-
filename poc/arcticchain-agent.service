@@ -1,0 +1,19 @@
+[Unit]
+Description=ArcticChain Level-1 mesh/cellular agent
+After=network.target
+# Start even with no network — the whole point is offline operation
+Wants=network.target
+
+[Service]
+Type=simple
+User=arctic
+ExecStart=/usr/bin/python3 /opt/arcticchain/arcticchain_agent.py
+Restart=always
+RestartSec=5
+# Hardware access
+SupplementaryGroups=spi i2c dialout gpio
+# Keep running on battery; don't let systemd stop us on "idle"
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

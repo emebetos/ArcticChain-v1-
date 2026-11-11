@@ -61,7 +61,7 @@ impl DeviceTree {
     /// Render in devicetree source syntax.
     pub fn to_dts(&self) -> String {
         let mut s = String::new();
-        let _ = writeln!(s, "/dts-v1/;\n/* generation {} */\n/ {{\n\tspine {{\n\t\tcompatible = \"monolith,ti-spine-v1\";", self.generation);
+        let _ = writeln!(s, "/dts-v1/;\n/* generation {} */\n/ {{\n\tspine {{\n\t\tcompatible = \"arcticchain,ti-spine-v1\";", self.generation);
         for n in self.nodes.values() {
             let name = n.path.rsplit('/').next().unwrap_or("");
             let _ = writeln!(s, "\t\tdock@{} {{\n\t\t\t{} {{", n.slot, name);

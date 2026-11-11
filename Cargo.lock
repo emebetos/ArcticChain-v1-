@@ -13,6 +13,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "arcticchain-compositor"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "arcticchain-engine"
+version = "0.1.0"
+dependencies = [
+ "arcticchain-compositor",
+ "arcticchain-hal",
+ "arcticchain-mesh",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "arcticchain-hal"
+version = "0.1.0"
+dependencies = [
+ "ed25519-dalek",
+ "rand_chacha",
+ "rand_core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "arcticchain-mesh"
+version = "0.1.0"
+dependencies = [
+ "chacha20poly1305",
+ "ed25519-dalek",
+ "rand_chacha",
+ "rand_core",
+ "serde",
+ "sha2",
+ "x25519-dalek",
+]
+
+[[package]]
 name = "base64ct"
 version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -223,49 +266,6 @@ name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
-
-[[package]]
-name = "monolith-compositor"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "monolith-engine"
-version = "0.1.0"
-dependencies = [
- "monolith-compositor",
- "monolith-hal",
- "monolith-mesh",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "monolith-hal"
-version = "0.1.0"
-dependencies = [
- "ed25519-dalek",
- "rand_chacha",
- "rand_core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "monolith-mesh"
-version = "0.1.0"
-dependencies = [
- "chacha20poly1305",
- "ed25519-dalek",
- "rand_chacha",
- "rand_core",
- "serde",
- "sha2",
- "x25519-dalek",
-]
 
 [[package]]
 name = "opaque-debug"

@@ -1,5 +1,5 @@
 [package]
-name = "monolith-mesh"
+name = "arcticchain-mesh"
 description = "Carrier-free LoRa + 60 GHz mmWave mesh stack with signed link-state routing and end-to-end encryption"
 version.workspace = true
 edition.workspace = true

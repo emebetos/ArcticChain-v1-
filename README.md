@@ -1,48 +1,44 @@
-# Project Monolith
+# ArcticChain
 
-An open-source modular smartphone platform, developed in simulation first. The repo contains a parametric titanium spine and snap-in modules (CadQuery), a Rust hot-swap HAL for the magnetic/optical module bus, a LoRa + 60 GHz mesh stack, an E-Ink/tabletop-projector compositor, and a browser dashboard that runs all of it through WebAssembly.
+A sovereign Canadian rural connectivity platform: a real cell phone that becomes a community mesh node, with offline-first AI, governance tools, and zero cloud dependency. Opposite to Starlink — community-owned, ground-based, and built for the North.
+
+This repo contains everything needed to build the Level-1 proof-of-concept: parametric CAD, a Rust hot-swap HAL, a signed mesh stack, a display compositor, a browser simulator, and a complete student/makerspace build kit.
 
 | Path | What it is |
 |------|------------|
-| `cad/` | `monolith_cad.py`: parametric spine (154 × 72 × 9.8 mm, Ti-6Al-4V) + 5 snap-in modules → STEP/STL + `out/dimensions.json` with 42 automated fit/interference checks |
-| `firmware-hal/` | Rust HAL: Optical Bus Protocol framing (CRC-32), Ed25519 module auth, power/bandwidth allocator with priority shedding, dynamic device tree, hot-plug state machine, energy harvesting daemon, tactile driver, privacy light-field controller |
-| `mesh-net/` | Signed link-state routing over LoRa + mmWave PHY models, X25519/ChaCha20-Poly1305 end-to-end envelopes, multi-node network simulation |
-| `compositor/` | IMU pose detection, E-Ink waveform scheduler, projector state machine with IR beam interlock, keystone homography + touch mapping |
-| `simulator/engine/` | `wasm-bindgen` wrapper exposing the crates above to JavaScript |
-| `simulator/web/` | React + Three.js dashboard (5 tabs, one per subsystem) |
-| `docs/` | `blueprint.svg` (generated from the CAD by `make_blueprint.py`) and `feasibility.md` |
-
-![blueprint](docs/blueprint.svg)
+| `cad/` | `monolith_cad.py`: parametric spine + snap-in modules (STEP/STL, 42 checks); `level1_chassis.py`: 3D-printable handheld brick (160×80×24mm) |
+| `firmware-hal/` | Rust HAL: OBP framing, Ed25519 module auth, power/bandwidth allocator, dynamic device tree, hot-plug state machine |
+| `mesh-net/` | Signed link-state routing over LoRa + mmWave PHY models, X25519/ChaCha20-Poly1305 E2E envelopes, multi-node simulation |
+| `compositor/` | IMU pose detection, E-Ink waveform scheduler, projector state machine with IR interlock |
+| `simulator/` | `engine/` (Rust→WASM) + `web/` (React/Three.js dashboard, 5 tabs) |
+| `poc/` | **Level-1 build kit**: `WIRING.md` (BOM + GPIO map), `SETUP.md` (Pi CM5 bring-up + acceptance test), `arcticchain_agent.py` (mesh/cellular agent), systemd unit |
+| `docs/` | `BUILD_GUIDE.md` (16-week student build plan), `blueprint.svg`, `feasibility.md` |
 
 ## Quick start
 
-Requirements: Rust (stable) with `wasm-pack`, Node 20+, and Python 3.10+ with `cadquery`.
-
 ```bash
-# CAD: regenerate geometry + run dimensional checks
-pip install cadquery
+# CAD: spine + modules
 python3 cad/monolith_cad.py --web ../simulator/web/public/models
 
-# Firmware / mesh / compositor tests (46 tests, incl. hot-swap soak)
+# Level-1 chassis
+python3 cad/level1_chassis.py        # -> cad/level1/*.step/.stl
+
+# Firmware / mesh / compositor (46 tests)
 cargo test --workspace
 
 # Dashboard
-cd simulator/web
-npm install
-npm run wasm      # builds simulator/engine to src/wasm
-npm run dev       # http://localhost:5173
+cd simulator/web && npm install && npm run wasm && npm run dev
 ```
 
-## Hot-swap in brief
+## Build the hardware (Level-1 PoC, 2–4 weeks)
 
-1. Magnet seats the module and the DETECT pogo goes low.
-2. HAL brings up the optical lanes and sends `Hello`.
-3. The module replies with its descriptor + manufacturer endorsement and signs a slot-bound challenge.
-4. The allocator grants power/bandwidth, shedding lower-priority modules if needed.
-5. A device-tree node is inserted and the generation increments.
+1. Order BOM from `poc/WIRING.md` (≈ $335–525 CAD)
+2. Print chassis from `cad/level1/`
+3. Wire per `poc/WIRING.md`, flash OS per `poc/SETUP.md`
+4. Run acceptance test: two units exchange a mesh message with LTE disabled
 
-Accepted attaches finish in about 10 ms of simulated time against a 50 ms deadline. Surprise removal, heartbeat loss, overcurrent and battery removal under load are all handled without a reboot (`firmware-hal/tests/hotswap.rs`).
+Full plan: [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md)
 
 ## Status
 
-This is a simulation and specification. See [`docs/feasibility.md`](docs/feasibility.md) for which parts are buildable today. In short: the spine, mesh and local-first OS are realistic; "zero-charge" harvesting yields about 4.5 mWh/day (0.038% of a phone's daily energy, enough only for a critical always-on floor), and the flat-lying 20″ projector needs a raised exit pupil.
+Simulation + Level-1 bring-up kit. The spine, mesh, and local-first software are proven in tests; the Level-1 hardware is orderable off-the-shelf. See `docs/feasibility.md` for honest constraints (energy harvesting yields ~4.5 mWh/day; flat-lying projection needs a raised exit pupil).

@@ -1,8 +1,8 @@
-use monolith_mesh::envelope::{Envelope, EnvelopeError};
-use monolith_mesh::identity::Identity;
-use monolith_mesh::network::MeshNetwork;
-use monolith_mesh::phy::{self, Phy};
-use monolith_mesh::routing::{LinkStateAdvert, LsaVerdict};
+use arcticchain_mesh::envelope::{Envelope, EnvelopeError};
+use arcticchain_mesh::identity::Identity;
+use arcticchain_mesh::network::MeshNetwork;
+use arcticchain_mesh::phy::{self, Phy};
+use arcticchain_mesh::routing::{LinkStateAdvert, LsaVerdict};
 
 const BOTH: &[Phy] = &[Phy::LoRa, Phy::MmWave];
 

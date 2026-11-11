@@ -1,0 +1,25 @@
+{
+  "params": {
+    "button_d": 12.0,
+    "corner_r": 8.0,
+    "floor_t": 2.0,
+    "hat_count": 3,
+    "hat_gap": 2.5,
+    "hat_thickness": 1.6,
+    "led_d": 5.0,
+    "length": 160.0,
+    "pcb_l": 56.5,
+    "pcb_w": 45.0,
+    "wall": 2.4,
+    "width": 80.0
+  },
+  "shell_volume_mm3": 78904.81789489235,
+  "shell_mass_g_petg": 100.20911872651328,
+  "tray_volume_mm3": 27951.240197630927,
+  "notes": [
+    "PETG or ABS only; field-rated enclosure",
+    "Battery tray: 4x 18650 (3.7V) -> 14.8V nominal, needs buck to 5V USB-C PD",
+    "Stack height: 3 boards x 1.6mm + 2 x 2.5mm header gaps ~= 9.2mm; cavity 22mm OK",
+    "Add 2mm standoffs at PCB corners in CAD revision 2"
+  ]
+}

@@ -1,5 +1,5 @@
 [package]
-name = "monolith-engine"
+name = "arcticchain-engine"
 description = "WASM bridge running the real HAL, mesh, compositor and harvesting code inside the dashboard"
 version.workspace = true
 edition.workspace = true
@@ -9,9 +9,9 @@ license.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-monolith-hal = { path = "../../firmware-hal" }
-monolith-mesh = { path = "../../mesh-net" }
-monolith-compositor = { path = "../../compositor" }
+arcticchain-hal = { path = "../../firmware-hal" }
+arcticchain-mesh = { path = "../../mesh-net" }
+arcticchain-compositor = { path = "../../compositor" }
 serde.workspace = true
 serde_json.workspace = true
 wasm-bindgen = "0.2"
