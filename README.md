@@ -45,4 +45,4 @@ Accepted attaches finish in about 10 ms of simulated time against a 50 ms deadli
 
 ## Status
 
-This is a simulation and specification. See [`docs/feasibility.md`](docs/feasibility.md) for which parts are buildable today. In short: the spine, mesh and local-first OS are realistic; "zero-charge" harvesting covers only an always-on tier (about 0.1% of a phone's daily energy), and the flat-lying 20″ projector needs a raised exit pupil.
+This is a simulation and specification. See [`docs/feasibility.md`](docs/feasibility.md) for which parts are buildable today. In short: the spine, mesh and local-first OS are realistic; "zero-charge" harvesting yields about 4.5 mWh/day (0.038% of a phone's daily energy, enough only for a critical always-on floor), and the flat-lying 20″ projector needs a raised exit pupil.

@@ -7,7 +7,7 @@ This review covers what the simulator shows, what physics and current components
 |---|-----------|--------|-----------------|
 | 1 | Lego spine + optical bus | Hard | Mass, thickness, contact contamination, and Project Ara's history |
 | 2 | Programmable surface | Hard (tactile) / Conflicting (privacy on E-Ink) | Dynamic microfluidics aren't commercial; reflective E-Ink can't be light-field steered |
-| 3 | Zero-charge power | **Unrealistic as specified** | Harvest is about 0.1% of a phone's daily energy |
+| 3 | Zero-charge power | **Unrealistic as specified** | Harvest is under 0.1% of a phone's daily energy |
 | 4 | Node mesh + local-first OS | Buildable (LoRa, OS) / Hard (60 GHz) | 60 GHz is line-of-sight; LoRa duty-cycle limits |
 | 5 | E-Ink + tabletop projector | Hard | Grazing-angle projection from a flat phone; colour E-Ink refresh rate |
 
@@ -29,11 +29,11 @@ This review covers what the simulator shows, what physics and current components
 
 ## 3. "Zero-charge" power: the hard limit
 
-With the dashboard defaults (body to 22 °C ambient, a 127-couple TEG, a 5 g piezo proof mass, and a normal day of handling and walking), the harvest comes out at a few mWh/day. A phone uses about **12,000 mWh/day**. Even generous assumptions (a 3 K effective ΔT across the TEG, constant contact, running) stay below about 50 mWh/day. That is under 0.5%.
+With the dashboard defaults (body to 22 °C ambient, a 127-couple TEG, a 5 g piezo proof mass, and a normal day of handling and walking), the daemon harvests **4.5 mWh/day**. A phone uses about **12,000 mWh/day**, so harvest covers **0.038%** of it. Even generous assumptions (a 3 K effective ΔT across the TEG, constant contact, running) stay below about 50 mWh/day. That is under 0.5%.
 
 Why: TEG output scales with ΔT², and the effective ΔT across a small module is 1–3 K, not the 15 K skin-to-air difference, because thermal resistances in series eat most of it. Piezo output is limited by proof mass and displacement inside a pocket.
 
-**What it can do:** keep an always-on tier alive. That covers RTC, mesh beacon reception, the E-Ink static image (zero power to hold), fall detection, and a spiking-NPU wake-word at about 100 µW. The daemon's job is to keep those running on harvest alone and to throttle everything else. Rename the feature "battery-extending harvest", not "zero-charge".
+**What it can do:** harvest can't even cover the whole always-on tier, which needs 28 mWh/day with the defaults (harvest supplies about 16% of that). It *can* sustain the critical floor indefinitely: RTC/PMIC plus LoRa beacon RX at about 33 µW, or about 0.8 mWh/day. The E-Ink image holds at zero power. The daemon's job is to keep the critical floor running on harvest and the buffer cell, and to throttle the interactive, background and deferrable tiers. With the defaults, it throttles for 443 minutes over 48 h. Rename the feature "battery-extending harvest", not "zero-charge".
 
 ## 4. Node phone: mesh and local-first OS
 
