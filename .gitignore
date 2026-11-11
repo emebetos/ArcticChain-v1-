@@ -1,0 +1,8 @@
+target/
+node_modules/
+dist/
+simulator/web/src/wasm/
+__pycache__/
+*.pyc
+.DS_Store
+tsconfig.tsbuildinfo

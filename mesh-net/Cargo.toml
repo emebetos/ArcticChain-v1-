@@ -1,0 +1,15 @@
+[package]
+name = "monolith-mesh"
+description = "Carrier-free LoRa + 60 GHz mmWave mesh stack with signed link-state routing and end-to-end encryption"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+ed25519-dalek.workspace = true
+x25519-dalek.workspace = true
+chacha20poly1305.workspace = true
+sha2.workspace = true
+rand_core.workspace = true
+rand_chacha.workspace = true

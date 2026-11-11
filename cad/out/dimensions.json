@@ -1,0 +1,447 @@
+{
+  "params": {
+    "length": 154.0,
+    "width": 72.0,
+    "thickness": 9.8,
+    "corner_radius": 9.0,
+    "wall": 2.0,
+    "display_recess": 2.2,
+    "midplate": 2.4,
+    "beam_width": 10.0,
+    "rib": 1.2,
+    "rows": 3,
+    "pogo_count": 4,
+    "pogo_pitch": 2.54,
+    "pogo_barrel_dia": 1.5,
+    "pogo_u": 3.5,
+    "optical_window_v": 4.0,
+    "optical_window_u": 2.5,
+    "optical_u": 8.5,
+    "optical_boss_height": 0.8,
+    "backbone_width": 2.0,
+    "backbone_depth": 1.0,
+    "branch_width": 1.5,
+    "magnet_dia": 6.0,
+    "magnet_height": 1.5,
+    "magnet_v_inset": 9.0,
+    "align_depth": 2.0,
+    "align_pin_length": 1.5,
+    "align_v_inset": 6.0
+  },
+  "tolerances": {
+    "module_clearance": 0.15,
+    "module_flush_recess": 0.05,
+    "pogo_hole_clearance": 0.05,
+    "align_socket_dia": 2.012,
+    "align_pin_dia": 1.99,
+    "optical_clearance": 0.1,
+    "magnet_pocket_clearance": 0.1
+  },
+  "derived": {
+    "bay_width": 29.0,
+    "bay_height": 49.2,
+    "bay_depth": 5.2,
+    "bay_radius": 7.0,
+    "floor_z": 4.6
+  },
+  "bays": [
+    {
+      "slot": 0,
+      "row": 0,
+      "side": -1,
+      "cx": -19.5,
+      "cy": 50.400000000000006,
+      "rotation_deg": 180
+    },
+    {
+      "slot": 1,
+      "row": 0,
+      "side": 1,
+      "cx": 19.5,
+      "cy": 50.400000000000006,
+      "rotation_deg": 0
+    },
+    {
+      "slot": 2,
+      "row": 1,
+      "side": -1,
+      "cx": -19.5,
+      "cy": 7.105427357601002e-15,
+      "rotation_deg": 180
+    },
+    {
+      "slot": 3,
+      "row": 1,
+      "side": 1,
+      "cx": 19.5,
+      "cy": 7.105427357601002e-15,
+      "rotation_deg": 0
+    },
+    {
+      "slot": 4,
+      "row": 2,
+      "side": -1,
+      "cx": -19.5,
+      "cy": -50.39999999999999,
+      "rotation_deg": 180
+    },
+    {
+      "slot": 5,
+      "row": 2,
+      "side": 1,
+      "cx": 19.5,
+      "cy": -50.39999999999999,
+      "rotation_deg": 0
+    }
+  ],
+  "dock_layout": {
+    "pogo": [
+      [
+        3.5,
+        -3.81
+      ],
+      [
+        3.5,
+        -1.27
+      ],
+      [
+        3.5,
+        1.27
+      ],
+      [
+        3.5,
+        3.81
+      ]
+    ],
+    "pogo_roles": [
+      "VBUS",
+      "DETECT",
+      "SIDEBAND",
+      "GND"
+    ],
+    "optical": [
+      8.5,
+      0.0
+    ],
+    "magnets": [
+      [
+        14.5,
+        15.599999999999998
+      ],
+      [
+        14.5,
+        -15.599999999999998
+      ]
+    ],
+    "align": [
+      [
+        3.5,
+        18.599999999999998
+      ],
+      [
+        24.0,
+        -18.599999999999998
+      ]
+    ]
+  },
+  "fits": [
+    {
+      "feature": "module body / bay wall",
+      "clearance_mm": 0.15,
+      "per": "side"
+    },
+    {
+      "feature": "alignment pin / socket",
+      "socket": 2.012,
+      "pin": 1.99,
+      "clearance_mm": 0.022,
+      "fit": "H7/g6 (2.0 nominal)"
+    },
+    {
+      "feature": "pogo barrel / hole",
+      "hole": 1.55,
+      "barrel": 1.5,
+      "clearance_mm": 0.05
+    },
+    {
+      "feature": "optical lens boss / window",
+      "clearance_mm": 0.1,
+      "per": "side"
+    },
+    {
+      "feature": "N52 magnet / pocket",
+      "pocket": 6.1,
+      "magnet": 6.0,
+      "clearance_mm": 0.1
+    }
+  ],
+  "default_config": [
+    "camera",
+    "projector",
+    "npu",
+    "satcom",
+    "battery",
+    "battery"
+  ],
+  "spine_bbox": {
+    "x": 72.0,
+    "y": 154.0,
+    "z": 9.8,
+    "zmin": 0.0,
+    "zmax": 9.8
+  },
+  "module_bbox": {
+    "battery": {
+      "x": 28.7,
+      "y": 48.9,
+      "z": 6.65,
+      "zmin": -1.5,
+      "zmax": 5.15
+    },
+    "npu": {
+      "x": 28.7,
+      "y": 48.9,
+      "z": 6.65,
+      "zmin": -1.5,
+      "zmax": 5.15
+    },
+    "camera": {
+      "x": 28.7,
+      "y": 48.9,
+      "z": 6.65,
+      "zmin": -1.5,
+      "zmax": 5.15
+    },
+    "projector": {
+      "x": 28.7,
+      "y": 48.9,
+      "z": 6.65,
+      "zmin": -1.5,
+      "zmax": 5.15
+    },
+    "satcom": {
+      "x": 28.7,
+      "y": 48.9,
+      "z": 6.65,
+      "zmin": -1.5,
+      "zmax": 5.15
+    }
+  },
+  "verification": {
+    "checks": [
+      {
+        "name": "spine envelope",
+        "pass": true,
+        "detail": "154.0 x 72.0 x 9.8 mm (target 154.0 x 72.0 x 9.8)"
+      },
+      {
+        "name": "spine is a single solid",
+        "pass": true,
+        "detail": "1 solid(s)"
+      },
+      {
+        "name": "battery: body fits bay",
+        "pass": true,
+        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+      },
+      {
+        "name": "battery: flush below rear face",
+        "pass": true,
+        "detail": "top at z=9.750 (rear face 9.8)"
+      },
+      {
+        "name": "battery: no interference in slot 0",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "battery: no interference in slot 1",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "battery: no interference in slot 2",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "battery: no interference in slot 3",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "battery: no interference in slot 4",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "battery: no interference in slot 5",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "npu: body fits bay",
+        "pass": true,
+        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+      },
+      {
+        "name": "npu: flush below rear face",
+        "pass": true,
+        "detail": "top at z=9.750 (rear face 9.8)"
+      },
+      {
+        "name": "npu: no interference in slot 0",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "npu: no interference in slot 1",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "npu: no interference in slot 2",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "npu: no interference in slot 3",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "npu: no interference in slot 4",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "npu: no interference in slot 5",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "camera: body fits bay",
+        "pass": true,
+        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+      },
+      {
+        "name": "camera: flush below rear face",
+        "pass": true,
+        "detail": "top at z=9.750 (rear face 9.8)"
+      },
+      {
+        "name": "camera: no interference in slot 0",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "camera: no interference in slot 1",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "camera: no interference in slot 2",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "camera: no interference in slot 3",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "camera: no interference in slot 4",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "camera: no interference in slot 5",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "projector: body fits bay",
+        "pass": true,
+        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+      },
+      {
+        "name": "projector: flush below rear face",
+        "pass": true,
+        "detail": "top at z=9.750 (rear face 9.8)"
+      },
+      {
+        "name": "projector: no interference in slot 0",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "projector: no interference in slot 1",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "projector: no interference in slot 2",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "projector: no interference in slot 3",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "projector: no interference in slot 4",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "projector: no interference in slot 5",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "satcom: body fits bay",
+        "pass": true,
+        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+      },
+      {
+        "name": "satcom: flush below rear face",
+        "pass": true,
+        "detail": "top at z=9.750 (rear face 9.8)"
+      },
+      {
+        "name": "satcom: no interference in slot 0",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "satcom: no interference in slot 1",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "satcom: no interference in slot 2",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "satcom: no interference in slot 3",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "satcom: no interference in slot 4",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      },
+      {
+        "name": "satcom: no interference in slot 5",
+        "pass": true,
+        "detail": "overlap 0.000000 mm^3"
+      }
+    ],
+    "spine_volume_mm3": 40873.01,
+    "spine_mass_g": 181.07,
+    "all_pass": true
+  }
+}
