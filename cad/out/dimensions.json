@@ -4,12 +4,16 @@
     "width": 72.0,
     "thickness": 9.8,
     "corner_radius": 9.0,
-    "wall": 2.0,
-    "display_recess": 2.2,
-    "midplate": 2.4,
+    "wall": 1.0,
+    "display_recess": 1.5,
+    "midplate": 2.2,
     "beam_width": 10.0,
     "rib": 1.2,
     "rows": 3,
+    "shell_thickness": 0.8,
+    "rib_pitch": 12.0,
+    "rib_width": 1.0,
+    "rib_height": 3.0,
     "pogo_count": 4,
     "pogo_pitch": 2.54,
     "pogo_barrel_dia": 1.5,
@@ -38,59 +42,59 @@
     "magnet_pocket_clearance": 0.1
   },
   "derived": {
-    "bay_width": 29.0,
-    "bay_height": 49.2,
-    "bay_depth": 5.2,
-    "bay_radius": 7.0,
-    "floor_z": 4.6
+    "bay_width": 30.0,
+    "bay_height": 49.8667,
+    "bay_depth": 6.1,
+    "bay_radius": 8.0,
+    "floor_z": 3.7
   },
   "bays": [
     {
       "slot": 0,
       "row": 0,
       "side": -1,
-      "cx": -19.5,
-      "cy": 50.400000000000006,
+      "cx": -20.0,
+      "cy": 51.06666666666666,
       "rotation_deg": 180
     },
     {
       "slot": 1,
       "row": 0,
       "side": 1,
-      "cx": 19.5,
-      "cy": 50.400000000000006,
+      "cx": 20.0,
+      "cy": 51.06666666666666,
       "rotation_deg": 0
     },
     {
       "slot": 2,
       "row": 1,
       "side": -1,
-      "cx": -19.5,
-      "cy": 7.105427357601002e-15,
+      "cx": -20.0,
+      "cy": -7.105427357601002e-15,
       "rotation_deg": 180
     },
     {
       "slot": 3,
       "row": 1,
       "side": 1,
-      "cx": 19.5,
-      "cy": 7.105427357601002e-15,
+      "cx": 20.0,
+      "cy": -7.105427357601002e-15,
       "rotation_deg": 0
     },
     {
       "slot": 4,
       "row": 2,
       "side": -1,
-      "cx": -19.5,
-      "cy": -50.39999999999999,
+      "cx": -20.0,
+      "cy": -51.06666666666668,
       "rotation_deg": 180
     },
     {
       "slot": 5,
       "row": 2,
       "side": 1,
-      "cx": 19.5,
-      "cy": -50.39999999999999,
+      "cx": 20.0,
+      "cy": -51.06666666666668,
       "rotation_deg": 0
     }
   ],
@@ -125,22 +129,22 @@
     ],
     "magnets": [
       [
-        14.5,
-        15.599999999999998
+        15.0,
+        15.933333333333334
       ],
       [
-        14.5,
-        -15.599999999999998
+        15.0,
+        -15.933333333333334
       ]
     ],
     "align": [
       [
         3.5,
-        18.599999999999998
+        18.933333333333334
       ],
       [
-        24.0,
-        -18.599999999999998
+        25.0,
+        -18.933333333333334
       ]
     ]
   },
@@ -192,39 +196,39 @@
   },
   "module_bbox": {
     "battery": {
-      "x": 28.7,
-      "y": 48.9,
-      "z": 6.65,
+      "x": 29.7,
+      "y": 49.5667,
+      "z": 7.55,
       "zmin": -1.5,
-      "zmax": 5.15
+      "zmax": 6.05
     },
     "npu": {
-      "x": 28.7,
-      "y": 48.9,
-      "z": 6.65,
+      "x": 29.7,
+      "y": 49.5667,
+      "z": 7.55,
       "zmin": -1.5,
-      "zmax": 5.15
+      "zmax": 6.05
     },
     "camera": {
-      "x": 28.7,
-      "y": 48.9,
-      "z": 6.65,
+      "x": 29.7,
+      "y": 49.5667,
+      "z": 7.55,
       "zmin": -1.5,
-      "zmax": 5.15
+      "zmax": 6.05
     },
     "projector": {
-      "x": 28.7,
-      "y": 48.9,
-      "z": 6.65,
+      "x": 29.7,
+      "y": 49.5667,
+      "z": 7.55,
       "zmin": -1.5,
-      "zmax": 5.15
+      "zmax": 6.05
     },
     "satcom": {
-      "x": 28.7,
-      "y": 48.9,
-      "z": 6.65,
+      "x": 29.7,
+      "y": 49.5667,
+      "z": 7.55,
       "zmin": -1.5,
-      "zmax": 5.15
+      "zmax": 6.05
     }
   },
   "verification": {
@@ -242,7 +246,7 @@
       {
         "name": "battery: body fits bay",
         "pass": true,
-        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+        "detail": "49.5667 x 29.7 mm in 49.867 x 30.000 bay (0.15 mm/side)"
       },
       {
         "name": "battery: flush below rear face",
@@ -282,7 +286,7 @@
       {
         "name": "npu: body fits bay",
         "pass": true,
-        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+        "detail": "49.5667 x 29.7 mm in 49.867 x 30.000 bay (0.15 mm/side)"
       },
       {
         "name": "npu: flush below rear face",
@@ -322,7 +326,7 @@
       {
         "name": "camera: body fits bay",
         "pass": true,
-        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+        "detail": "49.5667 x 29.7 mm in 49.867 x 30.000 bay (0.15 mm/side)"
       },
       {
         "name": "camera: flush below rear face",
@@ -362,7 +366,7 @@
       {
         "name": "projector: body fits bay",
         "pass": true,
-        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+        "detail": "49.5667 x 29.7 mm in 49.867 x 30.000 bay (0.15 mm/side)"
       },
       {
         "name": "projector: flush below rear face",
@@ -402,7 +406,7 @@
       {
         "name": "satcom: body fits bay",
         "pass": true,
-        "detail": "48.9 x 28.7 mm in 49.200 x 29.000 bay (0.15 mm/side)"
+        "detail": "49.5667 x 29.7 mm in 49.867 x 30.000 bay (0.15 mm/side)"
       },
       {
         "name": "satcom: flush below rear face",
@@ -440,8 +444,8 @@
         "detail": "overlap 0.000000 mm^3"
       }
     ],
-    "spine_volume_mm3": 40873.01,
-    "spine_mass_g": 181.07,
+    "spine_volume_mm3": 11137.01,
+    "spine_mass_g": 49.34,
     "all_pass": true
   }
 }

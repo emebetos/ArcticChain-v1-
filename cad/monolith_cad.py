@@ -40,12 +40,18 @@ class SpineParams:
     width: float = 72.0
     thickness: float = 9.8
     corner_radius: float = 9.0
-    wall: float = 2.0
-    display_recess: float = 2.2
-    midplate: float = 2.4
+    wall: float = 1.0
+    display_recess: float = 1.5
+    midplate: float = 2.2
     beam_width: float = 10.0
     rib: float = 1.2
     rows: int = 3
+    # shell thickness for hollow structure
+    shell_thickness: float = 0.8
+    # rib parameters for internal reinforcement
+    rib_pitch: float = 12.0
+    rib_width: float = 1.0
+    rib_height: float = 3.0
     # dock connector
     pogo_count: int = 4
     pogo_pitch: float = 2.54
@@ -161,12 +167,40 @@ def make_spine(p: SpineParams) -> cq.Workplane:
     p.validate()
     t = p.tol
     W, L, T = p.width, p.length, p.thickness
+
+    # Create outer shell as a thin-walled rounded box
     body = rounded_box(W, L, T, p.corner_radius)
 
-    # front display recess
+    # Hollow out the interior, leaving shell_thickness walls
+    inner_w = W - 2 * p.shell_thickness
+    inner_l = L - 2 * p.shell_thickness
+    inner_h = T - 2 * p.shell_thickness
+    inner = rounded_box(inner_w, inner_l, inner_h, p.corner_radius - p.shell_thickness,
+                        z0=p.shell_thickness)
+    body = body.cut(inner)
+
+    # Add front display recess (cut into the front shell)
     body = body.cut(rounded_box(W - 2 * p.wall, L - 2 * p.wall, p.display_recess + 0.01,
                                 p.bay_radius, z0=-0.01))
 
+    # Add internal ribs for stiffness (run along length and width)
+    rib_z0 = p.shell_thickness
+    rib_z1 = T - p.shell_thickness
+    rib_h = rib_z1 - rib_z0
+    # longitudinal ribs (along Y)
+    for i in range(-2, 3):
+        x = i * p.rib_pitch
+        if abs(x) < W / 2 - p.shell_thickness - p.rib_width / 2:
+            rib = cq.Workplane("XY").box(p.rib_width, inner_l, rib_h, centered=(True, True, False))
+            body = body.union(rib.translate((x, 0, rib_z0)))
+    # transverse ribs (along X)
+    for i in range(-6, 7):
+        y = i * p.rib_pitch
+        if abs(y) < L / 2 - p.shell_thickness - p.rib_width / 2:
+            rib = cq.Workplane("XY").box(inner_w, p.rib_width, rib_h, centered=(True, True, False))
+            body = body.union(rib.translate((0, y, rib_z0)))
+
+    # Cut the module bays (these go all the way through the shell)
     layout = dock_layout(p)
     fz = p.floor_z
     for bay in p.bay_centers():
