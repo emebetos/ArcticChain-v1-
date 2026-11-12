@@ -137,6 +137,48 @@ bulletin boards (free clinic days, road closures, events).
 Solar+battery node telemetry, community microgrid monitoring, net-zero storytelling.
 Positions ArcticChain for Sustainable Development Technology Canada and cleantech grants.
 
+### 4.7 Fire-watch swarm — the "nano-bee" layer
+The wildfire wedge grows eyes. Architecture, honestly engineered:
+
+- **Fixed solar mesh nodes** (smoke/CO/temp/humidity, ~$100–200) form the detection
+  grid across ridgelines and fuel breaks — cheap, years-lived, zero flight risk.
+- **On detection, AI escalates**: edge inference on the node classifies the signature
+  (real smoke vs. dust/inversion), then dispatches **nano-drones** — sub-250 g,
+  solar-perched, tinyML vision — to visually confirm, thermal-scan the hotspot, and
+  map the perimeter.
+- **Bees are ArcticChain nodes with wings**: same signed mesh, same store-forward,
+  LoRa reporting, E-Ink-free (they're machines, not signs). They land on branches and
+  rocks to recharge — a perched bee is a free solar station that also relays mesh traffic.
+- **AI maximizes renewables**: duty-cycled sensing, wake-on-smoke, solar-aware task
+  scheduling (fly only when battery + irradiance allow), and edge inference so only
+  *detections and metadata* mesh upstream — no video backhaul, which is exactly what
+  LoRa bandwidth permits. The AI isn't decoration; it's what makes self-sustaining
+  swarms energy-feasible.
+- **Honest constraints**: flight endurance is minutes, wind/rain grounds the swarm,
+  and BVLOS operations need Transport Canada SFOC compliance — so the design is
+  *perch-and-report*, not continuous flight. Swarm unit cost target $200–500 at volume.
+  Fixed sensors carry Phase-1 deployments; drones arrive Phase-2 once regs and ops
+  are proven.
+- **Precedent**: Silvanet (ETH Zürich/PostDoc forest mesh + drones), FireSense,
+  AlertWildfire validate the architecture. Our difference: mesh-native, community-owned,
+  Canadian, and integrated with the alert/bulletin layer towns actually see.
+
+### 4.8 The environmental intelligence mesh — more ideas in the same vein
+Once the mesh exists, every sensor that reports store-forward is an app:
+
+- **Mountain pine beetle surveillance** — acoustic + visual AI traps; MPB is Alberta's
+  slow-motion fire, already devastating BC and spreading east. Early detection =
+  salvage economics.
+- **Flood & snowpack monitoring** — river level, ice-jam risk, spring melt telemetry
+  for municipalities and irrigators (Alberta 2013/2020 floods).
+- **Air-quality public health** — smoke/PM2.5 forecasting during fire season; the
+  E-Ink bulletin becomes the town's air-quality board.
+- **Permafrost & ground temperature** — northern infrastructure risk + climate data;
+  opens Northern-climate grant streams.
+- **Lightning & ignition mapping** — strike correlation with new fire starts.
+- **Space-weather citizen science** — magnetometer nodes tie the mesh to the satellite
+  story: aurora alerts, grid-risk indices, and a uniquely Canadian cross-sell.
+
 ---
 
 ## 5. Business model
@@ -368,6 +410,10 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
   sovereign-scale — neither is fundable from mesh revenue alone. Sequence them behind
   proven deployments and anchor funding (CSA, strategic partners); never let the space
   story run ahead of the ground network that justifies it.
+- **Drone regulation**: the fire-watch swarm needs Transport Canada SFOC/BVLOS
+  compliance before any flight ops — fixed sensor nodes carry early deployments;
+  swarm flight is a Phase-2 milestone gated on regs, weather limits, and wildlife
+  impact review.
 
 ---
 
