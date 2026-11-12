@@ -169,13 +169,17 @@ itself**. Architecture, honestly engineered:
   *perched and reporting*, so energy is abundant relative to demand. Flight is
   occasional relocation, not constant power draw — which is what makes the whole
   energy budget tractable.
-- **The size ladder — nano is a horizon, not a launch spec**: micro flyers
-  (~50–250 g) are the achievable product target. Sub-bee scale splits cleanly:
-  *perched motes* at sub-gram are an engineering+materials program (printed
-  electronics, energy harvesting — very reachable), while *sustained sub-bee
-  flight* remains the research frontier (insect-scale robots exist but are
-  tethered or fly for seconds). We don't bet the swarm on flight — motes perch,
-  sample, relay, and recharge; flyers are the minority role.
+- **The size ladder — start achievable, miniaturize with scale**: the swarm does NOT
+  start sub-bee. First generation is whatever size the working mechanism needs —
+  micro flyers (~50–250 g) or larger early prototypes — built from achievable,
+  orderable engineering. The architecture (roles, perch-and-report, solar charging,
+  mesh membership) is what matters, and it doesn't depend on size. Each generation
+  then gets smaller and more efficient as deployments, revenue, and research
+  funding compound — miniaturization is the *outcome of iteration*, not a launch
+  requirement. Sub-bee perched motes are a printed-electronics program reached
+  through that curve; sustained sub-bee flight remains the long-horizon frontier.
+  We don't bet the swarm on flight — motes perch, sample, relay, and recharge;
+  flyers are the minority role.
 - **The "billions" version — seed-drops, not drone fleets**: the form factor for
   swarm-scale deployment is **degradable motes** — transient-electronics nodes
   (silk/cellulose circuits that dissolve in the environment) scattered by the
