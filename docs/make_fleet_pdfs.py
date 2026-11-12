@@ -213,41 +213,39 @@ class Sheet:
         # title strip
         self.rect(ML, MT, CW, 56, fill="none", stroke=INK, sw=1.2)
         self.ln(ML + 300, MT, ML + 300, MT + 56, SOFT, 0.8)
-        self.t(ML + 18, MT + 36, self.node, 19, weight="bold", color=INK)
-        self.t(ML + 18, MT + 50, self.title, 12, color=SOFT)
-        self.t(ML + 318, MT + 24, self.dwg, 15, weight="bold")
-        self.t(ML + 318, MT + 44, f"REV {self.rev} · {TODAY}", 11, color=SOFT)
-        self.t(PW - MR - 18, MT + 36, self.status, 12, "end", RED, "bold")
+        self.t(ML + 18, MT + 26, self.node, 18, weight="bold", color=INK)
+        self.t(ML + 18, MT + 45, self.title, 11, color=SOFT)
+        self.t(ML + 318, MT + 23, self.dwg, 15, weight="bold")
+        self.t(ML + 318, MT + 43, f"REV {self.rev} · {TODAY}", 11, color=SOFT)
+        self.t(PW - MR - 18, MT + 34, self.status, 12, "end", RED, "bold")
 
     def titleblock(self, sheet_no, sheets_total):
-        """Architectural title block, bottom-right."""
+        """Architectural title block, bottom-right — label-over-value grid."""
         bw, bh = 560, 120
         x, y = PW - MR - bw, PH - MB - bh
         self.rect(x, y, bw, bh, stroke=INK, sw=1.4)
-        # grid lines
-        self.ln(x, y + 34, x + bw, y + 34, INK, 1)
-        self.ln(x, y + 68, x + bw, y + 68, INK, 1)
-        self.ln(x + 250, y + 34, x + 250, y + bh, INK, 1)
-        self.ln(x + 400, y + 68, x + 400, y + bh, INK, 1)
-        # owner block
+        self.ln(x + 250, y, x + 250, y + bh, INK, 1)
+        # left: owner / attribution
         self.t(x + 12, y + 20, "ARCTICCHAIN — RURAL NODE FLEET", 13, weight="bold")
-        self.t(x + 12, y + 48, "EMEBET INC. · emebetos.ca", 12, weight="bold", color=ACC)
-        self.t(x + 12, y + 62, "SOLE PROPRIETARY OWNER — SURAFEL NEGUSSIE, PLANNER/MAKER", 10, color=SOFT)
-        self.t(x + 12, y + 92, "PROPRIETARY & CONFIDENTIAL — UNAUTHORIZED DISTRIBUTION PROHIBITED", 10, color=RED, weight="bold")
-        # fields
-        self.t(x + 262, y + 24, "DRAWN BY", 10, color=SOFT)
-        self.t(x + 262, y + 48, "Surafel Negussie", 13, weight="bold")
-        self.t(x + 412, y + 24, "SCALE", 10, color=SOFT)
-        self.t(x + 412, y + 48, "NTS", 13, weight="bold")
-        self.t(x + 262, y + 58, "CHECKED BY", 10, color=SOFT)
-        self.t(x + 262, y + 80, "DATE", 10, color=SOFT)
-        self.t(x + 262, y + 102, "PROJECT", 10, color=SOFT)
-        self.t(x + 412, y + 58, "SHEET", 10, color=SOFT)
-        self.t(x + 412, y + 80, "DWG NO", 10, color=SOFT)
-        self.t(x + 412, y + 102, "UNITS", 10, color=SOFT)
-        self.t(x + 500, y + 48, f"{sheet_no}/{sheets_total}", 13, "end", weight="bold")
-        self.t(x + 500, y + 80, self.dwg, 12, "end", weight="bold")
-        self.t(x + 500, y + 102, "mm", 12, "end")
+        self.t(x + 12, y + 38, "EMEBET INC. · emebetos.ca", 12, weight="bold", color=ACC)
+        self.t(x + 12, y + 57, "SOLE PROPRIETARY OWNER", 10, color=SOFT)
+        self.t(x + 12, y + 71, "SURAFEL NEGUSSIE — PLANNER/MAKER", 10, color=SOFT)
+        self.t(x + 12, y + 92, "PROPRIETARY & CONFIDENTIAL", 10, RED, "bold")
+        self.t(x + 12, y + 106, "UNAUTHORIZED DISTRIBUTION PROHIBITED", 9, RED)
+        # right: two columns of label-over-value fields
+        def field(fx, fy, label, value):
+            self.t(fx, fy, label, 9, color=SOFT)
+            self.t(fx, fy + 17, value, 12, weight="bold")
+        for i, (lab, val) in enumerate([
+                ("DRAWN", "Surafel Negussie"),
+                ("DATE", TODAY),
+                ("SCALE", "NTS")]):
+            field(x + 270, y + 21 + i * 33, lab, val)
+        for i, (lab, val) in enumerate([
+                ("SHEET", f"{sheet_no}/{sheets_total}"),
+                ("DWG NO", self.dwg),
+                ("UNITS", "mm")]):
+            field(x + 415, y + 21 + i * 33, lab, val)
 
     def footer(self):
         self.t(ML + 8, PH - MB + 22, "EMEBET INC. — PROPRIETARY & CONFIDENTIAL", 10, color=RED)
@@ -295,8 +293,7 @@ def l1():
     comps = [
         (0.04, 0.06, 0.16, 0.30, "LTE ANT"),
         (0.80, 0.06, 0.16, 0.30, "LORA ANT"),
-        (0.34, 0.10, 0.32, 0.62, "E-INKE 7.5in"),
-        (0.38, 0.14, 0.24, 0.50, "CM5 STACK"),
+        (0.34, 0.10, 0.32, 0.62, "E-INKE + CM5/HAT STACK"),
         (0.10, 0.74, 0.80, 0.18, "BATTERY 4×18650"),
     ]
     for fx, fy, fw, fh, txt in comps:
@@ -309,7 +306,7 @@ def l1():
        "scale: shown NTS · dims in mm", 11, "middle", SOFT)
 
     # FRONT VIEW  (160 wide × ~32 tall)
-    fx_, fy_ = 900, 170
+    fx_, fy_ = 700, 170
     s.h(fx_, fy_ - 40, "FRONT VIEW")
     fsc = 3.4
     FWpx, FHpx = 160 * fsc, 32 * fsc    # 544 x 109
@@ -332,13 +329,13 @@ def l1():
     # USB-C port bottom edge
     s.rect(x1 + 0.30 * FWpx, y1 + FHpx - 4, 0.10 * FWpx, 5, fill=INK)
     # antenna whips
-    s.ln(x1 + 0.12 * FWpx, y1, x1 + 0.12 * FWpx, y1 - 46, INK, 2)
-    s.ln(x1 + 0.88 * FWpx, y1, x1 + 0.88 * FWpx, y1 - 46, INK, 2)
+    s.ln(x1 + 0.12 * FWpx, y1, x1 + 0.12 * FWpx, y1 - 30, INK, 2)
+    s.ln(x1 + 0.88 * FWpx, y1, x1 + 0.88 * FWpx, y1 - 30, INK, 2)
     s.dimh(x1, x1 + FWpx, y1 + FHpx + 34, "160")
     s.dimv(x1 - 34, y1, y1 + FHpx, "32")
 
     # SIDE VIEW  (80 × 32)
-    sx_, sy_ = 1330, 170
+    sx_, sy_ = 1280, 170
     s.h(sx_, sy_ - 40, "SIDE VIEW")
     ssc = 3.4
     SWpx, SHpx = 80 * ssc, 32 * ssc     # 272 x 109
@@ -362,7 +359,7 @@ def l1():
         "Runs ArcticChain agent on :8080 — SQLite store-and-forward, signed Ed25519 envelopes.",
         "LoRa 915 MHz mesh to neighbors; LTE backhaul only when a tower exists.",
         "Works with zero connectivity — that is the product.",
-    ], width=110)
+    ], width=62)
 
     s.h(560, fy, "KEY FEATURES")
     s.table(560, fy + 18, [250, 640], ["Feature", "Detail"], [
@@ -377,7 +374,7 @@ def l1():
     s.bullets(560, 800, [
         "Unit A POST /message → Unit B GET /inbox — with LTE in airplane mode.",
         "Mesh delivery with no towers = the whole pitch in one test.",
-    ], width=110)
+    ], width=95)
     out.append(s.svg(1, 3))
 
     # ---------------- 102 PARTS & POWER ----------------
@@ -427,7 +424,7 @@ def l1():
     ], rh=30)
 
     # config
-    cy = 780
+    cy = 750
     s.h(ML + 10, cy, "/boot/firmware/config.txt — REQUIRED")
     cfg = [
         "dtparam=i2c_arm=on", "dtparam=spi=on", "dtparam=uart0=on",
@@ -478,13 +475,13 @@ def l1():
         ["POST /message", "{to, text} — queues or sends via LoRa"],
     ], rh=30)
 
-    s.h(900, 380, "KNOWN GAPS (BY DESIGN)")
-    s.bullets(900, 404, [
+    s.h(760, 380, "KNOWN GAPS (BY DESIGN)")
+    s.bullets(760, 404, [
         "LoRa send/poll are TODOs — plaintext beacon until SX1262 driver lands (wk 3).",
         "E-Ink rendering is a stub; real Waveshare driver is Level-2.",
         "No power-path controller — battery swap reboots CM5 (acceptable PoC).",
         "Rev-B targets: -45 °C cells, IP65 gasket, glove SOS, solar input.",
-    ], width=105)
+    ], width=88)
 
     s.h(ML + 10, 560, "FIELD ACCEPTANCE CRITERIA")
     s.table(ML + 10, 578, [320, 700], ["Test", "Pass condition"], [
@@ -627,9 +624,9 @@ def mite():
         ["RX listen windows", "~15 mA", "~5%", "~0.006 Wh"],
         ["TOTAL", "", "", "≈0.03 Wh/day"],
     ], rh=32)
-    s.note(ML + 10, py + 220,
-          "2000 mAh LiPo ≈ 7.4 Wh → ~200+ days theoretical; winter sun + self-discharge → "
-          "plan 60–90 day autonomy. Solar 1 W cell ≫ duty-cycled need.", size=12)
+    s.note(ML + 10, py + 222,
+          "2000 mAh LiPo ≈ 7.4 Wh → ~200 days theoretical; winter + self-discharge → plan 60–90 day autonomy.",
+          size=12)
 
     # pin map
     gx = 780
@@ -644,7 +641,7 @@ def mite():
     ], rh=32)
 
     # block diagram
-    by = 800
+    by = 830
     s.h(ML + 10, by, "SYSTEM BLOCK")
     s.rect(ML + 10, by + 16, 170, 50, fill=FILL, stroke=INK, sw=1.2)
     s.t(ML + 95, by + 38, "SOLAR 1 W", 13, "middle", weight="bold")
@@ -794,13 +791,13 @@ def totem():
         ["Mesh status", "optional node-health display — coverage made visible"],
     ], rh=36)
 
-    s.h(110, 830, "WHY IT'S UNIQUE")
-    s.bullets(110, 856, [
+    s.h(px, 580, "WHY IT'S UNIQUE")
+    s.bullets(px, 606, [
         "Only public noticeboard that IS a network node — it routes, repeats, stores.",
         "Signed content: every notice carries publisher identity — no anonymous flyers.",
         "Works when grid AND cell network are both down — the blackout case.",
         "EN/FR pipeline; community controls what appears — sovereignty in public space.",
-    ], width=115)
+    ], width=56)
     out.append(s.svg(1, 2))
 
     # ---------------- 102 PARTS & INSTALL ----------------
@@ -901,13 +898,12 @@ def anchor():
         s.circ(bx + bw_ * (0.15 + i * 0.22), by - 4, 6, fill=ACC)
     s.t(bx + bw_ / 2, by - 22, "POGO DOCK ×4 (top)", 11, "middle", SOFT)
     # antenna ports
-    s.ln(bx + bw_ * 0.2, by, bx + bw_ * 0.2, by - 40, INK, 2)
-    s.ln(bx + bw_ * 0.8, by, bx + bw_ * 0.8, by - 40, INK, 2)
-    s.t(bx + bw_ * 0.5, by - 52, "ANTENNA PORTS (LoRa ×2 · LTE · GPS)", 10, "middle", SOFT)
+    s.ln(bx + bw_ * 0.2, by, bx + bw_ * 0.2, by - 26, INK, 2)
+    s.ln(bx + bw_ * 0.8, by, bx + bw_ * 0.8, by - 26, INK, 2)
     s.dimh(bx, bx + bw_, by + bh_ + 40, "350")
     s.dimv(bx - 40, by, by + bh_, "250")
-    s.t(bx + bw_ / 2, by + bh_ + 70,
-       "box ~350×250×400 mm incl. battery bay · NTS", 11, "middle", SOFT)
+    s.t(bx + bw_ / 2, by + bh_ + 56,
+       "box ~350×250×400 mm · antenna ports top: LoRa ×2 · LTE · GPS · NTS", 11, "middle", SOFT)
 
     # solar array beside
     sx_, sy_ = 760, 170
@@ -943,13 +939,13 @@ def anchor():
         ["Status beacon", "E-Ink or LED shows mesh health — readable infrastructure"],
     ], rh=38)
 
-    s.h(140, 880, "WHY ANCHORS MATTER")
-    s.bullets(140, 906, [
+    s.h(dx_, 600, "WHY ANCHORS MATTER")
+    s.bullets(dx_, 626, [
         "Docked Miters top off → perpetual patrol without battery swaps.",
         "Elevated relay roughly doubles effective mesh diameter vs. ground nodes.",
         "The visible, maintainable heart of the local mesh — trust infrastructure.",
         "Gateways are what communities pay for — the swarm rides on top.",
-    ], width=118)
+    ], width=62)
     out.append(s.svg(1, 2))
 
     # ---------------- 102 PARTS & SYSTEM ----------------
@@ -992,7 +988,7 @@ def anchor():
     # backhaul options
     gx = 900
     s.h(gx, py, "BACKHAUL OPTIONS (HIERARCHY)")
-    s.table(gx, py + 18, [190, 200, 330], ["Option", "Cost", "When"], [
+    s.table(gx, py + 18, [165, 180, 290], ["Option", "Cost", "When"], [
         ["Mesh only", "$0", "no coverage — still relays + docks"],
         ["LTE (SIM7600)", "$60–90", "any cell signal — most rural sites"],
         ["Starlink Mini/Res", "$300–600 + $/mo", "true dead zones — business case"],
@@ -1065,8 +1061,8 @@ def phone():
     ], rh=56)
 
     # capability set
-    s.h(ML + 10, 640, "CAPABILITY SET")
-    s.table(ML + 10, 668, [220, 760], ["Capability", "Implementation"], [
+    s.h(ML + 10, 664, "CAPABILITY SET")
+    s.table(ML + 10, 692, [220, 760], ["Capability", "Implementation"], [
         ["Mesh node", "SX1262 LoRa 915 + signed envelopes — every phone extends the network"],
         ["Satellite SOS", "L-band messenger module now; own constellation later"],
         ["Offline apps", "maps, manuals, forms, messaging EN/FR — useful with zero bars"],
@@ -1180,13 +1176,13 @@ def seed():
         "Precedent: DARPA/NSF computational-dust programs prove it's real.",
     ], width=105)
 
-    s.h(900, 800, "HONEST STATUS")
-    s.bullets(900, 830, [
+    s.h(900, 736, "HONEST STATUS")
+    s.bullets(900, 764, [
         "TRL ~2 — concept + literature. No ArcticChain mote exists yet.",
         "This sheet is a research brief, not a buildable BOM — deliberately.",
         "Swarm architecture is the same — only the node shrinks.",
         "Do NOT promise motes to funders until Gate 2 demo exists.",
-    ], width=105, color=RED)
+    ], width=92, color=RED)
     out.append(s.svg(1, 1))
     return out
 
@@ -1204,62 +1200,53 @@ def meridian():
         "Nobody else launching smallsats has a deployed rural ground network waiting — the mesh IS the user-terminal layer.",
         "A text message or sensor packet needs COVERAGE, not Starlink bandwidth — a handful of CubeSats can blanket Canada.",
         "Higher orbit is correct for THIS layer: bigger footprint per satellite = fewer needed.",
-    ], width=118)
+    ], width=85)
 
-    # orbit sketch
-    ox, oy = 700, 220
-    s.h(ox, oy - 40, "ORBIT CONCEPT")
-    s.circ(ox + 200, oy + 140, 120, fill="none", stroke=INK, sw=1.5)
-    s.circ(ox + 200, oy + 140, 55, fill=FILL, stroke=INK, sw=1)
-    s.t(ox + 200, oy + 145, "EARTH", 12, "middle", weight="bold")
+    # orbit sketch — right column
+    ox = 1130
+    s.t(ox, 148, "ORBIT CONCEPT", 15, "middle", SOFT, "bold")
+    s.circ(ox, 310, 95, fill="none", stroke=INK, sw=1.5)
+    s.circ(ox, 310, 42, fill=FILL, stroke=INK, sw=1)
+    s.t(ox, 315, "EARTH", 12, "middle", weight="bold")
     s.el.append(
-        f'<path d="M {ox} {oy + 140} A 200 70 0 0 1 {ox + 400} {oy + 140}" '
+        f'<path d="M {ox - 185} 310 A 185 62 0 0 1 {ox + 185} 310" '
         f'fill="none" stroke="{ACC}" stroke-width="1.5" stroke-dasharray="8 4"/>')
-    s.t(ox + 200, oy + 55, "polar ~600–1000 km", 12, "middle", ACC, "bold")
-    s.t(ox + 200, oy + 320, "inclination ~99° — Arctic coverage", 12, "middle", SOFT)
+    s.t(ox, 238, "polar ~600–1000 km", 12, "middle", ACC, "bold")
+    s.t(ox, 402, "inclination ~99° — Arctic coverage", 12, "middle", SOFT)
 
-    # payload table
-    s.h(ML + 10, 420, "PAYLOAD — DERIVED FROM THE MESH")
-    s.table(ML + 10, 448, [200, 720], ["Element", "Implementation"], [
+    # payload table — right column
+    s.h(720, 450, "PAYLOAD — DERIVED FROM THE MESH")
+    s.table(720, 476, [190, 600], ["Element", "Implementation"], [
         ["Radio", "UHF/S-band store-and-forward transceiver — LoRa-derived or CC1101-class"],
         ["Envelope", "same signed mesh-net format — satellite is just another hop"],
         ["Store", "onboard flash — holds envelopes until ground station passes"],
         ["Bus", "1U/3U CubeSat (GOMspace/EnduroSat/CubeSat Shop) or smallsat"],
         ["Ground segment", "the deployed mesh + community gateways = user terminals"],
-    ], rh=40)
+    ], rh=32)
 
-    s.h(ML + 10, 720, "MISSION PROFILE")
-    s.bullets(ML + 10, 750, [
+    # mission profile — left column
+    s.h(ML + 10, 430, "MISSION PROFILE")
+    s.bullets(ML + 10, 458, [
         "Polar LEO constellation blankets Canada incl. North — messaging/sensor tier.",
         "Latency: store-and-forward hours — right-sized for alerts, notices, telemetry.",
         "Each sat serves hundreds of nodes per pass — plenty for text/sensor traffic.",
         "Pathfinder: 2–6 sats prove the constellation, then scale regional.",
-    ], width=118)
+    ], width=85)
 
-    # ascent path right column
-    s.h(ox, 420, "ASCENT PATH")
-    s.table(ox, 448, [160, 300, 200], ["Stage", "Vehicle", "Cost class"], [
-        ["Hosted payload", "existing Canadian sat", "$50–500k"],
-        ["University CubeSat", "CSA CubeSat Initiative", "$50–500k"],
-        ["Dedicated smallsat", "rideshare (non-US ok)", "$1–5M"],
-        ["Pathfinder", "6–12 sats, own ops", "$10–30M"],
-        ["Constellation", "regional Canada", "earned by demand"],
-    ], rh=40)
+    # ascent + funding — right column bottom
+    s.h(720, 700, "ASCENT & FUNDING PATH")
+    s.bullets(720, 728, [
+        "Ascent: hosted payload → university CubeSat (CSA) → dedicated smallsat (non-US rideshare) → pathfinder 6–12 sats → regional constellation.",
+        "Funding: CSA CubeSat Initiative · provincial/Indigenous services · IDEaS/defence dual-use · anchor demand for domestic launch.",
+    ], width=92)
 
-    s.h(ox, 720, "FUNDING PATH")
-    s.bullets(ox, 750, [
-        "CSA CubeSat Initiative — funds Canadian university smallsats.",
-        "Provincial/territorial + Indigenous services — northern mandate.",
-        "IDEaS/defence dual-use — CAF buys commercial satcom.",
-        "Strategic: demand-side anchor for domestic launch — the summit.",
-    ], width=100)
-
-    s.h(ML + 10, 900, "HONEST STATUS")
-    s.bullets(ML + 10, 926, [
+    # honest status — left column bottom
+    s.h(ML + 10, 640, "HONEST STATUS")
+    s.bullets(ML + 10, 670, [
         "Vision stage — no satellite exists. The mesh must prove itself first (L1→swarm→revenue).",
         "This sheet is mission concept, not spacecraft design — payload inherits mesh crypto/routing.",
         "Every earlier rung funds and justifies this one — the trailhead is the ground network.",
-    ], width=118, color=RED)
+    ], width=85, color=RED)
     out.append(s.svg(1, 1))
     return out
 
@@ -1309,8 +1296,8 @@ def cover():
         s.t(1000, yy, desc, 13, color=SOFT)
         yy += 32
 
-    s.h(ML + 10, 900, "HOW TO READ THIS SET")
-    s.bullets(ML + 10, 928, [
+    s.h(ML + 10, 868, "HOW TO READ THIS SET")
+    s.bullets(ML + 10, 894, [
         "L1 Brick sheets are build-ready — real BOM, wiring, assembly, acceptance test.",
         "S Mite sheets are prototype-ready — orderable parts, CAD scripted (cad/swarm_node.py).",
         "E Totem / A Anchor sheets are spec-level — real parts selected, needs CAD pass.",
