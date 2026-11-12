@@ -371,11 +371,50 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 
 ---
 
-## 13. Next 30 days (concrete)
+## 13. The ignition playbook — highest-leverage moves
+
+"Be like SpaceX" decomposes into a sequence, not a slogan: **anchor demand → flight
+heritage → launch demand → domestic capacity.** SpaceX ignited because NASA *needed*
+cheap cargo before the rockets existed. ArcticChain improves on that: we build Canadian
+demand from the ground up, so when launch capacity is needed it already exists.
+Ordered by cost-to-orbit:
+
+1. **University CubeSat feeder (cheapest path to "our tech on orbit").** The CSA
+   CubeSat Initiative funds Canadian university smallsats. ArcticChain supplies the
+   payload (our store-forward radio *is* a satellite payload) and — uniquely — the
+   ground segment: our mesh network is literally the satellite's user-terminal layer.
+   Result: an ArcticChain payload on a Canadian university CubeSat around yr 2 for
+   ~$50–500k, plus a pipeline of student teams who become our engineers.
+2. **Hosted payload shortcut.** Fly the same radio as a hosted payload on GHGSat,
+   MDA, or university satellites — months to orbit instead of years, proving
+   on-orbit ops before we own a bus.
+3. **IDEaS + defence angle.** DND's Innovation for Defence Excellence and Security
+   funds dual-use comms; the CAF already buys commercial satcom for Arctic ops. A
+   Canadian sovereign alternative is politically attractive — and emergency/off-grid
+   comms is exactly the dual-use story IDEaS exists for.
+4. **Procurement early.** Get on CanadaBuys and provincial supplier lists while contracts
+   are small — every PO is legitimacy, references, and revenue that compounds.
+5. **Open the ground segment.** Open-source mesh protocol, agent, CAD, and build guides
+   (the Meshtastic playbook): a global builder community, undeniable demand signal,
+   and the sovereignty story funders repeat back to us.
+6. **Student space kit.** Extend the 16-week phone-node build kit into a flat-sat +
+   ground-station-emulator kit for universities — the talent engine every space
+   program is actually made of.
+7. **Never skip rungs.** Flight heritage (1–2) precedes dedicated constellation (S1),
+   which precedes launch demand (S3). Each rung is a fundable milestone — skipping
+   straight to "we'll build a rocket" is how space dreams die; walking the ladder is
+   how SpaceX — and now ArcticChain — actually ignites.
+
+---
+
+## 14. Next 30 days (concrete)
 
 1. **Bench**: pass the Level-1 two-node acceptance test (`poc/SETUP.md`).
 2. **Anchor**: pick the wildfire pilot — identify one county/forestry partner, get an LOI.
-3. **Package**: one-page pilot proposal + simulator dashboard link + feasibility appendix.
-4. **Money**: file SR&ED claim for work to date; apply for one Alberta Innovates voucher.
-5. **Repo**: this document + feasibility + build guide = the funder packet. Keep it public
+3. **Ignition**: pick ONE university (U of A / U of C / NAIT / SAIT) and propose a
+   CubeSat-payload partnership — our radio + their bus + our mesh as ground segment.
+4. **Package**: one-page pilot proposal + simulator dashboard link + feasibility appendix.
+5. **Money**: file SR&ED claim for work to date; apply for one Alberta Innovates voucher
+   and check CSA CubeSat Initiative eligibility.
+6. **Repo**: this document + feasibility + build guide = the funder packet. Keep it public
    — transparency is the brand.
