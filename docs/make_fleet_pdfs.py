@@ -78,6 +78,8 @@ class Sheet:
         self.dwg, self.title, self.subtitle = dwg, title, subtitle
         self.node, self.rev, self.status = node, rev, status
         self.el = []
+        self._ngrad = 0
+        self._nscr = 0
         self._frame()
 
     # -- primitives ------------------------------------------------------
@@ -132,6 +134,176 @@ class Sheet:
         # front face
         self.rect(fx, fy, w, h, fill=front, stroke=INK, sw=1.4)
         return fx, fy, dx, dy
+
+    # -- product-shot device ----------------------------------------------
+    def device(self, cx, cy, w, h, d, color, top=None, side=None, rad=14):
+        """Realistic product shot: gradient-shaded faces, rounded front,
+        drop shadow. Returns geometry dict G for face-mapped details."""
+        dx, dy = d * 0.45, -d * 0.42
+        fx, fy = cx - w / 2, cy - h / 2
+        if top is None:
+            top = shade(color, 1.30)
+        if side is None:
+            side = shade(color, 0.70)
+        gid = f"dg{self._ngrad}"
+        self._ngrad += 1
+        self.el.append(
+            f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="0" y2="1">'
+            f'<stop offset="0" stop-color="{shade(color, 1.24)}"/>'
+            f'<stop offset="0.5" stop-color="{color}"/>'
+            f'<stop offset="1" stop-color="{shade(color, 0.80)}"/>'
+            f'</linearGradient></defs>')
+        # drop shadow (drawn first, under device)
+        self.el.append(
+            f'<ellipse cx="{cx + dx * 0.55:.1f}" cy="{cy + h / 2 + abs(dy) * 0.55:.1f}" '
+            f'rx="{w * 0.56:.1f}" ry="{max(10, d * 0.28):.1f}" fill="#000" fill-opacity="0.13"/>')
+        self.poly([(fx + w, fy), (fx + w + dx, fy + dy),
+                   (fx + w + dx, fy + h + dy), (fx + w, fy + h)],
+                  fill=side, stroke=INK, sw=1.4)
+        self.poly([(fx, fy), (fx + dx, fy + dy),
+                   (fx + w + dx, fy + dy), (fx + w, fy)],
+                  fill=top, stroke=INK, sw=1.4)
+        self.rect(fx, fy, w, h, fill=f"url(#{gid})", stroke=INK, sw=1.4, r=rad)
+        # edge highlight on top face
+        self.el.append(
+            f'<line x1="{fx + rad:.1f}" y1="{fy + 1.5:.1f}" '
+            f'x2="{fx + w - rad:.1f}" y2="{fy + 1.5:.1f}" stroke="#ffffff" '
+            f'stroke-width="1.2" stroke-opacity="0.35"/>')
+        return {"fx": fx, "fy": fy, "w": w, "h": h, "dx": dx, "dy": dy,
+                "cx": cx, "cy": cy, "color": color, "rad": rad}
+
+    @staticmethod
+    def fpt(G, fxr, fyr):
+        """Front-face fraction → absolute point."""
+        return G["fx"] + fxr * G["w"], G["fy"] + fyr * G["h"]
+
+    @staticmethod
+    def tpt(G, a, b):
+        """Top-face point: a = left→right, b = front→back."""
+        return (G["fx"] + a * G["w"] + b * G["dx"], G["fy"] + b * G["dy"])
+
+    @staticmethod
+    def spt(G, a, b):
+        """Side-face point: a = front→back (depth), b = top→bottom."""
+        return (G["fx"] + G["w"] + a * G["dx"], G["fy"] + b * G["h"] + a * G["dy"])
+
+    def screen(self, G, fxr, fyr, fw, fh, mode="lcd"):
+        """Bezeled display on front face. mode: 'lcd' glass UI or 'eink' paper."""
+        fx, fy, w, h = G["fx"], G["fy"], G["w"], G["h"]
+        x, y, ww, hh = fx + fxr * w, fy + fyr * h, fw * w, fh * h
+        self.rect(x - 5, y - 5, ww + 10, hh + 10, fill="#10151c",
+                  stroke=INK, sw=1.2, r=10)
+        if mode == "eink":
+            self.rect(x, y, ww, hh, fill="#d9e0cf", stroke=SOFT, sw=0.8, r=4)
+            self.rect(x + 4, y + 4, ww - 8, hh * 0.13, fill="#bccbb0",
+                      stroke="none", r=2)
+            self.t(x + 10, y + hh * 0.125 - 2, "COMMUNITY BOARD", 9, color="#5a6b52")
+            for i in range(4):
+                ly = y + hh * (0.26 + i * 0.155)
+                self.rect(x + 8, ly, ww * (0.86 - 0.09 * (i % 2)), 5,
+                          fill="#a7b499", stroke="none", r=2)
+            self.rect(x + 8, y + hh - 13, ww * 0.42, 5, fill="#bccbb0",
+                      stroke="none", r=2)
+            self.rect(x + ww - 26, y + hh - 13, 18, 5, fill="#8fa184",
+                      stroke="none", r=2)
+        else:
+            gid = f"sc{self._nscr}"
+            self._nscr += 1
+            self.el.append(
+                f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
+                f'<stop offset="0" stop-color="#0e1a2b"/>'
+                f'<stop offset="1" stop-color="#1e3a5c"/></linearGradient></defs>')
+            self.rect(x, y, ww, hh, fill=f"url(#{gid})", stroke=SOFT, sw=0.8, r=4)
+            # status bar
+            self.ln(x + 6, y + hh * 0.10, x + ww - 6, y + hh * 0.10, "#33506e", 0.7)
+            self.rect(x + 9, y + hh * 0.035, 16, 3.5, fill="#5eead4", stroke="none", r=1)
+            self.rect(x + ww - 30, y + hh * 0.032, 18, 4, fill="none",
+                      stroke="#5eead4", sw=0.8, r=1)
+            # content lines
+            for i, (lw, lc) in enumerate(
+                    [(0.88, "#9fc3e8"), (0.72, "#7ea6cf"),
+                     (0.84, "#9fc3e8"), (0.5, "#5f87ad")]):
+                ly = y + hh * (0.24 + i * 0.16)
+                self.rect(x + 8, ly, ww * lw, max(4, hh * 0.05),
+                          fill=lc, stroke="none", r=2)
+            # glare
+            self.el.append(
+                f'<polygon points="{x:.1f},{y:.1f} {x + ww * 0.55:.1f},{y:.1f} '
+                f'{x + ww * 0.22:.1f},{y + hh:.1f} {x:.1f},{y + hh * 0.75:.1f}" '
+                f'fill="#ffffff" fill-opacity="0.09"/>')
+
+    # -- face-mapped product details --------------------------------------
+    def sidebtn(self, G, a0, a1, b0, b1, color=None):
+        """Button quad on the side (depth) face. a=depth frac, b=height frac."""
+        pts = [self.spt(G, a0, b0), self.spt(G, a1, b0),
+               self.spt(G, a1, b1), self.spt(G, a0, b1)]
+        self.poly(pts, fill=color or shade(G["color"], 0.5), stroke=INK, sw=1)
+
+    def port(self, G, a, b, size=1.0):
+        """Connector cutout on side face (USB-C / pogo / gland)."""
+        wf, hf = 0.045 * size, 0.028 * size
+        pts = [self.spt(G, a - wf, b - hf), self.spt(G, a + wf, b - hf),
+               self.spt(G, a + wf, b + hf), self.spt(G, a - wf, b + hf)]
+        self.poly(pts, fill="#0b0e12", stroke=INK, sw=0.8)
+        mx, my = self.spt(G, a, b)
+        self.circ(mx, my, 1.6 * size, fill="#2c3644", stroke="none")
+
+    def solar(self, G, a0, a1, b0, b1):
+        """Photovoltaic panel mapped onto the top face."""
+        c = [self.tpt(G, a0, b0), self.tpt(G, a1, b0),
+             self.tpt(G, a1, b1), self.tpt(G, a0, b1)]
+        self.poly(c, fill="#122740", stroke=INK, sw=1)
+        lerp = lambda p, q, t: (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
+        for i in range(1, 4):
+            t = i / 4
+            self.ln(*lerp(c[0], c[3], t), *lerp(c[1], c[2], t), "#33517c", 0.6)
+        for i in range(1, 3):
+            t = i / 3
+            self.ln(*lerp(c[0], c[1], t), *lerp(c[3], c[2], t), "#33517c", 0.6)
+
+    def whip(self, G, a, b, height=52):
+        """Antenna whip rising from a top-face point."""
+        x, y = self.tpt(G, a, b)
+        self.ln(x, y, x, y - height, INK, 2.4)
+        self.circ(x, y - height, 2.4, fill=INK)
+
+    def cam(self, G, fxr, fyr, fr):
+        """Camera module on front face."""
+        x, y = self.fpt(G, fxr, fyr)
+        r = fr * G["w"]
+        self.circ(x, y, r, fill="#0d1117", stroke=INK, sw=1)
+        self.circ(x, y, r * 0.55, fill="#1a2f4a", stroke="#3a5a86", sw=0.8)
+        self.circ(x - r * 0.18, y - r * 0.18, r * 0.16, fill="#8fc0ea", stroke="none")
+
+    def vents(self, G, fxr, fyr, fw, fh, n=5):
+        """Slot vents on front face."""
+        x, y = self.fpt(G, fxr, fyr)
+        w, h = fw * G["w"], fh * G["h"]
+        for i in range(n):
+            yy = y + (i + 0.5) * h / n
+            self.ln(x + 4, yy, x + w - 4, yy, INK, 2)
+
+    def dock(self, G, fxr, fyr, fw, fh):
+        """Recessed charging dock on front face with pogo pins."""
+        x, y = self.fpt(G, fxr, fyr)
+        w, h = fw * G["w"], fh * G["h"]
+        self.rect(x, y, w, h, fill="#0b0f15", stroke=INK, sw=1.4, r=8)
+        self.rect(x + 6, y + 6, w - 12, h - 12, fill="none", stroke=SOFT, sw=0.8, r=5)
+        for i in range(4):
+            self.circ(x + w * (0.32 + i * 0.12), y + h * 0.5, 3.4,
+                      fill="#c9a227", stroke=INK, sw=0.6)
+
+    def front_text(self, G, txt, fxr, fyr, size=10, color=None, spacing="2"):
+        """Brand/logo text on front face."""
+        x, y = self.fpt(G, fxr, fyr)
+        self.t(x, y, txt, size, "middle", color or shade(G["color"], 0.4),
+               "bold", spacing)
+
+    def seam(self, G, fxr, fyr, fw, fh):
+        """Door/panel seam rectangle on front face."""
+        x, y = self.fpt(G, fxr, fyr)
+        self.rect(x, y, fw * G["w"], fh * G["h"], fill="none",
+                  stroke=shade(G["color"], 0.55), sw=1, dash="7 4")
 
     def swatch(self, x, y, w, h, color, label, sub=None):
         self.rect(x, y, w, h, fill=color, stroke=INK, sw=1)
@@ -1388,32 +1560,52 @@ def finish_sheet(dwg, title, subtitle, node, sheet_no, sheets_total,
     for r in rs:
         cx = fx_cursor + r["w"] / 2
         cy = 300
-        s.iso(cx, cy, r["w"], r["h"], r["d"], r["color"], r.get("top"), r.get("side"))
-        fx, fy = cx - r["w"] / 2, cy - r["h"] / 2
+        G = s.device(cx, cy, r["w"], r["h"], r["d"], r["color"],
+                     r.get("top"), r.get("side"), r.get("rad", 14))
         for det in r.get("details", []):
             kind = det[0]
-            if kind == "rect":
-                _, fxr, fyr, fw, fh, txt = det[:6]
-                fill = det[7] if len(det) > 7 else "none"
-                s.rect(fx + fxr * r["w"], fy + fyr * r["h"],
-                       fw * r["w"], fh * r["h"], fill=fill, stroke=INK, sw=1)
+            if kind == "screen":
+                s.screen(G, *det[1:6])
+            elif kind == "rect":
+                _, fxr, fyr, fw, fh = det[:5]
+                fill = det[5] if len(det) > 5 else "none"
+                txt = det[6] if len(det) > 6 else None
+                rr = det[7] if len(det) > 7 else 4
+                x, y = s.fpt(G, fxr, fyr)
+                s.rect(x, y, fw * G["w"], fh * G["h"], fill=fill,
+                       stroke=INK, sw=1, r=rr)
                 if txt:
-                    if fill == "none":
-                        dark = True
-                    else:
-                        fc = fill if len(fill) == 7 else "#" + "".join(
-                            c * 2 for c in fill.lstrip("#"))
-                        lum = sum(int(fc[i:i + 2], 16) for i in (1, 3, 5))
-                        dark = lum > 380
-                    s.t(fx + (fxr + fw / 2) * r["w"], fy + (fyr + fh / 2) * r["h"] + 4,
-                       txt, 10, "middle", INK if dark else "#ffffff")
+                    dark = fill in (None, "none")
+                    s.t(x + fw * G["w"] / 2, y + fh * G["h"] / 2 + 4, txt, 10,
+                         "middle", INK if dark else "#ffffff")
             elif kind == "circle":
-                _, fxr, fyr, fd, txt = det[:5]
-                fill = det[5] if len(det) > 5 else FILL
-                s.circ(fx + fxr * r["w"], fy + fyr * r["h"], fd * r["w"] / 2,
-                       fill=fill, stroke=INK, sw=1)
+                _, fxr, fyr, fd = det[:4]
+                fill = det[4] if len(det) > 4 else "#c0392b"
+                txt = det[5] if len(det) > 5 else None
+                x, y = s.fpt(G, fxr, fyr)
+                rad = fd * G["w"] / 2
+                s.circ(x, y, rad, fill=fill, stroke=INK, sw=1)
                 if txt:
-                    s.t(fx + fxr * r["w"], fy + fyr * r["h"] + 4, txt, 9, "middle", "#ffffff")
+                    s.t(x, y + rad * 0.35, txt, max(7, rad * 0.55), "middle",
+                         "#ffffff", "bold")
+            elif kind == "sidebtn":
+                s.sidebtn(G, *det[1:5], color=det[5] if len(det) > 5 else None)
+            elif kind == "port":
+                s.port(G, *det[1:4])
+            elif kind == "solar":
+                s.solar(G, *det[1:5])
+            elif kind == "whip":
+                s.whip(G, *det[1:4])
+            elif kind == "cam":
+                s.cam(G, *det[1:4])
+            elif kind == "vents":
+                s.vents(G, *det[1:6])
+            elif kind == "dock":
+                s.dock(G, *det[1:5])
+            elif kind == "logo":
+                s.front_text(G, *det[1:5])
+            elif kind == "seam":
+                s.seam(G, *det[1:5])
         s.t(cx, cy + r["h"] / 2 + r["d"] * 0.42 + 34, r.get("caption", ""),
            12, "middle", SOFT)
         s.t(cx, cy + r["h"] / 2 + r["d"] * 0.42 + 54, r.get("sub", ""),
@@ -1439,14 +1631,19 @@ def l1_finish():
         "AF-L1-105", "L1 BRICK", "FINAL LOOK — COLOR, FINISH, MATERIALS",
         "L1 · BRICK", 5, 5,
         renders=[{
-            "w": 560, "h": 210, "d": 130, "color": "#3a4148",
-            "top": "#4d555e", "side": "#2b3036",
+            "w": 600, "h": 200, "d": 120, "color": "#3a4148", "rad": 10,
             "caption": "L1 BRICK — REV A",
             "sub": "160 × 80 × 32 mm · ~450 g · matte textured",
             "details": [
-                ("rect", 0.30, 0.10, 0.42, 0.62, "FRONT DISPLAY + CONTROLS", None, "#1a2230"),
-                ("circle", 0.52, 0.14, 0.035, "SOS", "#c0392b"),
-                ("rect", 0.34, 0.82, 0.10, 0.06, "USB-C", None, "#111"),
+                ("screen", 0.05, 0.14, 0.52, 0.60, "eink"),
+                ("circle", 0.66, 0.28, 0.055, "#c0392b", "SOS"),
+                ("circle", 0.66, 0.55, 0.018, "#5eead4", None),
+                ("sidebtn", 0.55, 0.95, 0.34, 0.46),
+                ("sidebtn", 0.55, 0.95, 0.52, 0.62),
+                ("port", 0.50, 0.92, 1.2),
+                ("whip", 0.16, 0.10, 58),
+                ("whip", 0.84, 0.10, 58),
+                ("logo", "ARCTICCHAIN", 0.5, 0.90, 9),
             ],
         }],
         materials=[
@@ -1678,13 +1875,16 @@ def mite_finish():
         "AF-S-107", "S MITE", "FINAL LOOK — SWARM UNIT APPEARANCE",
         "S · MITE", 7, 7,
         renders=[{
-            "w": 380, "h": 380, "d": 90, "color": "#4a6741",
-            "top": "#5d8154", "side": "#3a5233",
+            "w": 340, "h": 340, "d": 95, "color": "#4a6741", "rad": 16,
             "caption": "S MITE — SENSOR-BEE",
             "sub": "90 × 90 × 35 mm · ~180 g · forest camouflage",
             "details": [
-                ("rect", 0.18, 0.18, 0.64, 0.64, "SOLAR WINDOW", None, "#1c2b1e"),
-                ("rect", 0.40, 0.42, 0.20, 0.16, "", None, "#22301f"),
+                ("solar", 0.10, 0.90, 0.14, 0.82),
+                ("circle", 0.50, 0.55, 0.045, "#22301f", None),
+                ("circle", 0.50, 0.55, 0.018, "#5eead4", None),
+                ("vents", 0.40, 0.68, 0.20, 0.10, 4),
+                ("whip", 0.88, 0.16, 34),
+                ("sidebtn", 0.50, 0.95, 0.30, 0.42),
             ],
         }],
         materials=[
@@ -1714,14 +1914,16 @@ def totem_finish():
         "AF-E-103", "E TOTEM", "FINAL LOOK — COMMUNITY BOARD APPEARANCE",
         "E · TOTEM", 3, 3,
         renders=[{
-            "w": 520, "h": 340, "d": 110, "color": "#2e3a45",
-            "top": "#3d4c59", "side": "#232d36",
+            "w": 520, "h": 340, "d": 110, "color": "#2e3a45", "rad": 8,
             "caption": "E TOTEM — FRONT",
             "sub": "~320 × 220 × 100 mm box on 3 m pole · IP66",
             "details": [
-                ("rect", 0.08, 0.10, 0.84, 0.62, "E-INKE DISPLAY", None, "#f4f1e8"),
-                ("rect", 0.10, 0.80, 0.30, 0.10, "VENT", None, "#161c22"),
-                ("circle", 0.82, 0.85, 0.025, "", "#5eead4"),
+                ("screen", 0.08, 0.10, 0.84, 0.64, "eink"),
+                ("vents", 0.10, 0.80, 0.26, 0.13, 4),
+                ("circle", 0.84, 0.86, 0.022, "#5eead4", None),
+                ("whip", 0.78, 0.80, 64),
+                ("port", 0.50, 0.94, 1.4),
+                ("logo", "COMMUNITY BOARD", 0.5, 0.955, 9, "#8fa3b5"),
             ],
         }],
         materials=[
@@ -1751,14 +1953,21 @@ def anchor_finish():
         "AF-A-103", "A ANCHOR", "FINAL LOOK — CHARGING STATION APPEARANCE",
         "A · ANCHOR", 3, 3,
         renders=[{
-            "w": 460, "h": 320, "d": 120, "color": "#37424e",
-            "top": "#47555f", "side": "#2a333c",
+            "w": 460, "h": 320, "d": 120, "color": "#37424e", "rad": 8,
             "caption": "A ANCHOR — STATION",
             "sub": "~350 × 250 × 400 mm · solar array separate · IP65",
             "details": [
-                ("rect", 0.08, 0.08, 0.40, 0.42, "COMPUTE", None, "#22303c"),
-                ("rect", 0.55, 0.08, 0.37, 0.42, "RADIOS", None, "#22303c"),
-                ("rect", 0.08, 0.62, 0.84, 0.30, "BATTERY BAY", None, "#1d2731"),
+                ("seam", 0.06, 0.06, 0.88, 0.82),
+                ("rect", 0.10, 0.10, 0.34, 0.36, "#22303c", "COMPUTE", 4),
+                ("rect", 0.50, 0.10, 0.36, 0.36, "#22303c", "RADIOS", 4),
+                ("dock", 0.30, 0.60, 0.40, 0.26),
+                ("circle", 0.76, 0.66, 0.014, "#5eead4", None),
+                ("circle", 0.76, 0.74, 0.014, "#e8b13c", None),
+                ("circle", 0.76, 0.82, 0.014, "#c0392b", None),
+                ("vents", 0.72, 0.14, 0.22, 0.34, 6),
+                ("whip", 0.50, 0.45, 72),
+                ("port", 0.30, 0.94, 1.6),
+                ("port", 0.70, 0.94, 1.2),
             ],
         }],
         materials=[
@@ -2034,21 +2243,32 @@ def phone_finish():
         "AF-P-107", "P ARCTICPHONE", "FINAL LOOK — RURAL PHONE APPEARANCE",
         "P · ARCTICPHONE", 7, 7,
         renders=[{
-            "w": 170, "h": 320, "d": 40, "color": "#2b3440",
-            "top": "#3a4553", "side": "#1f2731",
+            "w": 175, "h": 330, "d": 20, "color": "#2b3440", "rad": 16,
             "caption": "P ARCTICPHONE — FRONT",
             "sub": "~145 × 72 × 14 mm · ~220 g · IP68",
             "details": [
-                ("rect", 0.08, 0.06, 0.84, 0.80, "DISPLAY", None, "#101820"),
-                ("circle", 0.50, 0.025, 0.025, "", "#0a0e14"),
+                ("rect", 0.36, 0.018, 0.13, 0.014, "#0d1117", None, 3),
+                ("cam", 0.62, 0.030, 0.028),
+                ("screen", 0.05, 0.055, 0.90, 0.90, "lcd"),
+                ("sidebtn", 0.55, 0.97, 0.22, 0.34),
+                ("sidebtn", 0.55, 0.97, 0.38, 0.50),
+                ("sidebtn", 0.55, 0.97, 0.55, 0.74, "#c0392b"),
+                ("port", 0.5, 0.985, 0.9),
             ],
         }, {
-            "w": 170, "h": 320, "d": 40, "color": "#2b3440",
-            "top": "#3a4553", "side": "#1f2731",
+            "w": 175, "h": 330, "d": 20, "color": "#2b3440", "rad": 16,
             "caption": "REAR — MODULE BAY",
             "sub": "bay covers 40% of rear — hot-swap modules",
             "details": [
-                ("rect", 0.20, 0.20, 0.60, 0.55, "BAY", None, "#141c26"),
+                ("cam", 0.13, 0.075, 0.045),
+                ("seam", 0.14, 0.16, 0.72, 0.62),
+                ("rect", 0.17, 0.20, 0.66, 0.50, "#222b36", None, 8),
+                ("circle", 0.5, 0.62, 0.028, "#c9a227", None),
+                ("circle", 0.30, 0.685, 0.012, "#8fa3b5", None),
+                ("circle", 0.42, 0.685, 0.012, "#8fa3b5", None),
+                ("circle", 0.58, 0.685, 0.012, "#8fa3b5", None),
+                ("circle", 0.70, 0.685, 0.012, "#8fa3b5", None),
+                ("logo", "ARCTICPHONE", 0.5, 0.93, 8, "#8fa3b5"),
             ],
         }],
         materials=[
