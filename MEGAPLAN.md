@@ -1,0 +1,260 @@
+# ArcticChain Megaplan
+
+**Sovereign rural connectivity for Canada — the mesh layer that makes everything else work.**
+
+*Status: strategy document. Companion to `docs/feasibility.md` (engineering honesty) and
+`docs/BUILD_GUIDE.md` (build plan). This document decides **what we build toward** and **why
+anyone should pay for it**.*
+
+---
+
+## 1. The honest positioning (read this first)
+
+The goal is not to "beat Starlink" — that fight is already lost on physics. Starlink delivers
+100–250 Mbps from orbit; nothing ground-based will beat it on bandwidth, and we should never
+claim to. The telecom giants (Rogers, Bell, Telus) won't economically light up the long tail:
+a cell tower costs ~$250k–$1M and pays back only where density is high. **That gap — the last
+10–20% of Canada — is the entire market.**
+
+ArcticChain wins by owning a layer nobody else wants to serve:
+
+| Layer | Who owns it today | ArcticChain's answer |
+|---|---|---|
+| Broadband pipe | Starlink, cellular, fibre | **Not our fight.** We interoperate — a node can use Starlink/Iridium/LTE as *backhaul*. |
+| Critical messaging | Nothing reliable off-grid | **Store-and-forward mesh**: alerts, SMS, email, sensor data — works with zero bars. |
+| Rural IoT | Prohibitive cost per site | **$335–525 node** + multi-year battery + solar option. |
+| Local services | Cloud-dependent apps | **Offline-first OS**: bulletin boards, records sync, learning content. |
+| Ownership | Foreign satellites, foreign cloud | **Community-owned infrastructure**, Canadian stack, open hardware. |
+
+**One-line pitch:** *Starlink gives you internet if you can afford it and see the sky.
+ArcticChain gives a community its own network — alerts, messages, sensors, and services —
+that works when nothing else does, and gets better every time a neighbour joins.*
+
+This is also the grant-winning frame: not "competing with Starlink" (funders get nervous),
+but "complementary infrastructure for the unserved" (ISC, emergency management, and agricultural
+funding all have mandates for exactly this).
+
+---
+
+## 2. What makes it defensible (the moat)
+
+Anyone can buy a LoRa board. The moat is the **integrated system + the data network effect**:
+
+1. **Signed mesh protocol** (`mesh-net/`): Ed25519 link-state adverts, X25519 + ChaCha20-Poly1305
+   E2E envelopes, bidirectional-link-only routing. Security is not a feature — it's table stakes
+   for government/emergency deployments, and we already have it tested (46 Rust tests).
+2. **The store-and-forward agent** (`poc/arcticchain_agent.py`): SQLite-backed, survives days
+   offline, syncs opportunistically. This is the product — the radio is just transport.
+3. **E-Ink public surface**: zero-power display = community bulletin board, emergency alerts,
+   market prices, clinic notices — usable by people who'll never own a smartphone data plan.
+4. **Open hardware + student pipeline**: 16-week build kit means the bill of materials is a
+   *training program*. Every cohort of students is a recruiting funnel and a PR engine.
+5. **Data network effects**: every deployed node makes the mesh more valuable (more relay
+   paths, more sensor coverage, more local content). Telecoms can't copy this without building
+   the physical layer.
+
+---
+
+## 3. Where Project Monolith fits (incorporated cleanly)
+
+Monolith was never a separate product — it was the **flagship device research**. Its codebase
+is already merged here (crates renamed `arcticchain_*`, CAD + simulator + feasibility docs
+carried over). The megaplan assigns it a product role instead of letting it float:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TIER 3 — MONOLITH (the sovereign phone, year 2+)           │
+│  Modular spine + snap-in modules: mesh radio, satellite     │
+│  modem, sensor pack, E-Ink, projector. A phone that IS a    │
+│  mesh node. Premium device + developer platform.            │
+├─────────────────────────────────────────────────────────────┤
+│  TIER 2 — ARCTICCHAIN OS + APPLIANCES (year 1)              │
+│  Community hub: multi-node mesh, backhaul (LTE/Starlink/    │
+│  fibre), dashboards, alert gateway, e-ink bulletin, apps.   │
+├─────────────────────────────────────────────────────────────┤
+│  TIER 1 — FIELD NODE (today → year 1)                       │
+│  The $335–525 brick: LoRa + LTE + E-Ink + 18650 pack.       │
+│  Sensors, repeaters, SOS beacons, rural mailboxes.          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**The sequencing rule (learned from feasibility.md + Project Ara's corpse):** build the
+*module ecosystem on cheap, proven hardware first*. The Monolith titanium spine, optical bus,
+and projector are research — they stay in the repo behind feature flags and simulator models,
+funded by grants as R&D, but **no customer waits on them**. When Tier-1/2 deployments prove
+the network has value, Tier-3 Monolith becomes the premium terminal that anchors it —
+the Fairphone lesson: ecosystem before exotic hardware.
+
+What carries over from Monolith *now* (all already in this repo):
+- `mesh-net/` — signed routing, E2E envelopes, multi-node simulation → production mesh core
+- `firmware-hal/` — hot-swap module auth, power/bandwidth allocator → Tier-3 module spec
+- `compositor/` — E-Ink waveform scheduler, pose detection → the bulletin/display layer
+- `simulator/` — WASM dashboard → the "digital twin" sales tool for pilots and funders
+- `docs/feasibility.md` — the honest constraints doc → appendices in every grant application
+
+What stays parked (honest): optical midplane bus (alignment/contamination), tabletop
+projector geometry (needs raised exit pupil — the doc has the fix), energy harvesting
+(4.5 mWh/day covers the *critical floor* at ~33 µW, not a phone — market it as
+"battery-extending," never "zero-charge"), 60 GHz links (line-of-sight only, niche backhaul).
+
+---
+
+## 4. The applications that make it a "hub" (revenue + grant hooks)
+
+Ordered by fastest path to a paying pilot:
+
+### 4.1 Wildfire early-warning mesh — *the flagship wedge*
+Alberta's defining seasonal threat. A LoRa mesh of $100-class smoke/temp sensor nodes on
+ridgeline/county land, backhauled by one Tier-2 hub, gives fire agencies detection minutes-to-
+hours earlier than satellites in valley inversions — and works when cell coverage is ash.
+- Buyer: counties, Alberta Wildfire, forestry contractors, insurance.
+- Story: "community-owned sensor grid" — perfect for provincial emergency-management grants.
+
+### 4.2 Agriculture mesh — *the volume market*
+Soil moisture, frost, cattle GPS (store-forward), equipment trackers, grain-bin monitors.
+Alberta is Canada's ag heartland; connectivity is the #1 precision-ag complaint.
+- Buyer: co-ops, farm retailers (FBN/decagon-class dealers), agronomists, individual producers.
+- Model: hardware + per-hectare analytics subscription.
+
+### 4.3 Emergency services backbone — *the mandate play*
+Off-grid alerting (reverse-911 style), first-responder messaging when towers fail, SOS mesh
+for hunters/industry/remote workers. Alberta's huge wildland-urban-interface makes this a
+provincial priority, not a niche.
+- Buyer: municipal emergency programs, Search and Rescue, oil & gas site safety.
+
+### 4.4 Indigenous connectivity sovereignty — *the deepest impact*
+Remote First Nations often have *no* reliable service at all. Community-owned mesh + a
+single satellite/LTE backhaul = local network ownership, local jobs, data sovereignty.
+- Buyer/funder: ISC (Indigenous Services Canada) connectivity programs, band councils,
+  provincial Indigenous relations. Slow sales cycle, huge grant pull — pursue in parallel.
+
+### 4.5 Rural health & education — *the steady services*
+Clinic store-forward (lab results, referrals, telehealth triage notes), rural school
+connectivity (homework sync, email, low-bandwidth content — not video), community e-ink
+bulletin boards (free clinic days, road closures, events).
+
+### 4.6 Energy & microgrid telemetry — *the SDTC angle*
+Solar+battery node telemetry, community microgrid monitoring, net-zero storytelling.
+Positions ArcticChain for Sustainable Development Technology Canada and cleantech grants.
+
+---
+
+## 5. Business model
+
+| Stream | What | Price anchor |
+|---|---|---|
+| **Hardware** | Tier-1 node kits (assembled, tested) → Tier-2 hubs → Tier-3 Monolith | $600–1,200 / node; $5–15k / hub |
+| **Software** | ArcticChain OS: dashboards, alert routing, sensor apps, bulletin CMS | $10–40/node/month or per-community license |
+| **Monitoring services** | Wildfire mesh, ag analytics, asset tracking — managed | $2–10k/site/year |
+| **Emergency retainer** | Priority alert backbone for municipalities/counties | annual contract |
+| **Training** | Student build-kit cohorts, technician certification | program fees / sponsored |
+| **Data/products** | Aggregated, anonymized environmental/ag data products (later) | TBD |
+
+**Capital efficiency:** Tier-1 BOM is $335–525; assembled margin + OS attach gets us to
+healthy hardware gross margin without exotic supply chains. No tower capex, no licensed
+spectrum — the two cost structures that kill rural telecom economics don't apply to us.
+
+---
+
+## 6. Regulatory & certification path (plain terms)
+
+- **LoRa 915 MHz (ISM)**: unlicensed in Canada — no spectrum purchase, fast to deploy.
+  Product still needs **ISED certification** for the intentional radiator (routine, $5–15k,
+  2–4 months via accredited lab).
+- **Store-and-forward SMS/email**: we *transport* messages; actual SMS termination goes
+  through licensed aggregators (Twilio-class or Canadian equivalents). We never become a
+  carrier — that keeps us out of CRTC license territory entirely.
+- **Cellular/satellite backhaul**: partner, don't build — MVNO arrangements or simply
+  customer-premises Starlink/Iridium/LTE. Zero licensing burden.
+- **Monolith radios** (when Tier-3 arrives): modular certification per radio (FCC/CE/ISED
+  module certs) — flagged in feasibility.md already; budget it in the Tier-3 business case.
+- **Privacy**: store-forward data is encrypted E2E by design; provincial privacy laws
+  (PIPA/FOIP) actually *favor* our local-first architecture — a selling point, document it.
+
+---
+
+## 7. Funding stack (Canada-specific, in order of fit)
+
+1. **SR&ED** — already eligible; mesh protocol, HAL, energy work all qualify. Refundable
+   for CCPCs — real non-dilutive cash.
+2. **Alberta Innovates / provincial innovation vouchers** — prototype-to-pilot money.
+3. **ISED programs** — rural connectivity initiatives; position as "complementary layer,"
+   not competitor.
+4. **Indigenous Services Canada (ISC)** — connectivity sovereignty projects (Phase 4.4).
+5. **Emergency-management funding** — provincial/municipal wildfire & public-safety programs.
+6. **SDTC** — if the energy/microgrid telemetry thread is real.
+7. **Mitacs + NSERC Engage + IRAP** — student researchers and technical help, cheap talent.
+8. **Community Economic Development (CED) funds** — rural municipalities co-fund pilots.
+
+Every grant application gets the same three attachments: `docs/feasibility.md` (we know our
+limits), the simulator dashboard (they can *see* the network), and a live pilot LOI.
+
+---
+
+## 8. Roadmap with gates
+
+| Phase | Timeline | Deliverable | Gate to proceed |
+|---|---|---|---|
+| **0 — Two-node proof** | now → wk 4 | Level-1 acceptance test passing (two units mesh-message, LTE off) | Works on the bench |
+| **1 — Anchor pilot** | mo 1–3 | 10–25 nodes in ONE real site: wildfire sensor pilot (recommended) or ag co-op | Signed pilot LOI + deployed |
+| **2 — OS v1 + first revenue** | mo 3–9 | Store-forward apps, e-ink bulletin, alert gateway, dashboards; paid pilot | Revenue or paid LOI |
+| **3 — Productize** | mo 6–12 | ISED cert, small-batch manufactured node (PCBA), 100+ nodes, 2–3 paid pilots | Unit economics proven |
+| **4 — Monolith module ecosystem** | yr 2 | Tier-3 dev-kit: modular spine running ArcticChain OS; developer program | Tier-1/2 network has proven value |
+| **5 — Provincial mesh + international** | yr 3+ | County/regional backbone partnerships; Indigenous network deployments; Global South licensing | Series A / strategic partner |
+
+**Why wildfire first:** fastest path to a sympathetic provincial buyer, smallest BOM
+(add sensors to existing node), dramatic demo (live detection map), and it exercises every
+layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
+
+---
+
+## 9. Team & talent engine
+
+- **Student build kit** (`docs/BUILD_GUIDE.md`): 16-week cohort = trained builders +
+  recruiters + press. Partner with NAIT/SAIT/U of A/U of C engineering capstones.
+- **Mitacs** accelerators embed grad students on mesh/security/energy problems.
+- **Open-source hardware**: published CAD + firmware = global contributor pool and the
+  sovereignty story funders love. (License decision needed — see §11.)
+- **Emebet Inc.** is the company vehicle; structure spin-out/IP cleanly before Series A.
+
+---
+
+## 10. What "winning" looks like (metrics)
+
+- **Cost per connected site**: <$1,500 all-in vs $10k+ cellular drop, $120+/mo Starlink.
+- **Mesh performance**: >95% message delivery, <15 min store-forward latency in pilot.
+- **Wildfire pilot**: detection lead-time vs satellite baseline; zero missed alerts.
+- **Deployments**: 100 nodes / 3 paid pilots by end of year 1.
+- **Grant pull**: SR&ED + 2–3 non-dilutive grants by month 12.
+- **The headline**: *"Canada's community-owned rural network — built by students,
+  powered by sun, working when everything else is down."*
+
+---
+
+## 11. Risks & honest constraints
+
+- **Duty cycle**: LoRa's 1% EU / ISM duty limits cap node density — needs channel planning
+  and gateway nodes; mesh-net already models airtime, enforce it in deployment planning.
+- **Bandwidth honesty**: kbps-class mesh will *never* carry internet. Every deck, doc, and
+  sale says "messaging, alerts, sensors, services" — if we ever imply broadband, telecom
+  engineers will correctly destroy us in review.
+- **Funding cycles are 6–18 months**: bridge with pilot revenue or Emebet Inc. subsidy;
+  don't plan payroll on grant timing.
+- **Monolith is R&D, not product**: titanium spine/optical bus/projector could eat the
+  company if it jumps the queue. Tier-3 stays parked until Tiers 1–2 prove revenue.
+- **"Demonopolize" is narrative, not engineering**: use it in pitch decks and op-eds;
+  the actual wedge is serving customers the giants rationally ignore.
+- **Open-source vs IP**: decide the license *before* the first paid pilot — hardware
+  open (CERN OHL), mesh protocol possibly open, OS/apps proprietary. Mixed model is
+  standard and defensible.
+
+---
+
+## 12. Next 30 days (concrete)
+
+1. **Bench**: pass the Level-1 two-node acceptance test (`poc/SETUP.md`).
+2. **Anchor**: pick the wildfire pilot — identify one county/forestry partner, get an LOI.
+3. **Package**: one-page pilot proposal + simulator dashboard link + feasibility appendix.
+4. **Money**: file SR&ED claim for work to date; apply for one Alberta Innovates voucher.
+5. **Repo**: this document + feasibility + build guide = the funder packet. Keep it public
+   — transparency is the brand.
