@@ -162,18 +162,28 @@ itself**. Architecture, honestly engineered:
   task scheduling (forage only when battery + irradiance allow), edge inference so
   only *detections and metadata* mesh upstream — no video backhaul, which is exactly
   what LoRa bandwidth permits.
-- **The size ladder — nano is a horizon, not a launch spec**: today's swarm target is
-  micro (~50–250 g, achievable engineering). Sub-bee nano-flight is real research —
-  insect-scale robots exist (Harvard's RoboBee, ~80 mg) but are tethered or fly for
-  seconds; power, actuation, and control at that scale are open problems. We fund it
-  as R&D through SR&ED/university partners, not as a product claim.
-- **The "billions" version — seed-drops, not drone fleets**: the honest form factor for
+- **Power is a solved-ish problem — solar + duty cycle + charging stations**: a
+  perched mote sips microwatts; a 1 cm² solar cell harvests ~10 mW in sun — orders
+  of magnitude of margin. Fixed **solar charging stations** (anchors, also
+  renewable-powered) let motes top off and relay; the swarm's default state is
+  *perched and reporting*, so energy is abundant relative to demand. Flight is
+  occasional relocation, not constant power draw — which is what makes the whole
+  energy budget tractable.
+- **The size ladder — nano is a horizon, not a launch spec**: micro flyers
+  (~50–250 g) are the achievable product target. Sub-bee scale splits cleanly:
+  *perched motes* at sub-gram are an engineering+materials program (printed
+  electronics, energy harvesting — very reachable), while *sustained sub-bee
+  flight* remains the research frontier (insect-scale robots exist but are
+  tethered or fly for seconds). We don't bet the swarm on flight — motes perch,
+  sample, relay, and recharge; flyers are the minority role.
+- **The "billions" version — seed-drops, not drone fleets**: the form factor for
   swarm-scale deployment is **degradable motes** — transient-electronics nodes
   (silk/cellulose circuits that dissolve in the environment) scattered by the
-  thousand-to-million over a fuel break or burn scar. They form a temporary sensor
-  field for a season, then vanish: no retrieval, no e-waste, no installed grid. This
-  is a materials program, not an aviation program — and it's the version of "swarm of
-  billions" that's actually fundable and reviewable.
+  thousand-to-million over a fuel break or burn scar. They form a temporary
+  sensor field for a season, then vanish: no retrieval, no e-waste, no installed
+  grid. Deployment **ramps season by season** — pilot thousands, then regional
+  millions — never a big-bang billions launch. Mostly-biological materials are
+  the end-state goal, reached gradually as the materials program matures.
 - **Mesh scales by density tiers**: motes don't each need a radio shouting — duty
   cycling + local clustering means each mote transmits rarely; tiers run mote →
   cluster head → backbone node, same pattern as the satellite constellation:
@@ -181,15 +191,16 @@ itself**. Architecture, honestly engineered:
 - **Honest constraints**: flight endurance is minutes, wind/rain grounds flyers,
   swarm density means *intermittent* coverage (duty-cycled, not continuous), BVLOS
   ops need Transport Canada SFOC — so the design is *perch-and-report*, not
-  continuous flight. Swarm unit cost target $200–500 at volume for micro flyers;
-  mote cost target is a materials R&D problem (<$1 is the goal, not the spec).
-  Fixed anchors (a few powered nodes) complement the swarm where continuous
-  coverage matters.
+  continuous flight. Micro flyer target $200–500 at volume; sub-gram mote cost is
+  a printed-electronics R&D problem (<$1 is the goal, not the spec). Fixed
+  anchors (solar charging stations + powered nodes) complement the swarm where
+  continuous coverage matters.
 - **Precedent**: Silvanet (ETH Zürich/PostDoc forest mesh + drones), FireSense,
   AlertWildfire validate the architecture; transient-electronics research
   (DARPA/NSF-funded "computational dust") validates the mote horizon. Our difference:
   mesh-native, community-owned, Canadian, swarm-as-sensor rather than
-  sensor-plus-drones, and integrated with the alert/bulletin layer towns actually see.
+  sensor-plus-drones, solar-perched by default, and integrated with the
+  alert/bulletin layer towns actually see.
 
 ### 4.8 The environmental intelligence mesh — more ideas in the same vein
 Once the mesh exists, every sensor that reports store-forward is an app:
