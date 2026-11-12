@@ -162,15 +162,34 @@ itself**. Architecture, honestly engineered:
   task scheduling (forage only when battery + irradiance allow), edge inference so
   only *detections and metadata* mesh upstream — no video backhaul, which is exactly
   what LoRa bandwidth permits.
-- **Honest constraints**: flight endurance is minutes, wind/rain grounds the swarm,
+- **The size ladder — nano is a horizon, not a launch spec**: today's swarm target is
+  micro (~50–250 g, achievable engineering). Sub-bee nano-flight is real research —
+  insect-scale robots exist (Harvard's RoboBee, ~80 mg) but are tethered or fly for
+  seconds; power, actuation, and control at that scale are open problems. We fund it
+  as R&D through SR&ED/university partners, not as a product claim.
+- **The "billions" version — seed-drops, not drone fleets**: the honest form factor for
+  swarm-scale deployment is **degradable motes** — transient-electronics nodes
+  (silk/cellulose circuits that dissolve in the environment) scattered by the
+  thousand-to-million over a fuel break or burn scar. They form a temporary sensor
+  field for a season, then vanish: no retrieval, no e-waste, no installed grid. This
+  is a materials program, not an aviation program — and it's the version of "swarm of
+  billions" that's actually fundable and reviewable.
+- **Mesh scales by density tiers**: motes don't each need a radio shouting — duty
+  cycling + local clustering means each mote transmits rarely; tiers run mote →
+  cluster head → backbone node, same pattern as the satellite constellation:
+  massively distributed, individually disposable, collectively intelligent.
+- **Honest constraints**: flight endurance is minutes, wind/rain grounds flyers,
   swarm density means *intermittent* coverage (duty-cycled, not continuous), BVLOS
   ops need Transport Canada SFOC — so the design is *perch-and-report*, not
-  continuous flight. Swarm unit cost target $200–500 at volume. Fixed anchors
-  (a few powered nodes) can complement the swarm where continuous coverage matters.
+  continuous flight. Swarm unit cost target $200–500 at volume for micro flyers;
+  mote cost target is a materials R&D problem (<$1 is the goal, not the spec).
+  Fixed anchors (a few powered nodes) complement the swarm where continuous
+  coverage matters.
 - **Precedent**: Silvanet (ETH Zürich/PostDoc forest mesh + drones), FireSense,
-  AlertWildfire validate the architecture. Our difference: mesh-native, community-owned,
-  Canadian, swarm-as-sensor rather than sensor-plus-drones, and integrated with the
-  alert/bulletin layer towns actually see.
+  AlertWildfire validate the architecture; transient-electronics research
+  (DARPA/NSF-funded "computational dust") validates the mote horizon. Our difference:
+  mesh-native, community-owned, Canadian, swarm-as-sensor rather than
+  sensor-plus-drones, and integrated with the alert/bulletin layer towns actually see.
 
 ### 4.8 The environmental intelligence mesh — more ideas in the same vein
 Once the mesh exists, every sensor that reports store-forward is an app:
