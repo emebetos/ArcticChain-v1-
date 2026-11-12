@@ -158,8 +158,23 @@ spectrum — the two cost structures that kill rural telecom economics don't app
 
 ## 6. The space layer: satellites as a phase, not a leap
 
-The endgame is our own constellation — but satellites are layered onto a working ground
-network, not launched ahead of it. Three stages, each independently fundable:
+**North star:** ArcticChain is not trying to *be* Canada's space program — it is designed
+to be the **demand-side anchor that makes one worth building**. That is the Telesat
+model: a Canadian company with a national mission that government, capital, and
+institutions coalesce around. Canada already has the pedigree — GHGSat flies commercial
+methane smallsats, Kepler built an IoT constellation, RADARSAT Constellation and Sapphire
+(space situational awareness) are Canadian, the CSA flies, and 14+ Canadian astronauts
+have ridden to orbit. What the ecosystem lacks is an anchor tenant with a continental
+mission. ArcticChain is built to be that tenant: rural connectivity is the one market
+where sovereign Canadian space infrastructure has an obvious, fundable customer.
+
+The endgame ambition — a Canadian space capability at homegrown scale, reducing reliance
+on foreign launch and foreign pipes — is stated here honestly: it is a generational,
+national-program outcome, not a startup business plan. What a startup *can* do is earn
+the right to be the applications layer and first NewSpace operator on that stack.
+
+Satellites are layered onto a working ground network, not launched ahead of it.
+Three stages, each independently fundable:
 
 ### S0 — Borrow capacity (now → yr 2): be a customer, not a competitor
 Aggregate existing satellite backhaul as a *service* inside ArcticChain hubs:
@@ -186,6 +201,11 @@ A constellation sized for the **messaging/IoT layer, not broadband**:
 - **Cost reality**: rideshare launches run ~$1–5M per mission; a credible 6–12 satellite
   pathfinder constellation is a $10–30M program — fundable via CSA, NSERC, provincial
   innovation, and strategic partners (MDA is Canada's space prime — a natural ally).
+- **Launch sovereignty**: Canada has satellites but **no orbital launcher** — the honest
+  gap. Non-US providers keep the sovereignty story intact meanwhile: ISRO (India, the
+  workhorse for CubeSats), JAXA, Arianespace, Rocket Lab (NZ). Domestic Canadian orbital
+  launch is a separate decade-scale national program — name it as such in every deck,
+  because naming the gap is what makes the rest credible.
 
 ### S2 — Sovereign NGSO broadband (yr 5+, moonshot — honest framing)
 Actually competing with Starlink on *bandwidth* is a sovereign-scale effort: spectrum
@@ -194,12 +214,14 @@ makes sense with owned or subsidized rockets. No startup buys its way there — 
 only because it owns the launch company.
 
 The realistic paths, in order of probability:
-1. **Ground-segment + applications layer** on a Canadian polar constellation (partner with
-   Telesat, MDA, or a future national program — we become *the* rural OS on their pipes).
+1. **Ground-segment + applications layer** on a Canadian polar constellation — become
+   *the* rural OS on Canadian NGSO capacity (partner with Telesat, MDA, or a future
+   national program; the anchor-tenant role described above).
 2. **Wholesale→retail aggregation**: broker capacity across Telesat/OneWeb/Kuiper/Starlink
    into one Canadian rural service — the "Canada roaming" play, no constellation needed.
 3. **National program**: pitch ArcticChain as the demand-side anchor for a Canadian
-   broadband constellation (the role Telesat played for Canada).
+   broadband constellation — the role Telesat played for Canada, now for the mesh era.
+   If that program ever stands up, ArcticChain is its first customer and its OS.
 
 **Physics correction worth stating publicly:** to compete on bandwidth you fly **LEO
 (~550 km shells, like Starlink)** — higher orbit means more path loss, worse latency,
@@ -207,6 +229,17 @@ bigger satellites. Higher orbits (MEO) only win for latency-tolerant store-forwa
 coverage-per-satellite matters more than round-trip time — which is precisely what our
 S1 constellation exploits. Knowing which layer wants which orbit is the kind of detail
 that makes technical reviewers take us seriously.
+
+**Debris & coexistence — the common misconception:** the hazardous debris belts sit at
+~800–1,200 km (legacy payloads), *above* Starlink's ~550 km shell — Starlink flies low
+on purpose because drag sweeps debris away fast. Below Starlink (~300–500 km VLEO) is
+the cleanest region in LEO; the cost there is propulsion for station-keeping, not
+debris. And "orbiting with" other constellations isn't a protected zone — operators
+coexist by separating altitude + inclination (Starlink 53°, Kuiper 51.6°, OneWeb 87.9°
+polar, Telesat ~99° polar) and screening conjunctions against the public Space-Track
+catalog. A 6–12 satellite pathfinder at a chosen polar shell is routine rideshare
+operations; the real constraints on us are launch cost and ITU/ISED coordination, not
+the sky.
 
 ---
 
@@ -281,6 +314,8 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 - **Wildfire pilot**: detection lead-time vs satellite baseline; zero missed alerts.
 - **Deployments**: 100 nodes / 3 paid pilots by end of year 1.
 - **Grant pull**: SR&ED + 2–3 non-dilutive grants by month 12.
+- **Space milestone**: first ArcticChain smallsat on orbit (S1 pathfinder) by yr 3–4 —
+  Canada's next NewSpace anchor, if the ground network earns it.
 - **The headline**: *"Canada's community-owned rural network — built by students,
   powered by sun, working when everything else is down."*
 
