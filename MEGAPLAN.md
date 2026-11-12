@@ -138,30 +138,39 @@ Solar+battery node telemetry, community microgrid monitoring, net-zero storytell
 Positions ArcticChain for Sustainable Development Technology Canada and cleantech grants.
 
 ### 4.7 Fire-watch swarm — the "nano-bee" layer
-The wildfire wedge grows eyes. Architecture, honestly engineered:
+The wildfire wedge grows eyes — and the sensor isn't any single bee, it's **the swarm
+itself**. Architecture, honestly engineered:
 
-- **Fixed solar mesh nodes** (smoke/CO/temp/humidity, ~$100–200) form the detection
-  grid across ridgelines and fuel breaks — cheap, years-lived, zero flight risk.
-- **On detection, AI escalates**: edge inference on the node classifies the signature
-  (real smoke vs. dust/inversion), then dispatches **nano-drones** — sub-250 g,
-  solar-perched, tinyML vision — to visually confirm, thermal-scan the hotspot, and
-  map the perimeter.
 - **Bees are ArcticChain nodes with wings**: same signed mesh, same store-forward,
-  LoRa reporting, E-Ink-free (they're machines, not signs). They land on branches and
-  rocks to recharge — a perched bee is a free solar station that also relays mesh traffic.
-- **AI maximizes renewables**: duty-cycled sensing, wake-on-smoke, solar-aware task
-  scheduling (fly only when battery + irradiance allow), and edge inference so only
-  *detections and metadata* mesh upstream — no video backhaul, which is exactly what
-  LoRa bandwidth permits. The AI isn't decoration; it's what makes self-sustaining
-  swarms energy-feasible.
+  LoRa reporting. Individually they're minimal — a solar cell, a tiny MCU, one sensor
+  role — but *collectively* they form a distributed sensing aperture. One bee doesn't
+  need to be a sensor; a hundred cooperating bees are a sensor network.
+- **Specialized roles, shared picture**: sensor-bees carry gas/temp/humidity sniffers,
+  eye-bees carry thermal/visual, relay-bees extend LoRa range, charger-bees perch on
+  infrastructure. The swarm allocates roles dynamically — AI task-schedules who
+  forages, who perches, who relays, based on battery, solar, wind, and threat location.
+- **Mobile, not fixed — coverage follows the threat**: no installed grid to build,
+  maintain, or protect. The swarm roams fuel breaks and ridgelines in fire season,
+  shifts to river corridors at snowmelt, redeploys for floods or events. "Fixed"
+  becomes "persistent but mobile" — the swarm IS the detection layer, and it goes
+  where the risk actually is.
+- **Collaborative detection**: a gas-sniffer bee smells anomalous CO/VOC, reports it
+  up the mesh, and eye-bees converge on the fix to confirm visually/thermally — swarm
+  behavior as a detection algorithm. Distributed sampling also enables plume
+  triangulation: many weak readings combined beat one strong sensor.
+- **AI maximizes renewables**: duty-cycled sensing, wake-on-anomaly, solar-aware
+  task scheduling (forage only when battery + irradiance allow), edge inference so
+  only *detections and metadata* mesh upstream — no video backhaul, which is exactly
+  what LoRa bandwidth permits.
 - **Honest constraints**: flight endurance is minutes, wind/rain grounds the swarm,
-  and BVLOS operations need Transport Canada SFOC compliance — so the design is
-  *perch-and-report*, not continuous flight. Swarm unit cost target $200–500 at volume.
-  Fixed sensors carry Phase-1 deployments; drones arrive Phase-2 once regs and ops
-  are proven.
+  swarm density means *intermittent* coverage (duty-cycled, not continuous), BVLOS
+  ops need Transport Canada SFOC — so the design is *perch-and-report*, not
+  continuous flight. Swarm unit cost target $200–500 at volume. Fixed anchors
+  (a few powered nodes) can complement the swarm where continuous coverage matters.
 - **Precedent**: Silvanet (ETH Zürich/PostDoc forest mesh + drones), FireSense,
   AlertWildfire validate the architecture. Our difference: mesh-native, community-owned,
-  Canadian, and integrated with the alert/bulletin layer towns actually see.
+  Canadian, swarm-as-sensor rather than sensor-plus-drones, and integrated with the
+  alert/bulletin layer towns actually see.
 
 ### 4.8 The environmental intelligence mesh — more ideas in the same vein
 Once the mesh exists, every sensor that reports store-forward is an app:
@@ -410,10 +419,11 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
   sovereign-scale — neither is fundable from mesh revenue alone. Sequence them behind
   proven deployments and anchor funding (CSA, strategic partners); never let the space
   story run ahead of the ground network that justifies it.
-- **Drone regulation**: the fire-watch swarm needs Transport Canada SFOC/BVLOS
-  compliance before any flight ops — fixed sensor nodes carry early deployments;
-  swarm flight is a Phase-2 milestone gated on regs, weather limits, and wildlife
-  impact review.
+- **Drone regulation & coverage honesty**: the swarm needs Transport Canada
+  SFOC/BVLOS compliance before flight ops, and duty-cycled mobile coverage is
+  *intermittent*, not continuous — fixed anchor nodes complement the swarm where
+  24/7 detection matters. Swarm flight is a Phase-2 milestone gated on regs,
+  weather limits, and wildlife impact review.
 
 ---
 
