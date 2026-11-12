@@ -63,6 +63,14 @@ def wrap(s, n):
     return lines or [""]
 
 
+def shade(hexcolor, factor):
+    """Lighten (>1) or darken (<1) a #rrggbb color, clamped."""
+    h = hexcolor.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    c = lambda v: max(0, min(255, int(v * factor)))
+    return f"#{c(r):02x}{c(g):02x}{c(b):02x}"
+
+
 class Sheet:
     """One architectural-style sheet: border, title strip, title block."""
 
@@ -97,6 +105,45 @@ class Sheet:
         self.el.append(
             f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{fill}" '
             f'stroke="{stroke}" stroke-width="{sw}"{d}/>')
+
+    def poly(self, pts, fill="none", stroke=INK, sw=1.0):
+        p = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+        self.el.append(
+            f'<polygon points="{p}" fill="{fill}" stroke="{stroke}" '
+            f'stroke-width="{sw}"/>')
+
+    def iso(self, cx, cy, w, h, d, front, top=None, side=None):
+        """Oblique 'product shot' box: front face + top + side, auto-shaded.
+        front/top/side are hex colors; top/side default to shaded variants."""
+        dx, dy = d * 0.45, -d * 0.42
+        fx, fy = cx - w / 2, cy - h / 2
+        if top is None:
+            top = shade(front, 1.28)
+        if side is None:
+            side = shade(front, 0.72)
+        # side face
+        self.poly([(fx + w, fy), (fx + w + dx, fy + dy),
+                   (fx + w + dx, fy + h + dy), (fx + w, fy + h)],
+                  fill=side, stroke=INK, sw=1.4)
+        # top face
+        self.poly([(fx, fy), (fx + dx, fy + dy),
+                   (fx + w + dx, fy + dy), (fx + w, fy)],
+                  fill=top, stroke=INK, sw=1.4)
+        # front face
+        self.rect(fx, fy, w, h, fill=front, stroke=INK, sw=1.4)
+        return fx, fy, dx, dy
+
+    def swatch(self, x, y, w, h, color, label, sub=None):
+        self.rect(x, y, w, h, fill=color, stroke=INK, sw=1)
+        self.t(x + w / 2, y + h + 18, label, 12, "middle", weight="bold")
+        if sub:
+            self.t(x + w / 2, y + h + 34, sub, 10, "middle", SOFT)
+
+    def callout(self, x1, y1, x2, y2, label, size=12):
+        """Leader line from feature point to label."""
+        self.ln(x1, y1, x2, y2, SOFT, 0.8)
+        self.circ(x1, y1, 2.2, fill=INK)
+        self.t(x2, y2 + 4, label, size, color=INK)
 
     def center_h(self, x1, y1, x2, y2, color=SOFT, w=0.8):
         """Long-dash centerline."""
@@ -162,7 +209,11 @@ class Sheet:
 
     def table(self, x, y, widths, headers, rows, rh=26, fs=12, hfs=12):
         total = sum(widths)
-        self.rect(x, y, total, rh * (len(rows) + 1), fill="none", stroke=INK, sw=1.2)
+        wrapped = [[wrap(c, max(8, int(w / 6.4))) for c, w in zip(row, widths)]
+                   for row in rows]
+        heights = [max(rh, max(len(c) for c in cells) * 17 + 10)
+                   for cells in wrapped]
+        self.rect(x, y, total, rh + sum(heights), fill="none", stroke=INK, sw=1.2)
         cx = x
         for w, htxt in zip(widths, headers):
             self.t(cx + 7, y + rh - 8, htxt.upper(), hfs, weight="bold",
@@ -170,13 +221,11 @@ class Sheet:
             cx += w
         self.ln(x, y + rh, x + total, y + rh, INK, 1.2)
         yy = y + rh
-        for row in rows:
+        for cells, rowh in zip(wrapped, heights):
             cx = x
-            cells = [wrap(c, max(8, int(w / 6.4))) for c, w in zip(row, widths)]
-            rowh = max(rh, max(len(c) for c in cells) * 15 + 8)
             for cell, w in zip(cells, widths):
                 for j, cl in enumerate(cell):
-                    self.t(cx + 7, yy + 16 + j * 15, cl, fs)
+                    self.t(cx + 7, yy + 17 + j * 17, cl, fs)
                 cx += w
                 if cx < x + total:
                     self.ln(cx, yy, cx, yy + rowh, SOFT, 0.5, "4 3")
@@ -301,7 +350,7 @@ def l1():
         s.rect(rx, ry, fw * Wpx, fh * Dpx, fill="none", stroke=INK, sw=0.9)
         s.t(rx + fw * Wpx / 2, ry + fh * Dpx / 2 + 4, txt, 11, "middle", SOFT)
     s.dimh(x0, x0 + Wpx, y0 + Dpx + 34, "160")
-    s.dimv(x0 - 34, y0, y0 + Dpx, "80")
+    s.dimv(x0 - 26, y0, y0 + Dpx, "80")
     s.t(x0 + Wpx / 2, y0 + Dpx + 62,
        "scale: shown NTS · dims in mm", 11, "middle", SOFT)
 
@@ -375,7 +424,7 @@ def l1():
         "Unit A POST /message → Unit B GET /inbox — with LTE in airplane mode.",
         "Mesh delivery with no towers = the whole pitch in one test.",
     ], width=95)
-    out.append(s.svg(1, 3))
+    out.append(s.svg(1, 5))
 
     # ---------------- 102 PARTS & POWER ----------------
     s = Sheet("AF-L1-102", "PARTS LIST & POWER",
@@ -445,7 +494,7 @@ def l1():
         "E-Ink HAT — SPI0 + GPIO25 busy",
         "LoRa SX1262 — SPI1 GPIO16–21 (top)",
     ], width=110)
-    out.append(s.svg(2, 3))
+    out.append(s.svg(2, 5))
 
     # ---------------- 103 ASSEMBLY & NOTES ----------------
     s = Sheet("AF-L1-103", "ASSEMBLY, SOFTWARE & NOTES",
@@ -498,7 +547,7 @@ def l1():
         "docs/ORDER_LIST.md · BUILD_GUIDE.md · HARDWARE.md",
         "firmware-hal · mesh-net · compositor · simulator (Rust, 46 tests)",
     ], width=120)
-    out.append(s.svg(3, 3))
+    out.append(s.svg(3, 5))
     return out
 
 
@@ -595,7 +644,7 @@ def mite():
         ["Gen-2", "smaller, printed antenna, lower cost", "volume + field data"],
         ["Gen-3 (R&D)", "sub-bee perched motes, degradable", "transient-electronics — see D SEED"],
     ], rh=34)
-    out.append(s.svg(1, 3))
+    out.append(s.svg(1, 7))
 
     # ---------------- 102 PARTS & POWER ----------------
     s = Sheet("AF-S-102", "PARTS LIST & POWER",
@@ -661,7 +710,7 @@ def mite():
     s.note(ML + 10, by + 90,
           "ESP32-S3 + SX1262 + ENS160 on 38×38 carrier; sensors on I2C; radio on private SPI.",
           size=12)
-    out.append(s.svg(2, 3))
+    out.append(s.svg(2, 7))
 
     # ---------------- 103 ASSEMBLY & ROLES ----------------
     s = Sheet("AF-S-103", "ASSEMBLY, FIRMWARE & ROLES",
@@ -708,7 +757,7 @@ def mite():
         ["Perch", "clip holds Ø25 mm branch through wind-shake test"],
         ["False positive", "<1 smoke alarm/week/unit in dust/inversion"],
     ], rh=34)
-    out.append(s.svg(3, 3))
+    out.append(s.svg(3, 7))
     return out
 
 
@@ -798,7 +847,7 @@ def totem():
         "Works when grid AND cell network are both down — the blackout case.",
         "EN/FR pipeline; community controls what appears — sovereignty in public space.",
     ], width=56)
-    out.append(s.svg(1, 2))
+    out.append(s.svg(1, 3))
 
     # ---------------- 102 PARTS & INSTALL ----------------
     s = Sheet("AF-E-102", "PARTS LIST & INSTALLATION",
@@ -863,7 +912,7 @@ def totem():
         "Rotation: alerts > notices > info; expiry timestamps auto-clear.",
         "Rate-limit + dedup; offline queue preserves order; admin can pin/hide.",
     ], width=118)
-    out.append(s.svg(2, 2))
+    out.append(s.svg(2, 3))
     return out
 
 
@@ -946,7 +995,7 @@ def anchor():
         "The visible, maintainable heart of the local mesh — trust infrastructure.",
         "Gateways are what communities pay for — the swarm rides on top.",
     ], width=62)
-    out.append(s.svg(1, 2))
+    out.append(s.svg(1, 3))
 
     # ---------------- 102 PARTS & SYSTEM ----------------
     s = Sheet("AF-A-102", "PARTS LIST & POWER SYSTEM",
@@ -1013,7 +1062,7 @@ def anchor():
         "LTE failover: drop → store-forward continues → auto-reconnect.",
         "Winter: -30 °C, panel snow-covered 3 days → still docks + relays.",
     ], width=100)
-    out.append(s.svg(2, 2))
+    out.append(s.svg(2, 3))
     return out
 
 
@@ -1070,7 +1119,7 @@ def phone():
         ["Power", "replaceable battery + USB-C PD + solar trickle option"],
         ["Rugged", "IP68 · -30..+55 °C · glove UI · 1.5 m drop target"],
     ], rh=36)
-    out.append(s.svg(1, 2))
+    out.append(s.svg(1, 7))
 
     # ---------------- 102 SPEC ----------------
     s = Sheet("AF-P-102", "SPECIFICATION SKETCH",
@@ -1120,7 +1169,7 @@ def phone():
         "All speak the same signed mesh — a call routes phone→phone→brick→satellite.",
         "Phone is the highest-volume node — its radio is the network's user terminal.",
     ], width=100)
-    out.append(s.svg(2, 2))
+    out.append(s.svg(2, 7))
     return out
 
 
@@ -1183,7 +1232,7 @@ def seed():
         "Swarm architecture is the same — only the node shrinks.",
         "Do NOT promise motes to funders until Gate 2 demo exists.",
     ], width=92, color=RED)
-    out.append(s.svg(1, 1))
+    out.append(s.svg(1, 3))
     return out
 
 
@@ -1251,6 +1300,1029 @@ def meridian():
     return out
 
 
+# ============================================================ L1 ELECTRONICS ==
+def l1_electronics():
+    s = Sheet("AF-L1-104", "ELECTRONICS DETAIL",
+              "SPI MAP · RF CONFIG · POWER SEQUENCING · LEVELS", "L1 · BRICK")
+
+    s.h(ML + 10, 150, "SPI / BUS MAP")
+    s.table(ML + 10, 172, [110, 170, 160, 90, 180],
+            ["Bus", "Device", "Pins", "Speed", "Notes"], [
+        ["SPI0", "E-Ink 7.5in", "GPIO 9/10/11 · CE0=8", "8 MHz", "Waveshare HAT default"],
+        ["SPI0 ctrl", "busy / reset", "GPIO 25 / 17", "—", "poll BUSY before refresh"],
+        ["SPI1", "SX1262 LoRa", "GPIO 16–19 · CE1=17?", "8 MHz", "dtoverlay=spi1-3cs"],
+        ["SPI1 ctrl", "NSS/RST/BUSY/DIO1", "GPIO 20/21/22/23", "—", "DIO1 = RX interrupt"],
+        ["I2C", "PMIC / sensors", "GPIO 2/3 (i2c_arm)", "400 kHz", "i2cdetect -y 1"],
+        ["UART", "LTE modem", "USB CDC-ACM", "115200", "preferred — no GPIO cost"],
+        ["GPIO", "SOS / LED", "GPIO 27 / 22", "—", "pull-up input / PWM out"],
+    ], rh=32)
+
+    s.h(ML + 10, 480, "SX1262 RADIO CONFIG (915 MHz ISM)")
+    s.table(ML + 10, 502, [140, 190, 190, 190], ["Param", "Value", "Param", "Value"], [
+        ["Frequency", "915–928 MHz", "Spreading factor", "SF7–SF12 (adaptive)"],
+        ["Bandwidth", "125 kHz", "Coding rate", "4/5 – 4/8"],
+        ["TX power", "+22 dBm max", "Preamble", "8 symbols"],
+        ["CAD", "enabled", "CAD duration", "2 symbols"],
+        ["Duty cycle", "<1% target", "CAD → RX window", "~200 ms"],
+    ], rh=34)
+    s.note(ML + 10, 716,
+          "Mesh envelope = signed mesh-net frame (~200 B max). Broadcast beacon every "
+          "30–60 s; unicast relay on demand. CRC + whitening on.", size=12)
+
+    # power sequencing — right column
+    px = 800
+    s.h(px, 150, "POWER SEQUENCING")
+    steps = [
+        ("1 · BAT", "4×18650 → 14.8 V → 5 V buck 3 A"),
+        ("2 · 5V RAIL", "fuse 5 A → CM5 USB-C PD"),
+        ("3 · HATS", "LTE HAT 5 V · E-Ink 3V3 rail · LoRa 3V3"),
+        ("4 · PERIPH", "LoRa EN · display reset · button pull-ups"),
+    ]
+    yy = 178
+    for tag, desc in steps:
+        s.rect(px, yy, 720, 46, fill=FILL, stroke=INK, sw=1.1)
+        s.t(px + 14, yy + 20, tag, 13, weight="bold")
+        s.t(px + 14, yy + 38, desc, 11, color=SOFT)
+        if yy < 300:
+            s.arrow(px + 360, yy + 46, px + 360, yy + 56)
+        yy += 60
+    s.note(px, 430,
+          "All logic = 3V3. E-Ink needs 3V3+5V flash rails per Waveshare spec — "
+          "HAT handles it. Never feed 5 V to SX1262.", size=12)
+
+    s.h(px, 500, "LEVEL / SAFETY NOTES")
+    s.bullets(px, 526, [
+        "SX1262 = 1V8–3V6 supply, 3V3 logic — do NOT 5 V tolerate.",
+        "LoRa NSS on GPIO20 conflicts nothing on spi1-3cs — verify DT overlay at boot.",
+        "E-Ink BUSY must be polled — refresh takes 3–20 s depending on waveform.",
+        "USB-C PD negotiates 5 V/3 A; barrel alternative = 14.8→5 V buck only.",
+        "Static-safe layout: keep 915 MHz trace <30 mm, 50 Ω controlled.",
+    ], width=88)
+
+    s.h(ML + 10, 780, "BRING-UP ORDER")
+    s.bullets(ML + 10, 806, [
+        "1. Boot bare CM5 — SSH, i2cdetect, vcgencmd get_throttled.",
+        "2. spi0 E-Ink — Waveshare python lib, show test pattern.",
+        "3. spi1 SX1262 — send/recv test with second unit (or SDR).",
+        "4. LTE HAT — AT init, signal query, data session.",
+        "5. Agent — systemd up, /health green, acceptance test.",
+    ], width=95)
+    return s.svg(4, 4)
+
+
+# ============================================================ L1 FINISH ======
+def finish_sheet(dwg, title, subtitle, node, sheet_no, sheets_total,
+                 renders, materials, finishes, notes):
+    """Shared FINISH & MATERIALS sheet builder.
+    renders: list of (iso-callable spec dict)
+    materials: table rows [component, material, finish, note]
+    finishes: list of (color_hex, name, sub) swatches
+    notes: bullet list"""
+    s = Sheet(dwg, "FINISH & MATERIALS — FINAL LOOK",
+              subtitle, node, status="APPEARANCE REV A")
+
+    # render zone: up to 2 product shots, centered in left ~950px
+    rs = renders[:2]
+    total_w = sum(r["w"] + r["d"] * 0.45 for r in rs) + (len(rs) - 1) * 90
+    fx_cursor = 60 + max(0, (950 - total_w) / 2)
+    for r in rs:
+        cx = fx_cursor + r["w"] / 2
+        cy = 300
+        s.iso(cx, cy, r["w"], r["h"], r["d"], r["color"], r.get("top"), r.get("side"))
+        fx, fy = cx - r["w"] / 2, cy - r["h"] / 2
+        for det in r.get("details", []):
+            kind = det[0]
+            if kind == "rect":
+                _, fxr, fyr, fw, fh, txt = det[:6]
+                fill = det[7] if len(det) > 7 else "none"
+                s.rect(fx + fxr * r["w"], fy + fyr * r["h"],
+                       fw * r["w"], fh * r["h"], fill=fill, stroke=INK, sw=1)
+                if txt:
+                    if fill == "none":
+                        dark = True
+                    else:
+                        fc = fill if len(fill) == 7 else "#" + "".join(
+                            c * 2 for c in fill.lstrip("#"))
+                        lum = sum(int(fc[i:i + 2], 16) for i in (1, 3, 5))
+                        dark = lum > 380
+                    s.t(fx + (fxr + fw / 2) * r["w"], fy + (fyr + fh / 2) * r["h"] + 4,
+                       txt, 10, "middle", INK if dark else "#ffffff")
+            elif kind == "circle":
+                _, fxr, fyr, fd, txt = det[:5]
+                fill = det[5] if len(det) > 5 else FILL
+                s.circ(fx + fxr * r["w"], fy + fyr * r["h"], fd * r["w"] / 2,
+                       fill=fill, stroke=INK, sw=1)
+                if txt:
+                    s.t(fx + fxr * r["w"], fy + fyr * r["h"] + 4, txt, 9, "middle", "#ffffff")
+        s.t(cx, cy + r["h"] / 2 + r["d"] * 0.42 + 34, r.get("caption", ""),
+           12, "middle", SOFT)
+        s.t(cx, cy + r["h"] / 2 + r["d"] * 0.42 + 54, r.get("sub", ""),
+           10, "middle", SOFT)
+        fx_cursor += r["w"] + r["d"] * 0.45 + 90
+
+    s.h(ML + 10, 560, "COLOR / FINISH OPTIONS")
+    for i, (col, name, sub) in enumerate(finishes):
+        s.swatch(ML + 10 + i * 200, 590, 120, 60, col, name, sub)
+
+    s.h(ML + 10, 720, "MATERIALS SPEC")
+    s.table(ML + 10, 744, [190, 260, 190, 300],
+            ["Component", "Material", "Finish", "Note"], materials, rh=30)
+
+    # notes right column (clear of materials table which ends ~x990)
+    s.h(1000, 570, "DESIGN NOTES")
+    s.bullets(1000, 596, notes, width=75)
+    return s.svg(sheet_no, sheets_total)
+
+
+def l1_finish():
+    return finish_sheet(
+        "AF-L1-105", "L1 BRICK", "FINAL LOOK — COLOR, FINISH, MATERIALS",
+        "L1 · BRICK", 5, 5,
+        renders=[{
+            "w": 560, "h": 210, "d": 130, "color": "#3a4148",
+            "top": "#4d555e", "side": "#2b3036",
+            "caption": "L1 BRICK — REV A",
+            "sub": "160 × 80 × 32 mm · ~450 g · matte textured",
+            "details": [
+                ("rect", 0.30, 0.10, 0.42, 0.62, "FRONT DISPLAY + CONTROLS", None, "#1a2230"),
+                ("circle", 0.52, 0.14, 0.035, "SOS", "#c0392b"),
+                ("rect", 0.34, 0.82, 0.10, 0.06, "USB-C", None, "#111"),
+            ],
+        }],
+        materials=[
+            ["Shell + tray", "PETG (or ASA -20°C)", "matte, 0.2 mm layers", "hand-printable, repairable"],
+            ["Gasket/bezel", "TPU 95A", "soft-touch", "display window seal"],
+            ["Fasteners", "M3 stainless + threadlock", "black oxide", "hand-tool service"],
+            ["Labels", "laser-etched PET or engraved", "—", "no stickers — wipes clean"],
+            ["Antenna", "SMA whip + u.fl", "rubber boot", "field-replaceable"],
+        ],
+        finishes=[
+            ("#3a4148", "GRAPHITE", "default — hides dirt"),
+            ("#c96a1e", "HI-VIS ORANGE", "search & rescue"),
+            ("#e8e4da", "SAND", "desert/arid sites"),
+        ],
+        notes=[
+            "Matte texture = glare-free in sun, hides scratches, better grip with gloves.",
+            "Hi-vis orange variant mandatory for fire-season deployments.",
+            "No painted logos — laser-etched 'ARCTICCHAIN · EMEBET INC.' on rear.",
+            "Color does NOT change internals — same BOM, different filament only.",
+            "Rev-B: soft-touch TPU overmold option for consumer feel.",
+        ])
+
+
+# ============================================================ MITE ELECTRONICS =
+def mite_electronics():
+    s = Sheet("AF-S-104", "CARRIER ELECTRONICS DETAIL",
+              "BLOCK DIAGRAM · SLEEP DOMAINS · RF CHAIN", "S · MITE")
+
+    # block diagram
+    bx, by = ML + 10, 215
+    s.h(bx, 130, "CARRIER BLOCK DIAGRAM (38×38 mm)")
+    blocks = [
+        (bx + 10, by, 170, 56, "ESP32-S3", "dual-core · LP-core sleep", "#dfe9f5"),
+        (bx + 230, by - 75, 180, 52, "SX1262", "LoRa 915 · SPI", "#dfe9f5"),
+        (bx + 230, by + 65, 180, 52, "ENS160+SHT41", "I2C · gas+env", "#dfe9f5"),
+        (bx + 450, by - 35, 170, 56, "CN3791", "solar charge · MPPT", "#dfe9f5"),
+        (bx + 660, by - 95, 160, 50, "LiPo 2000", "503450 · JST", "#f5e6d0"),
+        (bx + 660, by + 55, 160, 56, "POGO DOCK", "2-pad + notch", "#dfe9f5"),
+        (bx + 450, by + 95, 170, 50, "ANTENNA", "PCB meander / whip", "#dfe9f5"),
+    ]
+    for x, y, w, h, t1, t2, col in blocks:
+        s.rect(x, y, w, h, fill=col, stroke=INK, sw=1.2)
+        s.t(x + w / 2, y + h / 2 - 4, t1, 13, "middle", weight="bold")
+        s.t(x + w / 2, y + h / 2 + 14, t2, 10, "middle", SOFT)
+    # links
+    s.arrow(bx + 180, by + 20, bx + 230, by - 40)
+    s.arrow(bx + 180, by + 40, bx + 230, by + 90)
+    s.ln(bx + 410, by - 10, bx + 450, by - 8, SOFT, 1)
+    s.ln(bx + 620, by - 15, bx + 660, by - 60, SOFT, 1)
+    s.ln(bx + 620, by + 83, bx + 660, by + 80, SOFT, 1)
+    s.ln(bx + 535, by + 95, bx + 535, by + 150, SOFT, 1)
+    s.ln(bx + 535, by + 150, bx + 740, by + 150, SOFT, 1)
+    s.ln(bx + 740, by + 150, bx + 740, by + 111, SOFT, 1)
+    s.note(bx, by + 185, "ESP32-S3 = brain · SX1262 = voice · sensors on shared I2C · "
+         "charge path independent of compute", size=12)
+
+    # sleep domains — left bottom
+    s.h(bx, 470, "SLEEP DOMAINS (WHO STAYS ON)")
+    s.table(bx, 494, [200, 320, 300], ["Domain", "State in deep sleep", "Wake source"], [
+        ["ESP32-S3", "ULP RISC-V only", "RTC timer / GPIO"],
+        ["SX1262", "sleep (~µA) + CAD armed", "DIO1 / host poll"],
+        ["ENS160+SHT41", "power-gated OFF", "ESP32 rail control"],
+        ["CN3791", "always (harvesting)", "— hardware"],
+        ["RTC", "always", "32 kHz crystal"],
+    ], rh=32)
+
+    # RF + timing — right column
+    rx = 900
+    s.h(rx, 170, "RADIO & TIMING")
+    s.table(rx, 194, [200, 340], ["Param", "Value"], [
+        ["LoRa SF / BW", "SF7 / 125 kHz — short range bursts"],
+        ["TX power", "+20 dBm (E22-900M30S)"],
+        ["Antenna", "PCB meander 915 MHz or ¼-wave whip"],
+        ["Sample", "every 5–10 min (temp/RH/VOC)"],
+        ["Beacon", "every 60 min signed hello"],
+        ["Anomaly TX", "immediate, then 5-min confirm"],
+        ["CAD listen", "2 × 200 ms windows/hour"],
+    ], rh=34)
+
+    s.h(rx, 480, "WAKE-UP CHAIN")
+    s.bullets(rx, 506, [
+        "Solar voltage sense → wake when dawn charging starts.",
+        "RTC alarm → periodic sense window.",
+        "SX1262 CAD detect → swarm traffic wakes host.",
+        "Dock pogo detect → charge mode + beacon boost.",
+        "All wake sources logged — swarm energy is mesh data.",
+    ], width=88)
+    return s.svg(4, 7)
+
+
+# ============================================================ MITE VARIANTS ====
+def mite_variants():
+    s = Sheet("AF-S-105", "SWARM VARIANTS — ROLE PAYLOADS",
+              "ONE PLATFORM · FOUR ROLES · DIFFERENT BOM DELTAS", "S · MITE")
+
+    s.h(ML + 10, 150, "VARIANT MATRIX")
+    s.table(ML + 10, 178, [105, 240, 300, 175],
+            ["Variant", "Payload delta", "Extra parts", "Cost / detection role"], [
+        ["SENSOR-BEE", "ENS160 + SHT41 (base)", "— none —", "+$0 · primary gas/temp anomaly"],
+        ["EYE-BEE", "thermal IR array (rev-C)", "AMG8833 or MLX90640 + lens", "+$25–45 · confirm fixes visually"],
+        ["RELAY-BEE", "tall antenna, no sensors", "915 MHz whip 8 dBi", "+$8–15 · extend range over ridges"],
+        ["CHARGER-BEE", "dock pads + charge LED", "2 pogo + indicator", "+$3–5 · perch at Anchor, rebroadcast"],
+    ], rh=52)
+
+    s.h(ML + 10, 480, "ROLE SELECTION LOGIC")
+    s.bullets(ML + 10, 508, [
+        "All variants share: ESP32-S3 + SX1262 + solar + LiPo + perch clip + mesh identity.",
+        "Coordinator (Anchor/Brick) assigns role via signed command — soft state, self-heals.",
+        "Fire season: 70% sensor-bees at fuel breaks, 20% relay on ridgelines, 10% chargers.",
+        "Non-fire season: roles rotate to flood/snowpack/beetle surveillance automatically.",
+        "Eye-bees are rev-C — thermal array needs carrier respin; sensor-bees fly first.",
+    ], width=110)
+
+    s.h(ML + 10, 720, "COST AT VOLUME (EST.)")
+    s.table(ML + 10, 748, [200, 200, 200, 200], ["Volume", "Sensor", "Relay", "All variants blended"], [
+        ["1–10 units", "$90–130 ea", "$95–140 ea", "≈$110 avg"],
+        ["100 units", "$55–75 ea", "$60–80 ea", "≈$65 avg"],
+        ["1,000 units", "$35–50 ea", "$38–55 ea", "≈$42 avg"],
+        ["10,000+", "$20–30 ea", "$22–32 ea", "≈$25 avg — seed-drop economics"],
+    ], rh=38)
+
+    s.h(880, 150, "PHYSICAL DIFFERENCES")
+    s.table(880, 178, [160, 460], ["Variant", "What changes physically"], [
+        ["SENSOR-BEE", "base puck — solar window + gas vent membrane"],
+        ["EYE-BEE", "domed IR window replaces solar center (rev-C)"],
+        ["RELAY-BEE", "extended top mast, whip antenna, minimal face"],
+        ["CHARGER-BEE", "bottom pogo pads exposed, dock-align notch"],
+    ], rh=44)
+
+    s.h(880, 480, "FIELD HIRING (HOW ROLES GET FILLED)")
+    s.bullets(880, 510, [
+        "Swarm joins mesh → coordinator reads capability flags.",
+        "Gap analysis: coverage map × season threat model → role demand.",
+        "Nearest capable unit gets signed role assignment.",
+        "Unit confirms, adopts payload profile, reports ready.",
+        "Reassignment on battery/sensor failure — automatic.",
+    ], width=85)
+    return s.svg(5, 7)
+
+
+# ============================================================ MITE MECHANICAL =
+def mite_mechanical():
+    s = Sheet("AF-S-106", "MECHANICAL DETAIL",
+              "PERCH CLIP SECTION · ENCLOSURE STACK · SEAL", "S · MITE")
+
+    # perch clip section drawing
+    vx, vy = 110, 160
+    s.h(vx, vy - 40, "PERCH CLIP — SECTION")
+    # clip profile: two jaws gripping a branch (circle)
+    s.circ(vx + 180, vy + 130, 60, fill="none", stroke=SOFT, sw=1.2, dash="6 4")
+    s.t(vx + 180, vy + 205, "BRANCH Ø10–40", 11, "middle", SOFT)
+    # upper jaw
+    s.poly([(vx + 60, vy + 40), (vx + 300, vy + 40), (vx + 300, vy + 90),
+            (vx + 240, vy + 160), (vx + 120, vy + 160), (vx + 60, vy + 90)],
+           fill=FILL, stroke=INK, sw=1.4)
+    # lower jaw
+    s.poly([(vx + 60, vy + 220), (vx + 300, vy + 220), (vx + 300, vy + 270),
+            (vx + 240, vy + 200), (vx + 120, vy + 200), (vx + 60, vy + 270)],
+           fill=FILL, stroke=INK, sw=1.4)
+    # spring
+    s.ln(vx + 180, vy + 90, vx + 180, vy + 200, INK, 3)
+    s.t(vx + 180, vy + 30, "PUCK BODY 90×90×35", 12, "middle", weight="bold")
+    s.t(vx + 180, vy + 290, "spring steel clip — tool-less snap", 11, "middle", SOFT)
+    s.dimh(vx + 60, vx + 300, vy + 345, "90")
+
+    # enclosure stack
+    sx, sy = 620, 160
+    s.h(sx, sy - 40, "ENCLOSURE STACK-UP")
+    layers = [
+        ("TOP LID — PC-ABS", "2.0 mm", "snap fit + gasket groove"),
+        ("SOLAR WINDOW — PC film", "1.0 mm", "90% transmission, UV stable"),
+        ("MAIN SHELL — ASA", "2.5 mm", "gas-permeable vent zone"),
+        ("CARRIER PCB — FR4", "1.6 mm", "38×38, ENIG finish"),
+        ("BATTERY BAY — PETG", "3.0 mm", "slide-in, JST access"),
+    ]
+    yy = sy
+    for name, th, note in layers:
+        s.rect(sx, yy, 380, 44, fill=FILL, stroke=INK, sw=1.1)
+        s.t(sx + 12, yy + 19, name, 12, weight="bold")
+        s.t(sx + 12, yy + 36, f"{th} — {note}", 10, color=SOFT)
+        yy += 54
+    s.note(sx, yy + 10, "Total Z ≈ 35 mm body + 10 mm clip = 45 mm field height.",
+           size=12)
+
+    # sealing + service
+    gx = 1100
+    s.h(gx, 160, "SEALING & SERVICE")
+    s.table(gx, 184, [150, 420], ["Feature", "Detail"], [
+        ["Gasket", "TPU bead around lid — IP65 splash"],
+        ["Vent", "ePTFE membrane — gas exchange, no water"],
+        ["Solar", "under-window film — replaceable"],
+        ["Battery", "slide tray — swap in field, no tools"],
+        ["PCB", "2× M2 screws — hand driver only"],
+        ["Clip", "spring steel — replaceable spare"],
+    ], rh=38)
+
+    s.h(gx, 460, "DIMENSIONS")
+    s.table(gx, 484, [150, 420], ["Dim", "Value"], [
+        ["Body", "90 × 90 × 35 mm (L×W×H)"],
+        ["Clip span", "Ø10–40 mm branch"],
+        ["Weight", "~180 g with battery"],
+        ["Solar cell", "62 × 62 mm active area"],
+        ["Carrier PCB", "38 × 38 mm, 4-layer"],
+        ["Operating", "-30..+60 °C (rev-A)"],
+    ], rh=38)
+
+    s.h(110, 560, "PERCH BEHAVIOR")
+    s.bullets(110, 586, [
+        "Clip grips branch/fence/rock — unit hangs vertically, solar faces up-ish.",
+        "Wind-shake test: survives 60 km/h gusts on Ø25 mm branch.",
+        "Perch sites chosen by mesh: fuel breaks, ridgelines, creek crossings.",
+        "Docked variant (CHARGER-BEE) swaps clip for pogo alignment feet.",
+    ], width=105)
+
+    s.h(110, 800, "MANUFACTURING")
+    s.bullets(110, 826, [
+        "Shell/lid/bay: FDM print ASA or PC-ABS — or injection mold at volume.",
+        "Clip: laser-cut 0.8 mm spring steel, powder-coated.",
+        "Gasket: die-cut TPU sheet or printed-in-place.",
+        "Carrier PCB: JLCPCB 4-layer ENIG — $15–30/pc at 10+.",
+        "Assembly: hand-solderable — no BGA, no reflow oven needed.",
+    ], width=105)
+    return s.svg(6, 7)
+
+
+# ============================================================ MITE FINISH =====
+def mite_finish():
+    return finish_sheet(
+        "AF-S-107", "S MITE", "FINAL LOOK — SWARM UNIT APPEARANCE",
+        "S · MITE", 7, 7,
+        renders=[{
+            "w": 380, "h": 380, "d": 90, "color": "#4a6741",
+            "top": "#5d8154", "side": "#3a5233",
+            "caption": "S MITE — SENSOR-BEE",
+            "sub": "90 × 90 × 35 mm · ~180 g · forest camouflage",
+            "details": [
+                ("rect", 0.18, 0.18, 0.64, 0.64, "SOLAR WINDOW", None, "#1c2b1e"),
+                ("rect", 0.40, 0.42, 0.20, 0.16, "", None, "#22301f"),
+            ],
+        }],
+        materials=[
+            ["Shell", "ASA or PC-ABS", "matte — forest tones", "UV stable, -30 °C"],
+            ["Solar", "poly cell + PC window", "anti-reflective", "replaceable film"],
+            ["Gasket", "TPU bead", "—", "IP65 splash"],
+            ["Clip", "spring steel 0.8 mm", "olive drab powder-coat", "field spare"],
+            ["Labels", "laser-etched ID", "—", "swarm serial + role"],
+        ],
+        finishes=[
+            ("#4a6741", "FOREST", "default — blends in"),
+            ("#8a8f6a", "SAGE", "arid grassland"),
+            ("#c96a1e", "HI-VIS", "training/retrieval"),
+        ],
+        notes=[
+            "Forest green is deliberate — swarm should disappear into canopy.",
+            "Hi-vis variant ONLY for bench testing and recovery ops.",
+            "Solar window slightly recessed — survives branch strikes.",
+            "Role variants share shell — only top insert + antenna differ.",
+            "No logos on top face — solar area is sacred.",
+        ])
+
+
+# ============================================================ TOTEM FINISH =====
+def totem_finish():
+    return finish_sheet(
+        "AF-E-103", "E TOTEM", "FINAL LOOK — COMMUNITY BOARD APPEARANCE",
+        "E · TOTEM", 3, 3,
+        renders=[{
+            "w": 520, "h": 340, "d": 110, "color": "#2e3a45",
+            "top": "#3d4c59", "side": "#232d36",
+            "caption": "E TOTEM — FRONT",
+            "sub": "~320 × 220 × 100 mm box on 3 m pole · IP66",
+            "details": [
+                ("rect", 0.08, 0.10, 0.84, 0.62, "E-INKE DISPLAY", None, "#f4f1e8"),
+                ("rect", 0.10, 0.80, 0.30, 0.10, "VENT", None, "#161c22"),
+                ("circle", 0.82, 0.85, 0.025, "", "#5eead4"),
+            ],
+        }],
+        materials=[
+            ["Enclosure", "polycarbonate IP66 box", "texture, UV stable", "Bud Industries class"],
+            ["Display", "E-Ink 13.3in + window film", "matte anti-glare", "sunlight readable"],
+            ["Pole", "galvanized steel / treated wood", "powder-coat charcoal", "community install"],
+            ["Gasket", "silicone continuous bead", "—", 'IP66 "driving rain"'],
+            ["Labels", "vinyl-cut bilingual", "reflective", "EN/FR community ID"],
+        ],
+        finishes=[
+            ("#2e3a45", "CHARCOAL", "default civic color"),
+            ("#1e4634", "FOREST", "park/natural areas"),
+            ("#7a2d2d", "COMMUNITY RED", "custom per community"),
+        ],
+        notes=[
+            "Charcoal powder-coat hides fingerprints and 10-year weathering.",
+            "Community name + nation badge on lower bezel — vinyl, field-replaceable.",
+            "Display window recessed 8 mm — survives thrown objects, hockey pucks.",
+            "Totem IS the landmark — finish should read 'public infrastructure', not gadget.",
+            "Solar panel separate, same charcoal frame — visual unity.",
+        ])
+
+
+# ============================================================ ANCHOR FINISH =====
+def anchor_finish():
+    return finish_sheet(
+        "AF-A-103", "A ANCHOR", "FINAL LOOK — CHARGING STATION APPEARANCE",
+        "A · ANCHOR", 3, 3,
+        renders=[{
+            "w": 460, "h": 320, "d": 120, "color": "#37424e",
+            "top": "#47555f", "side": "#2a333c",
+            "caption": "A ANCHOR — STATION",
+            "sub": "~350 × 250 × 400 mm · solar array separate · IP65",
+            "details": [
+                ("rect", 0.08, 0.08, 0.40, 0.42, "COMPUTE", None, "#22303c"),
+                ("rect", 0.55, 0.08, 0.37, 0.42, "RADIOS", None, "#22303c"),
+                ("rect", 0.08, 0.62, 0.84, 0.30, "BATTERY BAY", None, "#1d2731"),
+            ],
+        }],
+        materials=[
+            ["Cabinet", "powder-coated steel IP65", "texture charcoal", "field-replaceable panels"],
+            ["Solar", "anodized Al frame + poly", "anti-reflective", "ground/pole mount"],
+            ["Dock", "gold-plated pogo + PBT", "—", "self-cleaning tips"],
+            ["Battery", "LiFePO4 rack", "—", "swappable brick"],
+            ["Labels", "engraved SS plate", "—", "weatherproof ID"],
+        ],
+        finishes=[
+            ("#37424e", "CHARCOAL", "default — utility look"),
+            ("#4a6741", "FOREST", "wildland sites"),
+            ("#8a6d3b", "SAFETY YELLOW", "airfield/industrial"),
+        ],
+        notes=[
+            "Anchor is infrastructure — finish reads 'utility cabinet', survives decades.",
+            "Dock contacts gold-plated — 10k mate cycles, self-wiping on landing.",
+            "Battery bay front-access — swap in <15 min with hand tools.",
+            "Status LED visible 100 m — green mesh-up, amber degraded, red fault.",
+            "No sharp edges anywhere — glove + branch contact safe.",
+        ])
+
+
+# ============================================================ PHONE: SPECIAL =====
+def phone_definition():
+    s = Sheet("AF-P-103", "PRODUCT DEFINITION — WHY IT STANDS OUT",
+              "THE ONLY PHONE THAT IS A CITIZEN OF YOUR COMMUNITY'S NETWORK",
+              "P · ARCTICPHONE", rev="0", status="CONCEPT — NOT FROZEN")
+
+    s.h(ML + 10, 150, "THE ONE-LINE PITCH")
+    s.t(ML + 10, 190, "“A phone that joins YOUR network — not just the carrier's.”", 22, weight="bold")
+    s.t(ML + 10, 224, "Every ArcticPhone is a mesh node, a repeater, a satellite SOS beacon, "
+       "and an offline-first computer — in one rugged, repairable, community-owned device.",
+       14, color=SOFT)
+
+    s.h(ML + 10, 300, "SIX THINGS NO OTHER PHONE DOES")
+    s.table(ML + 10, 328, [40, 280, 640], ["#", "Feature", "Why it matters"], [
+        ["1", "TRI-RADIO", "LoRa mesh + LTE + satellite — three independent paths; at least one always works"],
+        ["2", "EVERY PHONE A REPEATER", "each unit extends coverage for the next — density IS the network"],
+        ["3", "SATELLITE SOS STANDARD", "one hardware key press reaches help anywhere on Earth — not an accessory, a core feature"],
+        ["4", "OFFLINE DIGNITY SUITE", "maps, manuals, forms, messaging, notices — fully useful with zero bars"],
+        ["5", "COMMUNITY SYNC", "Totem public boards push to your phone; your posts can reach the Totem"],
+        ["6", "REPAIRABLE BY DESIGN", "screws not glue, standard connectors, a local tech fixes it with hand tools"],
+    ], rh=46)
+
+    s.h(ML + 10, 672, "VS THE ALTERNATIVES")
+    s.table(ML + 10, 700, [140, 120, 120, 120, 120, 120],
+            ["Need", "Smartphone", "Rugged phone", "Sat messenger", "Mesh radio", "ARCTICPHONE"], [
+        ["Cellular calls", "✓", "✓", "—", "—", "✓"],
+        ["Works with no towers", "—", "—", "✓", "✓", "✓"],
+        ["Satellite SOS", "app only", "—", "✓", "—", "✓ built-in"],
+        ["Extends a network", "—", "—", "—", "✓", "✓"],
+        ["Offline apps", "partial", "partial", "—", "—", "✓ full"],
+        ["Repairable", "glue", "screws", "sealed", "—", "screws"],
+        ["Community-owned", "carrier", "carrier", "corporate", "DIY", "community"],
+    ], rh=34)
+
+    s.h(880, 300, "THE MOAT — WHY IT COMPOUNDS")
+    s.bullets(880, 330, [
+        "Network effect: every phone sold adds a repeater — the 100th user has "
+        "better coverage than the 1st. Competitors can't copy deployed density.",
+        "Community ownership: the mesh belongs to the town, not a carrier — "
+        "that's a procurement argument AND a loyalty argument.",
+        "Data stays home: messages route community mesh first — sovereignty "
+        "is a feature regulators and communities both want.",
+        "Module ecosystem: open bay spec → third parties build sat, thermal, "
+        "battery modules → platform, not product.",
+        "The phone is the user terminal for the whole ArcticChain stack — "
+        "mesh, swarm, Totem, satellites. One device, the entire ecosystem.",
+    ], width=80)
+
+    s.h(880, 640, "WHAT IT IS NOT")
+    s.bullets(880, 668, [
+        "NOT a smartphone killer — it's for places smartphones fail.",
+        "NOT a Starlink terminal — L-band messenger class for SOS/short messages.",
+        "NOT a toy mesh radio — it's certified cellular + satellite + mesh, carrier-grade.",
+        "NOT locked to one community — joins any ArcticChain mesh, carries identity.",
+    ], width=80)
+    return s.svg(3, 7)
+
+
+def phone_triradio():
+    s = Sheet("AF-P-104", "TRI-RADIO ARCHITECTURE",
+              "LoRa MESH + LTE + SATELLITE — ANTENNAS · COEXISTENCE · FAILOVER",
+              "P · ARCTICPHONE", rev="0", status="CONCEPT — NOT FROZEN")
+
+    # radio blocks
+    s.h(ML + 10, 150, "RADIO BLOCKS")
+    radios = [
+        (ML + 10, "MESH — SX1262", "LoRa 915 MHz", "0.3–50 kbps", "5–15 km LOS", "~50 mW", "#dfe9f5"),
+        (ML + 310, "CELLULAR — LTE Cat-4", "B1/2/5/13/66", "50–150 Mbps", "tower range", "~1–2 W", "#dfe9f5"),
+        (ML + 610, "SATELLITE — L-band", "Iridium Certus class", "~22 kbps", "global", "~3–5 W", "#f5e6d0"),
+    ]
+    for x, t1, t2, t3, t4, t5, col in radios:
+        s.rect(x, 178, 280, 120, fill=col, stroke=INK, sw=1.3)
+        s.t(x + 14, 208, t1, 14, weight="bold")
+        s.t(x + 14, 230, t2, 12)
+        s.t(x + 14, 252, t3, 11, color=SOFT)
+        s.t(x + 14, 274, t4, 11, color=SOFT)
+        s.t(x + 14, 292, t5, 10, color=SOFT)
+    s.note(ML + 10, 320, "All three share the SoC via SDIO/UART — coexistence filtering "
+         "required: cellular fundamental can desense LoRa.", size=12)
+
+    # antenna layout — phone outline
+    s.h(1000, 140, "ANTENNA LAYOUT (TARGET)")
+    px_, py_ = 1050, 210
+    s.rect(px_, py_, 180, 350, fill=FILL, stroke=INK, sw=1.5, r=18)
+    s.rect(px_ + 12, py_ + 24, 156, 290, fill="none", stroke=SOFT, sw=0.8, r=6)
+    s.t(px_ + 90, py_ + 175, "DISPLAY", 12, "middle", SOFT)
+    # antennas
+    s.ln(px_ + 40, py_, px_ + 40, py_ - 40, INK, 3)      # top whip
+    s.ln(px_ + 140, py_, px_ + 140, py_ - 40, INK, 3)    # top whip 2
+    s.t(px_ + 48, py_ - 14, "LoRa", 10, "start", SOFT)
+    s.t(px_ + 148, py_ - 14, "LTE", 10, "start", SOFT)
+    s.rect(px_ + 30, py_ + 318, 120, 8, fill=ACC)        # bottom L-band strip
+    s.t(px_ + 90, py_ + 344, "L-band PIFA (bottom edge)", 10, "middle", SOFT)
+    s.t(px_ + 90, py_ + 368, "GPS/BT: ceramic patch rear", 10, "middle", SOFT)
+
+    # coexistence + failover
+    s.h(ML + 10, 400, "COEXISTENCE & FAILOVER")
+    s.table(ML + 10, 428, [180, 300, 340], ["Scenario", "Radio used", "Behavior"], [
+        ["In community mesh range", "LoRa primary", "calls/texts route peer-to-peer signed"],
+        ["No mesh, cell exists", "LTE", "normal cellular + mesh backhaul opportunistic"],
+        ["No cell, no mesh", "L-band sat", "SOS + short messages only (22 kbps)"],
+        ["All three present", "mesh→LTE→sat priority", "mesh for local, LTE for internet, sat reserved SOS"],
+        ["Simultaneous TX", "TDM scheduler", "cellular TX pauses LoRa RX windows"],
+    ], rh=44)
+
+    s.h(ML + 10, 700, "LINK BUDGET (LoRa, typical)")
+    s.table(ML + 10, 728, [200, 170, 170, 200], ["Path", "Range", "Data", "Use"], [
+        ["Phone ↔ phone", "1–3 km", "text/voice-meta", "direct mesh call"],
+        ["Phone ↔ Brick/Totem", "3–10 km", "notices/data", "community services"],
+        ["Phone ↔ Anchor", "5–15 km", "backhaul relay", "reach the gateway"],
+        ["Phone ↔ satellite", "global", "22 kbps", "SOS + telemetry only"],
+    ], rh=38)
+
+    s.h(880, 640, "WHY TRI-RADIO WINS")
+    s.bullets(880, 668, [
+        "Single-radio phones fail exactly where they're needed — no towers, "
+        "no mesh, no service. Three radios = three independent lifelines.",
+        "LoRa mesh is FREE — unlicensed 915 MHz, zero carrier cost, community-owned.",
+        "LTE is familiar — works today, every Canadian knows it.",
+        "L-band sat is the insurance policy — works at the cabin, the fire line, "
+        "the North. SOS doesn't care about coverage maps.",
+        "Failover is automatic and signed — the network decides, user just talks.",
+    ], width=82)
+    return s.svg(4, 7)
+
+
+def phone_modules():
+    s = Sheet("AF-P-105", "EXPANSION MODULES — THE OPEN BAY",
+              "SWAPPABLE MISSION MODULES · POGO + GUIDE PINS · SIGNED AUTH",
+              "P · ARCTICPHONE", rev="0", status="CONCEPT — NOT FROZEN")
+
+    s.h(ML + 10, 150, "MODULE BAY SPEC (TARGET)")
+    s.table(ML + 10, 178, [150, 300, 200, 200, 160],
+            ["Module", "Function", "Interface", "Power", "Est. cost"], [
+        ["SAT-TERM", "full Iridium/Globalstar terminal", "USB3 + pogo", "5 V 2 A", "$80–150"],
+        ["THERMAL", "FLIR Lepton-class camera", "MIPI + pogo", "5 V 1 A", "$120–250"],
+        ["EXT-BATT", "second 4000 mAh cell", "pogo charge", "pass-through", "$25–40"],
+        ["LORA-BOOST", "external antenna + PA", "U.FL + pogo", "5 V 0.5 A", "$15–30"],
+        ["E-INK DOCK", "public display accessory", "SPI + pogo", "5 V 1 A", "$40–80"],
+        ["STORAGE", "1 TB encrypted card", "microSD slot", "—", "$50–90"],
+        ["CUSTOM", "third-party open spec", "pogo + USB-C", "5 V ≤2 A", "open"],
+    ], rh=40)
+
+    # bay mechanical — phone rear view
+    s.h(880, 150, "BAY MECHANICS (REAR VIEW)")
+    bx, by = 950, 190
+    s.rect(bx, by, 200, 380, fill=FILL, stroke=INK, sw=1.5, r=18)
+    s.rect(bx + 30, by + 40, 140, 300, fill="none", stroke=INK, sw=1.2, r=8, dash="8 4")
+    s.t(bx + 100, by + 190, "MODULE BAY", 13, "middle", weight="bold")
+    # pogo pins
+    for i in range(6):
+        s.circ(bx + 55 + i * 18, by + 350, 4, fill=ACC)
+    s.t(bx + 100, by + 372, "6× pogo (pwr/gnd/SPI/I2C/ID)", 9, "middle", SOFT)
+    # guide pins
+    s.circ(bx + 45, by + 60, 5, fill="none", stroke=INK, sw=1.2)
+    s.circ(bx + 155, by + 60, 5, fill="none", stroke=INK, sw=1.2)
+    s.t(bx + 100, by + 30, "guide pins + captive screws", 10, "middle", SOFT)
+    s.t(bx + 100, by + 420, "hot-swap? NO — power down to change", 10, "middle", SOFT)
+    s.t(bx + 100, by + 440, "signed module auth on insert", 10, "middle", SOFT)
+
+    s.h(ML + 10, 560, "MODULE AUTH & SAFETY")
+    s.bullets(ML + 10, 590, [
+        "Each module carries signed ID — phone verifies before enabling power.",
+        "Power budget enforced: module draws only within its rated envelope.",
+        "Thermal/current foldback — a bad module can't cook the phone.",
+        "Open spec published — third parties can build modules (revenue share).",
+        "Modules are field-swappable with one screwdriver — 60-second change.",
+    ], width=105)
+
+    s.h(ML + 10, 780, "ECOSYSTEM PLAY")
+    s.bullets(ML + 10, 808, [
+        "Phase 1: first-party modules (sat, thermal, battery).",
+        "Phase 2: certified partners — ag sensors, medical, survey gear.",
+        "Phase 3: open marketplace — community-built modules.",
+        "Every module is a node accessory — extends the mesh's reach.",
+        "This is how a phone becomes a PLATFORM — the moat compounds.",
+    ], width=105)
+    return s.svg(5, 7)
+
+
+def phone_ux():
+    s = Sheet("AF-P-106", "FIELD UX — DESIGNED FOR GLOVES & ZERO BARS",
+              "SOS CHAIN · MESH DASHBOARD · OFFLINE SUITE · NOTICES",
+              "P · ARCTICPHONE", rev="0", status="CONCEPT — NOT FROZEN")
+
+    s.h(ML + 10, 150, "SOS CHAIN — ONE KEY, EVERY PATH")
+    s.bullets(ML + 10, 180, [
+        "Physical SOS key (dedicated, glove-proof, hardware interrupt — not software).",
+        "Press → phone broadcasts signed SOS on mesh → nearest node relays.",
+        "If no mesh ack in 30 s → escalate to LTE data.",
+        "If no LTE → satellite messenger sends GPS + vitals packet.",
+        "Responder sees: identity, GPS, battery, mesh path taken — full provenance.",
+        "Works upside-down, wet, -30 °C, screen cracked — hardware path only.",
+    ], width=105)
+
+    s.h(ML + 10, 400, "MESH DASHBOARD (LIVE)")
+    s.table(ML + 10, 428, [200, 400], ["Metric", "What user sees"], [
+        ["Coverage bubble", "your mesh range on a local map — live, offline"],
+        ["Node count", "how many phones/bridges repeat your signal right now"],
+        ["Message latency", "mesh vs LTE vs sat — which path carried your last msg"],
+        ["Mesh score", "your contribution — messages relayed, hours online"],
+        ["Community notices", "Totem board content synced to phone"],
+    ], rh=38)
+
+    s.h(ML + 10, 690, "OFFLINE DIGNITY SUITE")
+    s.table(ML + 10, 716, [200, 400], ["App", "Offline capability"], [
+        ["Maps", "full regional maps pre-loaded — routing without bars"],
+        ["Manuals", "equipment/service docs — searchable, no data"],
+        ["Forms", "government/clinic/ag forms — fill, sign, queue to send"],
+        ["Messaging", "mesh SMS between phones — store-and-forward"],
+        ["Notices", "community bulletin — Totem content cached"],
+        ["Camera", "photos tagged GPS — queue upload when backhaul returns"],
+    ], rh=36)
+
+    s.h(880, 150, "GLove-FIRST HARDWARE")
+    s.table(880, 178, [160, 460], ["Element", "Design choice"], [
+        ["SOS key", "dedicated hardware button, 3 mm travel, textured"],
+        ["Display", "transflective — readable in sun, low power"],
+        ["UI", "high contrast, large targets, haptic confirm"],
+        ["Buttons", "3 physical (vol/PAN) + SOS — no touchscreen-only"],
+        ["Audio", "loud speaker + mic — works with mask/glove"],
+        ["Charging", "USB-C + pogo — one-hand dock charge"],
+    ], rh=42)
+
+    s.h(880, 480, "COMMUNITY INTEGRATION")
+    s.bullets(880, 510, [
+        "Phone joins community mesh automatically on first boot — "
+        "no carrier account needed for mesh service.",
+        "Community admin sees node health (opt-in) — coverage gaps visible.",
+        "Totem public boards sync notices to phones within range.",
+        "Your posts can go to the Totem — community bulletin from your pocket.",
+        "Data sovereignty: mesh traffic stays on community infrastructure "
+        "unless explicitly routed out.",
+        "EN/FR UI throughout — language is a first-class setting.",
+    ], width=82)
+
+    s.h(880, 760, "BATTERY & POWER UX")
+    s.bullets(880, 788, [
+        "Replaceable battery — swap in field with one tool, no adhesive.",
+        "USB-C PD fast charge — 0→80% in ~45 min.",
+        "Solar trickle mode — leaves on dash, gains ~10%/day.",
+        "Ultra-low-power standby — 30 days standby on mesh listen.",
+        "Battery health shown — honest capacity, not fake percentages.",
+    ], width=82)
+    return s.svg(6, 7)
+
+
+def phone_finish():
+    return finish_sheet(
+        "AF-P-107", "P ARCTICPHONE", "FINAL LOOK — RURAL PHONE APPEARANCE",
+        "P · ARCTICPHONE", 7, 7,
+        renders=[{
+            "w": 170, "h": 320, "d": 40, "color": "#2b3440",
+            "top": "#3a4553", "side": "#1f2731",
+            "caption": "P ARCTICPHONE — FRONT",
+            "sub": "~145 × 72 × 14 mm · ~220 g · IP68",
+            "details": [
+                ("rect", 0.08, 0.06, 0.84, 0.80, "DISPLAY", None, "#101820"),
+                ("circle", 0.50, 0.025, 0.025, "", "#0a0e14"),
+            ],
+        }, {
+            "w": 170, "h": 320, "d": 40, "color": "#2b3440",
+            "top": "#3a4553", "side": "#1f2731",
+            "caption": "REAR — MODULE BAY",
+            "sub": "bay covers 40% of rear — hot-swap modules",
+            "details": [
+                ("rect", 0.20, 0.20, 0.60, 0.55, "BAY", None, "#141c26"),
+            ],
+        }],
+        materials=[
+            ["Chassis", "polycarbonate + TPU bumpers", "textured matte", "IP68 sealed"],
+            ["Display", "transflective LCD 5–6in", "anti-glare", "sunlight + gloves"],
+            ["Buttons", "silicone overlay + metal", "tactile 3mm", "glove-proof"],
+            ["Antenna", "LDS laser-direct structuring", "—", "no external whips needed"],
+            ["Bay cover", "PC + TPU gasket", "thumb-screw", "tool-light swap"],
+        ],
+        finishes=[
+            ("#2b3440", "GRAPHITE", "default — professional"),
+            ("#3d5a45", "FOREST", "field/rural identity"),
+            ("#c96a1e", "HI-VIS", "SAR / search roles"),
+        ],
+        notes=[
+            "Rugged but NOT ugly — matte graphite reads 'serious tool', not 'military'.",
+            "Bumper corners absorb 1.5 m drops onto gravel — replaceable.",
+            "Module bay cover is the visual signature — slightly raised, thumb screw.",
+            "Transflective display: readable in sun WITHOUT backlight — days of battery.",
+            "No glass back — polycarbonate shrugs off drops and cold.",
+            "Color options are filament/finish only — same internal BOM.",
+        ])
+
+
+# ============================================================ SEED MATERIALS ===
+def seed_materials():
+    s = Sheet("AF-D-102", "MATERIALS STACK & DEGRADATION",
+              "WHAT THE MOTE IS MADE OF — AND HOW IT DISAPPEARS", "D · SEED",
+              rev="0", status="RESEARCH — NOT A PRODUCT")
+
+    s.h(ML + 10, 150, "MATERIALS STACK (TARGET)")
+    s.table(ML + 10, 178, [130, 240, 240, 190], ["Layer", "Candidate material", "Function", "Degradation"], [
+        ["Substrate", "cellulose paper / silk fibroin", "structure + insulation", "weeks–months in moisture"],
+        ["Electronics", "printed Zn/MnO₂ + organic TFT", "compute + sensing", "dissolves with substrate"],
+        ["Energy", "printed PV / TEG / RF harvest", "µW power", "encapsulated, degrades slowly"],
+        ["Comms", "backscatter or LoRa wake", "rare TX bursts", "antenna dissolves last"],
+        ["Encapsulant", "shellac / protein coating", "weather protection", "months — timed release"],
+        ["Seed pod", "compressed fiber + nutrient", "germination trigger", "sprouts sensor on moisture"],
+    ], rh=46)
+
+    s.h(ML + 10, 510, "DEGRADATION TIMELINE")
+    tl = [("0–2 mo", "ACTIVE", "sensing + reporting season", "#dfe9f5"),
+          ("2–6 mo", "DORMANT", "low-power sentinel, minimal TX", "#f5e6d0"),
+          ("6–12 mo", "DEGRADING", "encapsulant fails, electronics dissolve", "#f0d0d0"),
+          ("12+ mo", "GONE", "biodegraded residue — no e-waste", "#d0e8d0")]
+    xx = ML + 10
+    for i, (t, phase, desc, col) in enumerate(tl):
+        bx = xx + i * 205
+        s.rect(bx, 552, 185, 68, fill=col, stroke=INK, sw=1.2)
+        s.t(bx + 92, 580, t, 14, "middle", weight="bold")
+        s.t(bx + 92, 600, phase, 11, "middle", weight="bold")
+        s.t(bx + 92, 619, desc, 9, "middle", SOFT)
+        if i < 3:
+            s.arrow(bx + 185, 586, bx + 205, 586, SOFT)
+
+    s.h(ML + 10, 660, "WHY DEGRADABLE MATTERS")
+    s.bullets(ML + 10, 690, [
+        "Fire season is seasonal — permanent sensors waste 11 months of their life.",
+        "Degradable motes match the threat's rhythm: deploy, serve, vanish.",
+        "No retrieval mission, no e-waste in wilderness, no environmental liability.",
+        "Seed-drop economics: $0.10–1.00/mote at volume vs $100+ for durable nodes.",
+        "Residue is cellulose/protein — composts in the forest it monitored.",
+    ], width=110)
+
+    s.h(880, 150, "MANUFACTURING PATHWAY")
+    s.table(880, 178, [160, 440], ["Stage", "Process"], [
+        ["Printed electronics", "inkjet/aerosol jet — Zn, carbon, dielectric inks"],
+        ["Substrate", "cellulose sheet or silk fibroin cast"],
+        ["Energy", "printed battery (Zn/MnO₂) or RF harvest coil"],
+        ["Assembly", "roll-to-roll print + singulate — no pick-and-place"],
+        ["Seed pod", "compressed fiber pellet — moisture germinates"],
+    ], rh=44)
+
+    s.h(880, 460, "PRECEDENT / FUNDING")
+    s.bullets(880, 490, [
+        "DARPA/NSF 'computational dust' programs — real funded research.",
+        "Transient electronics groups (UIUC, Northwestern, ETH) publish weekly.",
+        "SR&ED eligible — Canadian research tax credit covers 35%+.",
+        "University partners: materials science + EE joint projects.",
+    ], width=82)
+
+    s.h(880, 680, "HONEST GAPS")
+    s.bullets(880, 710, [
+        "No working ArcticChain mote exists — this is a research brief.",
+        "Printed batteries at µW scale are lab-grade, not field-grade.",
+        "LoRa radios don't degrade — antenna/comms is the hard part.",
+        "Cluster heads must be durable — motes feed THEM, not the backbone.",
+        "Gate: lab demo (temp + 10 m report) before ANY field promise.",
+    ], width=82, color=RED)
+    return s.svg(2, 3)
+
+
+def seed_protocol():
+    s = Sheet("AF-D-103", "CLUSTER NETWORK PROTOCOL",
+              "HOW BILLIONS OF MOTES TALK — HIERARCHY · DUTY CYCLE · WIRELESS POWER",
+              "D · SEED", rev="0", status="RESEARCH — NOT A PRODUCT")
+
+    s.h(ML + 10, 150, "NETWORK HIERARCHY")
+    s.table(ML + 10, 178, [160, 300, 340], ["Tier", "Role", "Count / density"], [
+        ["Motes", "sense temp/RH/VOC — never talk to backbone", "thousands–millions per km²"],
+        ["Cluster heads", "aggregate mote data, relay to backbone", "1 per ~100 motes"],
+        ["Backbone", "Anchor/Brick/LTE/sat — the real mesh", "existing fleet"],
+    ], rh=44)
+    s.note(ML + 10, 360,
+          "Motes don't each shout — they whisper to their cluster head. Density is free; "
+          "backhaul is precious. Same pattern as satellite constellations.", size=12)
+
+    s.h(ML + 10, 430, "DUTY CYCLE — ENERGY BUDGET")
+    s.table(ML + 10, 458, [200, 160, 160, 240], ["State", "Current", "Duty", "Notes"], [
+        ["Deep sleep", "~1 µA", "~98%", "printed RTC + wake source"],
+        ["Sense window", "~50 µA", "~1.5%", "10 s every 10 min"],
+        ["Local TX (to head)", "~5 mA burst", "~0.5%", "LoRa or backscatter"],
+        ["Harvest", "solar/TEG/RF", "continuous", "µW average suffices"],
+    ], rh=38)
+
+    s.h(ML + 10, 700, "WAKE-UP METHODS (NO RTC CRYSTAL NEEDED)")
+    s.bullets(ML + 10, 730, [
+        "Solar voltage threshold — dawn wakes the field.",
+        "Wake-on-radio — cluster head pings, motes respond.",
+        "Vibration/seismic — fire/vehicle triggers sense window.",
+        "Chemical timer — printed RC slow-release wake.",
+        "Anomaly escalation — mote detects → wakes neighbors to confirm.",
+    ], width=105)
+
+    # protocol diagram right
+    rx = 880
+    s.h(rx, 150, "DATA FLOW")
+    flow = [
+        ("MOTES ×1000", "temp/RH/VOC every 10 min", "aggregate locally"),
+        ("CLUSTER HEAD", "median + anomaly flag", "LoRa to Anchor"),
+        ("ANCHOR/BRICK", "verify + store-forward", "mesh → backhaul"),
+        ("CLOUD/COMMUNITY", "dashboard + alerts", "EN/FR, OCAP"),
+    ]
+    yy = 190
+    for i, (t, sub, note) in enumerate(flow):
+        s.rect(rx, yy, 560, 64, fill=FILL, stroke=INK, sw=1.2)
+        s.t(rx + 14, yy + 26, t, 13, weight="bold")
+        s.t(rx + 14, yy + 46, f"{sub} → {note}", 11, color=SOFT)
+        if i < 3:
+            s.arrow(rx + 280, yy + 64, rx + 280, yy + 82)
+        yy += 92
+    s.note(rx, yy + 10, "Only ANOMALIES leave the cluster — raw data stays local. "
+         "Bandwidth is the constraint; intelligence is the answer.", size=12)
+
+    s.h(rx, 700, "OPEN RESEARCH QUESTIONS")
+    s.bullets(rx, 730, [
+        "Printed LoRa-class radio — does backscatter suffice at 915 MHz?",
+        "Cluster head durability — can IT be semi-degradable?",
+        "Mote density vs detection probability — modeling needed.",
+        "Biodegradation rate vs fire season length — materials tuning.",
+        "Wake-up reliability — missed windows = missed detections.",
+    ], width=85)
+    return s.svg(3, 3)
+
+
+# ============================================================ X MATRICES ======
+def radio_matrix():
+    s = Sheet("AF-X-101", "RADIO & MODEM SELECTION MATRIX",
+              "EVERY WIRELESS DECISION IN THE FLEET — OPTIONS · TRADE-OFFS · VERDICT",
+              "X · DECISIONS", status="LIVING DOCUMENT")
+
+    s.h(ML + 10, 150, "SUB-GHz / LONG-RANGE RADIOS")
+    s.table(ML + 10, 178, [150, 90, 110, 90, 110, 90, 170],
+            ["Module", "Band", "Range", "Rate", "Power", "Cost", "Verdict"], [
+        ["SX1262 (E22-900M30S)", "915 MHz", "5–15 km", "0.3–50 kbps", "22 dBm", "$15–25", "MESH STANDARD — fleet default"],
+        ["SX1276", "868/915 MHz", "similar", "0.3–50 kbps", "20 dBm", "$10–18", "alt — older, more libs"],
+        ["CC1101", "315/433/868/915", "1–3 km", "1.2–500 kbps", "10 dBm", "$5–10", "sensor motes — short range"],
+        ["nRF905", "433/868/915", "2–5 km", "20–100 kbps", "13 dBm", "$8–15", "legacy — superseded by SX1262"],
+        ["LoRa32 / RFM95", "915 MHz", "same radio", "same", "14–20 dBm", "$20–35", "dev boards only"],
+    ], rh=42)
+
+    s.h(ML + 10, 520, "CELLULAR / BACKHAUL")
+    s.table(ML + 10, 548, [120, 90, 120, 100, 100, 100, 170],
+            ["Module", "Gen", "Rate", "GNSS", "Cost", "Power", "Verdict"], [
+        ["SIM7600", "LTE Cat-4", "150 Mbps", "yes", "$60–90", "~1 W avg", "L1/TOTEM/ANCHOR backhaul"],
+        ["SIM7070", "LTE Cat-1", "10 Mbps", "yes", "$40–60", "~0.5 W", "MITE/PHONE low-power"],
+        ["BG96", "LTE Cat-M1/NB-IoT", "1 Mbps", "no", "$25–40", "~0.1 W", "sensor backhaul — tiny data"],
+        ["Starlink Mini", "LEO sat", "100+ Mbps", "—", "$300–600", "~30 W", "ANCHOR true dead zones"],
+        ["Iridium Certus", "L-band", "22–128 kbps", "—", "OEM $500+", "~5 W", "PHONE SOS + north"],
+    ], rh=42)
+
+    s.h(ML + 10, 830, "DECISION RULES")
+    s.bullets(ML + 10, 856, [
+        "Mesh = SX1262 everywhere — one radio, one firmware path, fleet commonality.",
+        "Backhaul = LTE where towers exist (SIM7600), NB-IoT where they barely do "
+        "(BG96). SOS = Iridium-class L-band — the only global guarantee.",
+        "Starlink = Anchor-level only — power-hungry, business case required.",
+        "No module gets chosen without: Canadian availability, -30 °C rating, "
+        "supply chain ≥2 sources.",
+    ], width=110)
+
+    s.h(880, 150, "ANTENNA OPTIONS")
+    s.table(880, 178, [160, 200, 200], ["Type", "Gain", "Use"], [
+        ["¼-wave whip SMA", "2–5 dBi", "L1/Anchor field replaceable"],
+        ["PCB meander", "1–2 dBi", "Mite — space-constrained"],
+        ["Helical", "3–8 dBi", "Relay-bee high perch"],
+        ["Yagi directional", "8–12 dBi", "Anchor backbone backhaul"],
+        ["LDS (laser-direct)", "—", "Phone — no external whips"],
+    ], rh=42)
+
+    s.h(880, 480, "REJECTED OPTIONS (AND WHY)")
+    s.bullets(880, 510, [
+        "Wi-Fi HaLow — promising but ecosystem immature; revisit rev-C.",
+        "Meshtastic commodity modules — closed firmware, no signed envelopes.",
+        "Cellular-only 'solution' — fails exactly where ArcticChain lives.",
+        "Satellite broadband for nodes — watts and dollars for kbps of need.",
+        "Proprietary mesh radios — vendor lock-in kills community ownership.",
+    ], width=82)
+    return s.svg(1, 2)
+
+
+def platform_matrix():
+    s = Sheet("AF-X-102", "PLATFORM SELECTION MATRIX",
+              "COMPUTE · POWER · DISPLAY · ENCLOSURE — EVERY HARDWARE DECISION",
+              "X · DECISIONS", status="LIVING DOCUMENT")
+
+    s.h(ML + 10, 150, "COMPUTE / MCU")
+    s.table(ML + 10, 178, [120, 120, 140, 140, 140, 160],
+            ["Chip", "Class", "Price", "Power", "Use", "Verdict"], [
+        ["ESP32-S3", "MCU+WiFi", "$3–8", "~0.5 W", "Mite/swarm", "DEFAULT for nodes"],
+        ["nRF52840", "MCU+BLE", "$4–8", "~0.1 W", "ultra-low-power", "seed motes candidate"],
+        ["STM32WB", "MCU+BLE", "$5–10", "~0.2 W", "industrial", "alt for certified builds"],
+        ["CM5", "SBC Linux", "$60–90", "~5 W", "L1/Totem/Anchor", "gateway compute"],
+        ["RK3326", "SBC Android", "$40–70", "~4 W", "phone-class", "Phone option B"],
+    ], rh=40)
+
+    s.h(ML + 10, 480, "POWER STORAGE")
+    s.table(ML + 10, 508, [130, 140, 160, 160, 160],
+            ["Chemistry", "Energy", "Cycle life", "Cold rating", "Verdict"], [
+        ["18650 Li-ion", "3 Ah/cell", "300–500", "-20 °C derate", "L1 portable"],
+        ["LiFePO4", "3.2 V/cell", "2000+", "-30 °C ok", "STATIONARY default"],
+        ["LiPo pouch", "varies", "300–500", "-20 °C", "Mite/Phone compact"],
+        ["Printed battery", "µWh", "season", "—", "Seed motes (R&D)"],
+    ], rh=40)
+
+    s.h(ML + 10, 740, "DISPLAY")
+    s.table(ML + 10, 768, [140, 160, 160, 200],
+            ["Type", "Power", "Sunlight", "Use"], [
+        ["E-Ink 7.5–13.3in", "zero idle", "perfect", "Totem/L1 public"],
+        ["Transflective LCD", "low", "good", "Phone outdoor"],
+        ["OLED", "med", "poor", "consumer look — wrong for field"],
+        ["LED matrix", "low", "ok", "status only — not content"],
+    ], rh=38)
+
+    s.h(880, 150, "ENCLOSURE / MECHANICAL")
+    s.table(880, 178, [130, 160, 170, 160],
+            ["Option", "Cost", "Tooling", "Verdict"], [
+        ["FDM print PETG/ASA", "low", "none", "prototypes + field spares"],
+        ["Injection mold PC/ABS", "high NRE", "mold $5–20k", "volume products"],
+        ["Polycarbonate box", "med", "none", "IP66 infrastructure"],
+        ["Sheet metal + gasket", "med", "fab", "Anchor industrial"],
+        ["3D-print + TPU overmold", "low-med", "print", "Phone rev-B option"],
+    ], rh=36)
+
+    s.h(880, 430, "CONNECTORS / INTERFACES")
+    s.table(880, 456, [150, 220, 200], ["Standard", "Use", "Why"], [
+        ["USB-C PD", "power + data", "universal, glove-friendly"],
+        ["Pogo pins", "dock/module", "blind-mate, no doors"],
+        ["SMA/U.FL", "antennas", "field-replaceable"],
+        ["JST-PH", "battery", "polarized, tool-light"],
+        ["M2/M3 screws", "enclosure", "hand-tool service"],
+        ["Magnetic catch", "lids", "tool-less battery access"],
+    ], rh=34)
+
+    s.h(880, 740, "THE PLATFORM RULE")
+    s.bullets(880, 764, [
+        "Common compute (ESP32-S3/CM5), SX1262 mesh, USB-C, signed envelope — everywhere.",
+        "Diversity only where environment demands: battery, display, enclosure.",
+        "Every choice must pass: Canadian supplier? -30 °C? hand-tool repair? "
+        "community-open?",
+    ], width=105)
+    return s.svg(2, 2)
+
+
 # ============================================================ COVER =======
 def cover():
     s = Sheet("AF-000", "FLEET OVERVIEW & DRAWING INDEX",
@@ -1258,16 +2330,16 @@ def cover():
               status="MASTER INDEX")
 
     s.h(ML + 10, 150, "THE FLEET — ONE NETWORK, MANY SHAPES")
-    s.table(ML + 10, 178, [60, 110, 300, 210, 200, 140],
-            ["Node", "Name", "Role", "Envelope", "Power", "Status"], [
-        ["L1", "Brick", "field node — mailbox+repeater+bulletin+SOS", "160×80×24 mm", "4×18650/solar", "CAD ready"],
-        ["E", "Totem", "community board — public E-Ink + mesh node", "~320×220×80+pole", "solar+LiFePO4", "spec"],
-        ["S", "Mite", "swarm unit — perchable env sensor", "~90×90×35 mm", "solar+LiPo", "CAD scripted"],
-        ["A", "Anchor", "charging station — dock+relay+backhaul", "~350×250×400+array", "20–60 W+LiFePO4", "spec"],
-        ["P", "ArcticPhone", "rural comms — mesh-native, sat SOS", "~145×72×14 mm", "replaceable+solar", "concept"],
-        ["D", "Seed", "degradable mote — seasonal sensing", "~20×20×5 mm", "printed+harvest", "R&D"],
-        ["H", "Meridian", "satellite payload — mesh IS ground segment", "1U/3U CubeSat", "solar array", "vision"],
-    ], rh=44)
+    s.table(ML + 10, 178, [50, 90, 250, 170, 160, 120, 190],
+            ["Node", "Name", "Role", "Envelope", "Power", "Finish", "Status"], [
+        ["L1", "Brick", "field node — mailbox+repeater+bulletin+SOS", "160×80×24 mm", "4×18650/solar", "graphite PETG matte", "CAD ready"],
+        ["E", "Totem", "community board — public E-Ink + mesh node", "~320×220×80+pole", "solar+LiFePO4", "charcoal PC IP66", "spec"],
+        ["S", "Mite", "swarm unit — perchable env sensor", "~90×90×35 mm", "solar+LiPo", "forest ASA matte", "CAD scripted"],
+        ["A", "Anchor", "charging station — dock+relay+backhaul", "~350×250×400+array", "20–60 W+LiFePO4", "charcoal powder-coat", "spec"],
+        ["P", "ArcticPhone", "rural comms — mesh-native, sat SOS", "~145×72×14 mm", "replaceable+solar", "graphite PC+TPU", "concept"],
+        ["D", "Seed", "degradable mote — seasonal sensing", "~20×20×5 mm", "printed+harvest", "cellulose — vanishes", "R&D"],
+        ["H", "Meridian", "satellite payload — mesh IS ground segment", "1U/3U CubeSat", "solar array", "aluminum 1U", "vision"],
+    ], rh=40)
 
     s.h(ML + 10, 560, "SHARED DESIGN DNA (EVERY NODE)")
     s.bullets(ML + 10, 590, [
@@ -1282,13 +2354,14 @@ def cover():
     s.h(860, 560, "DRAWING INDEX")
     idx = [
         ("AF-000", "this sheet — fleet overview & index"),
-        ("AF-L1-101…103", "L1 Brick — arrangement, parts/power, assembly"),
-        ("AF-S-101…103", "S Mite — arrangement, parts/power, assembly/roles"),
-        ("AF-E-101…102", "E Totem — arrangement, parts/install"),
-        ("AF-A-101…102", "A Anchor — arrangement, parts/power"),
-        ("AF-P-101…102", "P ArcticPhone — concept + spec sketch"),
-        ("AF-D-101", "D Seed — R&D brief (degradable motes)"),
+        ("AF-L1-101…105", "L1 Brick — arrangement, parts/power, assembly, electronics, finish"),
+        ("AF-S-101…107", "S Mite — arrangement, parts, assembly, electronics, variants, mechanical, finish"),
+        ("AF-E-101…103", "E Totem — arrangement, parts/install, finish"),
+        ("AF-A-101…103", "A Anchor — arrangement, parts/power, finish"),
+        ("AF-P-101…107", "P ArcticPhone — concept, spec, definition, tri-radio, modules, UX, finish"),
+        ("AF-D-101…103", "D Seed — R&D brief, materials/degradation, cluster protocol"),
         ("AF-H-101", "H Meridian — satellite mission concept"),
+        ("AF-X-101…102", "Component matrices — radios, compute, power, displays, enclosures"),
     ]
     yy = 590
     for dwg, desc in idx:
@@ -1298,25 +2371,29 @@ def cover():
 
     s.h(ML + 10, 868, "HOW TO READ THIS SET")
     s.bullets(ML + 10, 894, [
-        "L1 Brick sheets are build-ready — real BOM, wiring, assembly, acceptance test.",
-        "S Mite sheets are prototype-ready — orderable parts, CAD scripted (cad/swarm_node.py).",
-        "E Totem / A Anchor sheets are spec-level — real parts selected, needs CAD pass.",
-        "P Phone / D Seed / H Meridian are concept/R&D — honest status on every sheet.",
-        "Every sheet: SURAFEL NEGUSSIE drew it · EMEBET INC. owns it · PROPRIETARY & CONFIDENTIAL.",
-    ], width=118)
+        "L1 Brick = build-ready (BOM, wiring, electronics, assembly, acceptance test).",
+        "S Mite = prototype-ready (orderable parts, 4 swarm variants, CAD scripted).",
+        "Totem/Anchor = spec-level · Phone = concept · Seed/Meridian = R&D/vision.",
+        "Every product has a FINISH & MATERIALS sheet — final look + materials spec.",
+        "AF-X matrices = every electronic decision — radios, compute, power, displays.",
+        "Every sheet: SURAFEL NEGUSSIE drew it · EMEBET INC. owns it · PROPRIETARY.",
+    ], width=110)
     return [s.svg(1, 1)]
 
 
 # ============================================================ RENDER =======
 ALL_SETS = {
     "00_Fleet_Overview": cover(),
-    "01_L1_Brick": l1(),
-    "02_S_Mite": mite(),
-    "03_E_Totem": totem(),
-    "04_A_Anchor": anchor(),
-    "05_P_ArcticPhone": phone(),
-    "06_D_Seed": seed(),
+    "01_L1_Brick": l1() + [l1_electronics(), l1_finish()],
+    "02_S_Mite": mite() + [mite_electronics(), mite_variants(),
+                           mite_mechanical(), mite_finish()],
+    "03_E_Totem": totem() + [totem_finish()],
+    "04_A_Anchor": anchor() + [anchor_finish()],
+    "05_P_ArcticPhone": phone() + [phone_definition(), phone_triradio(),
+                                   phone_modules(), phone_ux(), phone_finish()],
+    "06_D_Seed": seed() + [seed_materials(), seed_protocol()],
     "07_H_Meridian": meridian(),
+    "08_Component_Matrices": [radio_matrix(), platform_matrix()],
 }
 
 
