@@ -156,7 +156,61 @@ spectrum — the two cost structures that kill rural telecom economics don't app
 
 ---
 
-## 6. Regulatory & certification path (plain terms)
+## 6. The space layer: satellites as a phase, not a leap
+
+The endgame is our own constellation — but satellites are layered onto a working ground
+network, not launched ahead of it. Three stages, each independently fundable:
+
+### S0 — Borrow capacity (now → yr 2): be a customer, not a competitor
+Aggregate existing satellite backhaul as a *service* inside ArcticChain hubs:
+- **Telesat Lightspeed** — Canadian (Ottawa), polar-orbit LEO built specifically for
+  Canadian/Arctic coverage. Wholesale/enterprise agreements are the natural first call.
+- **OneWeb/Eutelsat, Amazon Kuiper** — wholesale broadband capacity for hubs that need it.
+- **Iridium** (Canadian HQ) — Short Burst Data / Certus for SOS and telemetry where
+  bandwidth doesn't matter but global coverage does.
+- **Starlink** — customer-premises option; a hub can literally host a Starlink terminal.
+
+At this layer we never compete — we *resell and integrate*, which is also the polite entry
+into every satellite operator's channel-partner program.
+
+### S1 — ArcticChain smallsats (yr 2–4): "our own satellites" as a real milestone
+A constellation sized for the **messaging/IoT layer, not broadband**:
+- **6U–12U CubeSats → 50–100 kg smallsats**, S-band/UHF store-and-forward payloads.
+- **Polar inclinations** — Canada's population and resources stretch past 80°N; Starlink's
+  ~53° shells thin out toward the pole, while polar orbits (OneWeb 87.9°, Telesat ~99°)
+  prove the coverage case. A Canadian polar constellation is genuine differentiation.
+- **Coverage math favors us here**: a store-forward message needs kilobytes, not megabits.
+  A handful of MEO-or-high-LEO sats can blanket Canada for text/sensor traffic — higher
+  orbit = bigger footprint per satellite = *fewer satellites needed*, which is exactly
+  backwards from broadband economics and exactly right for us.
+- **Cost reality**: rideshare launches run ~$1–5M per mission; a credible 6–12 satellite
+  pathfinder constellation is a $10–30M program — fundable via CSA, NSERC, provincial
+  innovation, and strategic partners (MDA is Canada's space prime — a natural ally).
+
+### S2 — Sovereign NGSO broadband (yr 5+, moonshot — honest framing)
+Actually competing with Starlink on *bandwidth* is a sovereign-scale effort: spectrum
+filings (ITU + ISED), constellation capex in the billions, and launch cadence that only
+makes sense with owned or subsidized rockets. No startup buys its way there — SpaceX could
+only because it owns the launch company.
+
+The realistic paths, in order of probability:
+1. **Ground-segment + applications layer** on a Canadian polar constellation (partner with
+   Telesat, MDA, or a future national program — we become *the* rural OS on their pipes).
+2. **Wholesale→retail aggregation**: broker capacity across Telesat/OneWeb/Kuiper/Starlink
+   into one Canadian rural service — the "Canada roaming" play, no constellation needed.
+3. **National program**: pitch ArcticChain as the demand-side anchor for a Canadian
+   broadband constellation (the role Telesat played for Canada).
+
+**Physics correction worth stating publicly:** to compete on bandwidth you fly **LEO
+(~550 km shells, like Starlink)** — higher orbit means more path loss, worse latency,
+bigger satellites. Higher orbits (MEO) only win for latency-tolerant store-forward, where
+coverage-per-satellite matters more than round-trip time — which is precisely what our
+S1 constellation exploits. Knowing which layer wants which orbit is the kind of detail
+that makes technical reviewers take us seriously.
+
+---
+
+## 7. Regulatory & certification path (plain terms)
 
 - **LoRa 915 MHz (ISM)**: unlicensed in Canada — no spectrum purchase, fast to deploy.
   Product still needs **ISED certification** for the intentional radiator (routine, $5–15k,
@@ -173,7 +227,7 @@ spectrum — the two cost structures that kill rural telecom economics don't app
 
 ---
 
-## 7. Funding stack (Canada-specific, in order of fit)
+## 8. Funding stack (Canada-specific, in order of fit)
 
 1. **SR&ED** — already eligible; mesh protocol, HAL, energy work all qualify. Refundable
    for CCPCs — real non-dilutive cash.
@@ -191,7 +245,7 @@ limits), the simulator dashboard (they can *see* the network), and a live pilot 
 
 ---
 
-## 8. Roadmap with gates
+## 9. Roadmap with gates
 
 | Phase | Timeline | Deliverable | Gate to proceed |
 |---|---|---|---|
@@ -200,7 +254,8 @@ limits), the simulator dashboard (they can *see* the network), and a live pilot 
 | **2 — OS v1 + first revenue** | mo 3–9 | Store-forward apps, e-ink bulletin, alert gateway, dashboards; paid pilot | Revenue or paid LOI |
 | **3 — Productize** | mo 6–12 | ISED cert, small-batch manufactured node (PCBA), 100+ nodes, 2–3 paid pilots | Unit economics proven |
 | **4 — Monolith module ecosystem** | yr 2 | Tier-3 dev-kit: modular spine running ArcticChain OS; developer program | Tier-1/2 network has proven value |
-| **5 — Provincial mesh + international** | yr 3+ | County/regional backbone partnerships; Indigenous network deployments; Global South licensing | Series A / strategic partner |
+| **5 — Provincial mesh + S1 smallsats** | yr 2–4 | County/regional backbone partnerships; Indigenous deployments; CubeSat pathfinder constellation (store-forward backhaul) | Mesh revenue + anchor funding |
+| **6 — International + S2 vision** | yr 4+ | Global South licensing; ground-segment/aggregation strategy on Canadian NGSO capacity | Series A / strategic partner |
 
 **Why wildfire first:** fastest path to a sympathetic provincial buyer, smallest BOM
 (add sensors to existing node), dramatic demo (live detection map), and it exercises every
@@ -208,18 +263,18 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 
 ---
 
-## 9. Team & talent engine
+## 10. Team & talent engine
 
 - **Student build kit** (`docs/BUILD_GUIDE.md`): 16-week cohort = trained builders +
   recruiters + press. Partner with NAIT/SAIT/U of A/U of C engineering capstones.
 - **Mitacs** accelerators embed grad students on mesh/security/energy problems.
 - **Open-source hardware**: published CAD + firmware = global contributor pool and the
-  sovereignty story funders love. (License decision needed — see §11.)
+  sovereignty story funders love. (License decision needed — see §12.)
 - **Emebet Inc.** is the company vehicle; structure spin-out/IP cleanly before Series A.
 
 ---
 
-## 10. What "winning" looks like (metrics)
+## 11. What "winning" looks like (metrics)
 
 - **Cost per connected site**: <$1,500 all-in vs $10k+ cellular drop, $120+/mo Starlink.
 - **Mesh performance**: >95% message delivery, <15 min store-forward latency in pilot.
@@ -231,7 +286,7 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 
 ---
 
-## 11. Risks & honest constraints
+## 12. Risks & honest constraints
 
 - **Duty cycle**: LoRa's 1% EU / ISM duty limits cap node density — needs channel planning
   and gateway nodes; mesh-net already models airtime, enforce it in deployment planning.
@@ -247,10 +302,14 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 - **Open-source vs IP**: decide the license *before* the first paid pilot — hardware
   open (CERN OHL), mesh protocol possibly open, OS/apps proprietary. Mixed model is
   standard and defensible.
+- **Constellation capital**: S1 smallsats are a $10–30M program and S2 broadband is
+  sovereign-scale — neither is fundable from mesh revenue alone. Sequence them behind
+  proven deployments and anchor funding (CSA, strategic partners); never let the space
+  story run ahead of the ground network that justifies it.
 
 ---
 
-## 12. Next 30 days (concrete)
+## 13. Next 30 days (concrete)
 
 1. **Bench**: pass the Level-1 two-node acceptance test (`poc/SETUP.md`).
 2. **Anchor**: pick the wildfire pilot — identify one county/forestry partner, get an LOI.
