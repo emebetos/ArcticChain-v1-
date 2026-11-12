@@ -168,10 +168,12 @@ have ridden to orbit. What the ecosystem lacks is an anchor tenant with a contin
 mission. ArcticChain is built to be that tenant: rural connectivity is the one market
 where sovereign Canadian space infrastructure has an obvious, fundable customer.
 
-The endgame ambition — a Canadian space capability at homegrown scale, reducing reliance
-on foreign launch and foreign pipes — is stated here honestly: it is a generational,
-national-program outcome, not a startup business plan. What a startup *can* do is earn
-the right to be the applications layer and first NewSpace operator on that stack.
+The endgame ambition — **igniting orbital launch capability on Canadian soil** and a
+Canadian space stack that reduces reliance on foreign rockets and foreign pipes — is
+stated here honestly: it is a generational, national-program outcome, not a startup
+business plan. What a startup *can* do is earn the right to be the anchor payload
+demand, the applications layer, and the first NewSpace operator on that stack — the
+demand loop that makes domestic launch worth building (see S3).
 
 Satellites are layered onto a working ground network, not launched ahead of it.
 Three stages, each independently fundable:
@@ -229,6 +231,31 @@ bigger satellites. Higher orbits (MEO) only win for latency-tolerant store-forwa
 coverage-per-satellite matters more than round-trip time — which is precisely what our
 S1 constellation exploits. Knowing which layer wants which orbit is the kind of detail
 that makes technical reviewers take us seriously.
+
+### S3 — The launch horizon: ignite Canadian orbital launch (yr 5+, the point of it all)
+
+The endgame isn't just satellites — it's **launch capacity on Canadian soil**. Canada
+has never had an orbital launcher (Black Brant sounding rockets proved the propulsion
+heritage; Inuvik, Churchill, and CFB Esquimalt are the natural ranges). The ignition
+logic is deliberate and demand-led:
+
+1. **S1 constellation creates the payload demand.** A Canadian smallsat operator with
+   committed launches is the anchor customer a domestic launch vehicle needs — this is
+   how every launch startup on Earth gets funded (Rocket Lab's Electron was anchored by
+   NASA/NRO contracts; Relativity's Terran by similar).
+2. **Ride the learning curve down.** Early sats fly on ISRO/JAXA/Arianespace/RL-NZ —
+   non-US, sovereignty-compatible. Each mission builds Canadian launch ops experience:
+   mission management, range safety, ground stations (which we already need for the mesh).
+3. **Domestic small launch emerges** as a national program — CSA/MDA/infrastructure
+   money follows demonstrated demand. Electron-class small launchers are a ~$50–150M
+   R&D program, not a moonshot; Canada has the engineering base (MDA space robotics,
+   defense propulsion supply chains).
+4. **The flywheel**: Canadian launch → cheaper Canadian sats → more ArcticChain capacity
+   → more demand → bigger launcher. That is what "igniting a space program" actually
+   means mechanically — not a flag, a demand loop.
+
+Every earlier stage exists to make this stage inevitable. The satellite story is the
+trailhead; launch is the summit.
 
 **Debris & coexistence — the common misconception:** the hazardous debris belts sit at
 ~800–1,200 km (legacy payloads), *above* Starlink's ~550 km shell — Starlink flies low
@@ -288,7 +315,7 @@ limits), the simulator dashboard (they can *see* the network), and a live pilot 
 | **3 — Productize** | mo 6–12 | ISED cert, small-batch manufactured node (PCBA), 100+ nodes, 2–3 paid pilots | Unit economics proven |
 | **4 — Monolith module ecosystem** | yr 2 | Tier-3 dev-kit: modular spine running ArcticChain OS; developer program | Tier-1/2 network has proven value |
 | **5 — Provincial mesh + S1 smallsats** | yr 2–4 | County/regional backbone partnerships; Indigenous deployments; CubeSat pathfinder constellation (store-forward backhaul) | Mesh revenue + anchor funding |
-| **6 — International + S2 vision** | yr 4+ | Global South licensing; ground-segment/aggregation strategy on Canadian NGSO capacity | Series A / strategic partner |
+| **6 — International + S2/S3 vision** | yr 4+ | Global South licensing; ground-segment/aggregation strategy on Canadian NGSO capacity; Canadian launch-horizon program (domestic small launch anchored by our constellation demand) | Series A / strategic partner / national program |
 
 **Why wildfire first:** fastest path to a sympathetic provincial buyer, smallest BOM
 (add sensors to existing node), dramatic demo (live detection map), and it exercises every
