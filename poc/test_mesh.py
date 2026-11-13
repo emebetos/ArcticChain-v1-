@@ -48,10 +48,10 @@ def main():
     key = "test-community-key-001"
     env_a = {**os.environ, "ARCTIC_NODE_ID": "node-a", "ARCTIC_PORT": "8091",
              "ARCTIC_DB": str(tmp / "a.db"), "ARCTIC_VPORT": "9201",
-             "ARCTIC_KEY": key}
+             "ARCTIC_KEY": key, "ARCTIC_POS": "53.55,-113.49"}
     env_b = {**os.environ, "ARCTIC_NODE_ID": "node-b", "ARCTIC_PORT": "8092",
              "ARCTIC_DB": str(tmp / "b.db"), "ARCTIC_VPORT": "9201",
-             "ARCTIC_KEY": key}
+             "ARCTIC_KEY": key, "ARCTIC_POS": "53.60,-113.40"}
     pa = subprocess.Popen([sys.executable, str(AGENT)], env=env_a,
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     pb = subprocess.Popen([sys.executable, str(AGENT)], env=env_b,
@@ -66,7 +66,9 @@ def main():
         peers_b = get(8092, "/peers")["peers"]
         assert any(p["node"] == "node-b" for p in peers_a), f"A sees no B: {peers_a}"
         assert any(p["node"] == "node-a" for p in peers_b), f"B sees no A: {peers_b}"
-        print(f"[2] peers discovered — A sees {len(peers_a)}, B sees {len(peers_b)}")
+        peer_b = [p for p in peers_a if p["node"] == "node-b"][0]
+        assert peer_b.get("pos") == [53.60, -113.40], f"pos not propagated: {peer_b}"
+        print(f"[2] peers discovered — A sees {len(peers_a)}, B sees {len(peers_b)}; pos beacon OK")
 
         post(8091, "/send", {"to": "node-b", "text": "hello from A"})
         t0 = time.time()
@@ -80,6 +82,18 @@ def main():
             time.sleep(0.5)
         assert delivered, "unicast A->B NOT delivered in 15s"
         print("[3] unicast A->B DELIVERED")
+
+        # delivery ACK: B acked the unicast -> A's copy leaves pending
+        t0 = time.time()
+        acked = False
+        while time.time() - t0 < 12:
+            st = get(8091, "/stats")["by_state"]
+            if st.get("acked", 0) >= 1:
+                acked = True
+                break
+            time.sleep(0.5)
+        assert acked, "delivery ACK never arrived at sender"
+        print("[3b] delivery ACK received — sender marked acked")
 
         post(8092, "/broadcast", {"text": "mesh is alive"})
         t0 = time.time()

@@ -41,7 +41,13 @@ COMMUNITY = os.environ.get("ARCTIC_COMMUNITY", "default")
 COMMUNITY_KEY = os.environ.get("ARCTIC_KEY", "")      # HMAC key; empty = unsigned PoC
 BACKHAUL_URL = os.environ.get("ARCTIC_BACKHAUL", "")  # e.g. http://server:9000
 BACKHAUL_S = int(os.environ.get("ARCTIC_BACKHAUL_S", "30"))
+POS = os.environ.get("ARCTIC_POS", "")                # "lat,lon" for map display
 RADIO_KIND = os.environ.get("ARCTIC_RADIO", "virtual")
+
+# message classes — queue priority per PROTOCOL_v1.md section 4
+CLS_ORDER = {"alert": 0, "control": 1, "data": 2, "telemetry": 3}
+CLS_SQL = ("CASE cls WHEN 'alert' THEN 0 WHEN 'control' THEN 1 "
+           "WHEN 'data' THEN 2 ELSE 3 END")
 HTTP_PORT = int(os.environ.get("ARCTIC_PORT", "8080"))
 VPORT = int(os.environ.get("ARCTIC_VPORT", "9100"))
 DB_PATH = Path(os.environ.get("ARCTIC_DB", "messages.db"))
@@ -68,6 +74,16 @@ def db():
     conn.execute(
         "CREATE TABLE IF NOT EXISTS health ("
         "ts REAL, batt_mv INTEGER, temp_c REAL, tx INTEGER, rx INTEGER)")
+    # v1 protocol columns — ALTER for pre-v1 databases
+    for ddl in (
+        "ALTER TABLE messages ADD COLUMN cls TEXT DEFAULT 'data'",
+        "ALTER TABLE messages ADD COLUMN acked INTEGER DEFAULT 0",
+        "ALTER TABLE neighbors ADD COLUMN pos TEXT",
+    ):
+        try:
+            conn.execute(ddl)
+        except sqlite3.OperationalError:
+            pass
     return conn
 
 conn = db()
@@ -79,12 +95,13 @@ def mid():
 
 def store_msg(m):
     conn.execute(
-        "INSERT OR IGNORE INTO messages (id, ts, from_node, to_node, text, hops, state, rssi)"
-        " VALUES (?,?,?,?,?,?,?,?)",
+        "INSERT OR IGNORE INTO messages"
+        " (id, ts, from_node, to_node, text, hops, state, rssi, cls)"
+        " VALUES (?,?,?,?,?,?,?,?,?)",
         (m["id"], m.get("ts", time.time()), m.get("from", "?"),
          m.get("to", "*"), m.get("text", ""), m.get("hops", MAX_HOPS),
          "pending" if m.get("to") != NODE_ID else "delivered",
-         m.get("rssi", -999)))
+         m.get("rssi", -999), m.get("cls", "data")))
     conn.commit()
 
 
@@ -94,20 +111,22 @@ def seen(m_id):
 
 def pending_for(node):
     return conn.execute(
-        "SELECT id, from_node, to_node, text, hops FROM messages"
-        " WHERE state='pending' AND to_node=? ORDER BY ts LIMIT 20",
+        f"SELECT id, from_node, to_node, text, hops, cls FROM messages"
+        f" WHERE state='pending' AND to_node=?"
+        f" ORDER BY {CLS_SQL}, ts LIMIT 20",
         (node,)).fetchall()
 
 
 def all_pending():
     return conn.execute(
-        "SELECT id, from_node, to_node, text, hops FROM messages"
-        " WHERE state='pending' ORDER BY ts LIMIT 50").fetchall()
+        f"SELECT id, from_node, to_node, text, hops, cls FROM messages"
+        f" WHERE state='pending'"
+        f" ORDER BY {CLS_SQL}, ts LIMIT 50").fetchall()
 
 
 def inbox():
     return conn.execute(
-        "SELECT ts, from_node, to_node, text, hops, rssi FROM messages"
+        "SELECT ts, from_node, to_node, text, hops, rssi, cls FROM messages"
         " WHERE to_node=? OR to_node='*' ORDER BY ts DESC LIMIT 50",
         (NODE_ID,)).fetchall()
 
@@ -207,13 +226,25 @@ class Engine(threading.Thread):
         return hmac.compare_digest(sig, Engine._sign(f))
 
     def beacon(self):
-        return self._frame("beacon", battery=99)
+        kw = {}
+        if POS:
+            try:
+                kw["pos"] = [float(v) for v in POS.split(",")]
+            except ValueError:
+                pass
+        return self._frame("beacon", battery=99, **kw)
 
-    def send_msg(self, to, text):
+    def send_msg(self, to, text, cls="data"):
+        if cls not in CLS_ORDER:
+            cls = "data"
         m = {"t": "msg", "id": mid(), "from": NODE_ID, "to": to,
-             "text": text, "hops": MAX_HOPS, "ts": time.time()}
+             "text": text, "hops": MAX_HOPS, "ts": time.time(), "cls": cls}
         store_msg(m)
         return self.radio.send(self._frame("msg", **m))
+
+    def send_ack(self, m_id):
+        return self.radio.send(self._frame(
+            "ack", **{"id": m_id, "from": NODE_ID}))
 
     # -- receive --------------------------------------------------------
     def _handle(self, rssi, payload):
@@ -228,19 +259,29 @@ class Engine(threading.Thread):
             return
         self.rx += 1
         peer = f.get("node", "?")
+        pos = json.dumps(f["pos"]) if f.get("pos") else None
         conn.execute(
-            "INSERT INTO neighbors (node_id, last_seen, rssi, heard_via, msg_count)"
-            " VALUES (?,?,?,?,1) ON CONFLICT(node_id) DO UPDATE SET"
+            "INSERT INTO neighbors (node_id, last_seen, rssi, heard_via,"
+            " msg_count, pos) VALUES (?,?,?,?,1,?)"
+            " ON CONFLICT(node_id) DO UPDATE SET"
             " last_seen=excluded.last_seen, rssi=excluded.rssi,"
-            " msg_count=neighbors.msg_count+1",
-            (peer, time.time(), rssi, RADIO_KIND))
+            " msg_count=neighbors.msg_count+1,"
+            " pos=COALESCE(excluded.pos, neighbors.pos)",
+            (peer, time.time(), rssi, RADIO_KIND, pos))
         conn.commit()
 
         t = f.get("t")
         if t == "beacon":
             pass
-        elif t == "msg":
-            self._on_msg(f, rssi)
+        elif t == "msg" or t == "task":
+            self._on_msg(f if t == "msg" else {**f, "cls": "control"}, rssi)
+        elif t == "ack":
+            # delivery receipt — mark our own originated message acked
+            conn.execute(
+                "UPDATE messages SET state='acked', acked=1"
+                " WHERE id=? AND from_node=?",
+                (f.get("id"), NODE_ID))
+            conn.commit()
 
     def _on_msg(self, f, rssi):
         m_id = f.get("id")
@@ -254,13 +295,16 @@ class Engine(threading.Thread):
                          (time.time(), m_id))
             conn.commit()
             print(f"[mesh] DELIVERED {m_id} from {f.get('from')}")
+            if to != "*" and f.get("from") != NODE_ID:
+                self.send_ack(m_id)          # unicast delivery receipt
+                self.tx += 1
             return
         if hops <= 0:
             conn.execute("UPDATE messages SET state='expired' WHERE id=?", (m_id,))
             conn.commit()
             return
         # forward: flood for broadcast; toward best next-hop for unicast
-        f2 = dict(f, hops=hops)
+        f2 = dict(f, hops=hops, cls=f.get("cls", "data"))
         if to == "*":
             self.radio.send(self._frame("msg", **f2))
             self.tx += 1
@@ -292,11 +336,12 @@ class Engine(threading.Thread):
             (time.time() - 60,)).fetchall()
         if not neigh:
             return
-        for nid, frm, to, text, hops in pend:
+        for nid, frm, to, text, hops, cls in pend:
             for (peer,) in neigh:
                 self.radio.send(self._frame(
                     "msg", **{"id": nid, "from": frm, "to": to,
-                              "text": text, "hops": hops, "ts": time.time()}))
+                              "text": text, "hops": hops, "cls": cls,
+                              "ts": time.time()}))
                 self.tx += 1
 
     def run(self):
@@ -412,19 +457,22 @@ class Api(BaseHTTPRequestHandler):
             rows = inbox()
             self._json({"messages": [
                 {"ts": r[0], "from": r[1], "to": r[2], "text": r[3],
-                 "hops": r[4], "rssi": r[5]} for r in rows]})
+                 "hops": r[4], "rssi": r[5], "cls": r[6]} for r in rows]})
         elif self.path == "/peers":
             rows = conn.execute(
-                "SELECT node_id, last_seen, rssi FROM neighbors"
+                "SELECT node_id, last_seen, rssi, pos FROM neighbors"
                 " ORDER BY last_seen DESC").fetchall()
             self._json({"peers": [
                 {"node": r[0], "age_s": round(time.time() - r[1], 1),
-                 "rssi": r[2]} for r in rows]})
+                 "rssi": r[2],
+                 "pos": json.loads(r[3]) if r[3] else None} for r in rows],
+                "self_pos": [float(v) for v in POS.split(",")]
+                if POS and "," in POS else None})
         elif self.path == "/queue":
             rows = all_pending()
             self._json({"pending": [
                 {"id": r[0], "from": r[1], "to": r[2], "text": r[3],
-                 "hops": r[4]} for r in rows]})
+                 "hops": r[4], "cls": r[5]} for r in rows]})
         elif self.path == "/stats":
             c = conn.execute(
                 "SELECT state, COUNT(*) FROM messages GROUP BY state").fetchall()
@@ -447,10 +495,21 @@ class Api(BaseHTTPRequestHandler):
         if self.path in ("/send", "/message", "/broadcast"):
             to = data.get("to", "*")
             text = data.get("text", "")
+            cls = data.get("cls", "alert" if to != "*" and "sos" in text.lower()
+                           else "data")
             if not text:
                 return self._json({"error": "empty text"}, 400)
-            ok = engine.send_msg(to, text)
-            return self._json({"queued": ok, "to": to, "id": "see /queue"})
+            ok = engine.send_msg(to, text, cls)
+            return self._json({"queued": ok, "to": to, "cls": cls,
+                               "id": "see /queue"})
+        if self.path == "/task":
+            # swarm/coordinator tasking frame (PROTOCOL_v1 §3.3)
+            to = data.get("to", "*")
+            text = data.get("text", "")
+            if not text:
+                return self._json({"error": "empty text"}, 400)
+            ok = engine.send_msg(to, text, "control")
+            return self._json({"queued": ok, "to": to, "cls": "control"})
         self._json({"error": "not found"}, 404)
 
     def log_message(self, *a):
@@ -476,25 +535,54 @@ button{padding:8px 16px;border:0;border-radius:6px;background:#5eead4;color:#0d1
 <div class=card id=health>loading…</div>
 <h2>Send message</h2>
 <form onsubmit="send(event)"><input id=t placeholder="message to mesh (broadcast if no 'to')"><input id=to placeholder="to: node-id or *" style="max-width:160px"><button>send</button></form>
+<h2>Mesh map</h2><div class=card><svg id=map width="100%" height="220" viewBox="0 0 600 220"
+ style="background:#0a1018;border-radius:8px"></svg>
+ <div class=dim id=mapnote>set ARCTIC_POS=lat,lon on nodes to plot positions</div></div>
 <h2>Inbox</h2><div id=inbox></div>
 <h2>Peers</h2><div id=peers></div>
 <h2>Pending queue</h2><div id=queue></div>
 <script>
 async function j(u,o){let r=await fetch(u,o);return r.json()}
+const CLSC={alert:'#ff6b6b',control:'#ffd166',data:'#5eead4',telemetry:'#7f92a8'};
+function clsBadge(c){return '<span class=pill style="background:'+(CLSC[c]||'#1e3a5c')+'22;color:'+(CLSC[c]||'#7f92a8')+'">'+(c||'data')+'</span>'}
+function drawMap(p){
+ let pts=[];
+ if(p.self_pos)pts.push({n:'__NODE__',pos:p.self_pos,self:1});
+ p.peers.forEach(x=>{if(x.pos)pts.push({n:x.node,pos:x.pos,rssi:x.rssi})});
+ let svg=document.getElementById('map'),note=document.getElementById('mapnote');
+ if(pts.length<2){svg.innerHTML='';note.textContent='need ≥2 positioned nodes (ARCTIC_POS=lat,lon)';return}
+ note.textContent=pts.length+' positioned nodes';
+ let lats=pts.map(q=>q.pos[0]),lons=pts.map(q=>q.pos[1]);
+ let a0=Math.min(...lats),a1=Math.max(...lats),o0=Math.min(...lons),o1=Math.max(...lons);
+ let pad=30, W=600,H=220;
+ // equirectangular approx — fine at community scale
+ let kx=(W-2*pad)/Math.max(o1-o0,1e-6), ky=(H-2*pad)/Math.max(a1-a0,1e-6), k=Math.min(kx,ky);
+ let X=lo=>(lo-o0)*k+(W-(o1-o0)*k)/2, Y=la=>H-((la-a0)*k+(H-(a1-a0)*k)/2);
+ let html='';
+ // links: draw line self->each peer (star approx of gossip domain)
+ let sp=pts.find(q=>q.self);
+ pts.forEach(q=>{if(q===sp)return;
+  html+='<line x1="'+X(sp.pos[1])+'" y1="'+Y(sp.pos[0])+'" x2="'+X(q.pos[1])+'" y2="'+Y(q.pos[0])+'" stroke="#2a3a50" stroke-width="1"/>'});
+ pts.forEach(q=>{
+  let x=X(q.pos[1]),y=Y(q.pos[0]);
+  html+='<circle cx="'+x+'" cy="'+y+'" r="'+(q.self?9:6)+'" fill="'+(q.self?'#ffd166':'#5eead4')+'"/>';
+  html+='<text x="'+(x+10)+'" y="'+(y+4)+'" fill="#dfe7f0" font-size="11">'+q.n+'</text>'});
+ svg.innerHTML=html;
+}
 async function refresh(){
  let h=await j('/health');
  document.getElementById('health').innerHTML=
   'uptime <b>'+h.uptime_s+'s</b> · radio <b>'+h.radio+'</b> · tx <b>'+h.tx+'</b> · rx <b>'+h.rx+'</b>';
  let ib=await j('/inbox');
  document.getElementById('inbox').innerHTML=ib.messages.map(m=>
-  '<div class=msg><b>'+m.from+'</b> → '+m.to+' · '+new Date(m.ts*1000).toLocaleTimeString()+
+  '<div class=msg><b>'+m.from+'</b> → '+m.to+' '+clsBadge(m.cls)+' · '+new Date(m.ts*1000).toLocaleTimeString()+
   ' <span class=dim>rssi '+m.rssi+'</span><br>'+m.text+'</div>').join('')||'<div class=dim>empty</div>';
- let p=await j('/peers');
- document.getElementById('peers').innerHTML='<table><tr><th>node</th><th>age</th><th>rssi</th></tr>'+
-  p.peers.map(x=>'<tr><td>'+x.node+'</td><td>'+x.age_s+'s</td><td>'+x.rssi+'</td></tr>').join('')+'</table>';
+ let p=await j('/peers'); drawMap(p);
+ document.getElementById('peers').innerHTML='<table><tr><th>node</th><th>age</th><th>rssi</th><th>pos</th></tr>'+
+  p.peers.map(x=>'<tr><td>'+x.node+'</td><td>'+x.age_s+'s</td><td>'+x.rssi+'</td><td>'+(x.pos?x.pos.join(', '):'—')+'</td></tr>').join('')+'</table>';
  let q=await j('/queue');
- document.getElementById('queue').innerHTML='<table><tr><th>id</th><th>from→to</th><th>text</th><th>hops</th></tr>'+
-  q.pending.map(x=>'<tr><td>'+x.id+'</td><td>'+x.from+'→'+x.to+'</td><td>'+x.text+'</td><td>'+x.hops+'</td></tr>').join('')+'</table>';
+ document.getElementById('queue').innerHTML='<table><tr><th>id</th><th>class</th><th>from→to</th><th>text</th><th>hops</th></tr>'+
+  q.pending.map(x=>'<tr><td>'+x.id+'</td><td>'+clsBadge(x.cls)+'</td><td>'+x.from+'→'+x.to+'</td><td>'+x.text+'</td><td>'+x.hops+'</td></tr>').join('')+'</table>';
 }
 async function send(e){e.preventDefault();
  await j('/send',{method:'POST',headers:{'Content-Type':'application/json'},
