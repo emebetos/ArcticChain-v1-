@@ -45,6 +45,8 @@ class Node:
     # bee mobility
     target: tuple = None
     dwell: float = 0.0
+    alert_target: tuple = None   # mission: threat/research point to converge on
+    mission: str = ""            # sensor|eye|relay|charger + task tag
 
 
 @dataclass
@@ -153,7 +155,17 @@ class Sim:
         for n in self.nodes.values():
             if n.kind != "bee":
                 continue
-            if n.target is None or math.hypot(n.x - n.target[0], n.y - n.target[1]) < 12:
+            # mission override: converging on an alert/research point
+            if n.alert_target is not None:
+                ax, ay = n.alert_target
+                if math.hypot(n.x - ax, n.y - ay) < 60:
+                    # on station: small orbit/loiter pattern
+                    a = self.t * 0.15 + hash(n.nid) % 7
+                    n.target = (ax + 40 * math.cos(a), ay + 40 * math.sin(a))
+                else:
+                    n.target = (ax + random.gauss(0, 25),
+                                ay + random.gauss(0, 25))
+            elif n.target is None or math.hypot(n.x - n.target[0], n.y - n.target[1]) < 12:
                 # pick new perch: bias toward coverage gaps / threat point
                 if random.random() < 0.02:      # occasional long relocation
                     tx = random.uniform(100, self.area[0] - 100)
@@ -164,13 +176,15 @@ class Sim:
                     ty = min(max(n.y + random.gauss(0, 60), 40), self.area[1] - 40)
                 n.target = (tx, ty)
                 n.dwell = 0.0
-            else:
+            # move toward whatever target is active (patrol or mission)
+            if n.target is not None:
                 dx = n.target[0] - n.x
                 dy = n.target[1] - n.y
                 d = math.hypot(dx, dy)
-                step = min(d, 14.0 * dt)         # ~50 km/h bee glide
-                n.x += dx / d * step
-                n.y += dy / d * step
+                if d > 1.0:
+                    step = min(d, 14.0 * dt)     # ~50 km/h bee glide
+                    n.x += dx / d * step
+                    n.y += dy / d * step
             n.battery = max(0.0, n.battery - 0.0008 * dt)  # idle drain
 
     # -- coverage ------------------------------------------------------
@@ -227,7 +241,7 @@ def scenario(name):
             nodes.append(Node(f"bee-{i+1}", "bee",
                               1000 + r * math.cos(a), 700 + r * math.sin(a),
                               role=["sensor", "eye", "relay", "charger"][i % 4]))
-        return nodes, (2000, 1400)
+        return nodes, (2000, 1400), None
     if name == "wildfire":
         # sparse frontier — fire breaks comms in the middle
         nodes = [
@@ -239,7 +253,24 @@ def scenario(name):
             nodes.append(Node(f"bee-{i+1}", "bee",
                               400 + i * 130, 500 + (i % 4) * 180,
                               role=["sensor", "eye", "relay", "charger"][i % 4]))
-        return nodes, (2000, 1400)
+        return nodes, (2000, 1400), None
+    if name == "wildfire_response":
+        # ignition at centre-south at t=180; sensor/eye bees within
+        # 500 m get tasked to converge; relay bees push toward the
+        # nearest brick to extend the backhaul chain
+        nodes = [
+            Node("brick-1", "brick", 300, 1100),
+            Node("brick-2", "brick", 1700, 1100),
+            Node("totem-1", "totem", 1000, 1150),
+        ]
+        ignition = (1000, 450)
+        for i in range(10):
+            a = i / 10 * 2 * math.pi
+            nodes.append(Node(f"bee-{i+1}", "bee",
+                              1000 + 550 * math.cos(a), 800 + 380 * math.sin(a),
+                              role=["sensor", "eye", "relay", "charger"][i % 4],
+                              mission="patrol"))
+        return nodes, (2000, 1400), ignition
     if name == "indigenous_community":
         # hub-and-spoke: anchor center, houses/phones around
         nodes = [Node("anchor-1", "anchor", 1000, 700),
@@ -252,7 +283,7 @@ def scenario(name):
             nodes.append(Node(f"bee-{i+1}", "bee",
                               600 + i * 200, 900 + (i % 2) * 200,
                               role="sensor"))
-        return nodes, (2000, 1400)
+        return nodes, (2000, 1400), None
     raise ValueError(name)
 
 
@@ -262,7 +293,7 @@ def report_html(results, out_path):
         f"<tr><td>{r['scenario']}</td><td>{r['msgs']}</td>"
         f"<td>{r['delivered']}</td><td>{r['delivery_pct']}%</td>"
         f"<td>{r['avg_latency_s']}s</td><td>{r['coverage_pct']}%</td>"
-        f"<td>{r['links']}</td></tr>"
+        f"<td>{r['links']}</td><td>{r.get('converged','—')}</td></tr>"
         for r in results)
     html = f"""<!doctype html><html><head><meta charset=utf-8>
 <title>ArcticChain Mesh Sim Report</title>
@@ -271,9 +302,9 @@ table{{border-collapse:collapse}}td,th{{padding:8px 14px;border-bottom:1px solid
 h1{{color:#5eead4}}.dim{{color:#7f92a8}}</style></head><body>
 <h1>◈ ArcticChain Mesh Simulator — Report</h1>
 <p class=dim>Generated {time.strftime('%Y-%m-%d %H:%M')} · range-limited LoRa model ·
-epidemic store-forward · mobile bees</p>
+epidemic store-forward · mobile bees · wildfire_response tasks bees to ignition</p>
 <table><tr><th>scenario</th><th>msgs</th><th>delivered</th><th>delivery</th>
-<th>avg latency</th><th>coverage</th><th>links</th></tr>{rows}</table>
+<th>avg latency</th><th>coverage</th><th>links</th><th>bees@fire</th></tr>{rows}</table>
 <h2>Method</h2>
 <p class=dim>Radio range 900 m · beacon 10 s · max hops 8 · bee speed ~50 km/h
 perch-and-report. Delivery = msg reached dst before hops expired.
@@ -291,13 +322,15 @@ def main():
     ap.add_argument("--range", type=float, default=900.0)
     args = ap.parse_args()
 
-    names = ["rural_valley", "wildfire", "indigenous_community"] \
-        if args.scenario == "all" else [args.scenario]
+    names = ["rural_valley", "wildfire", "wildfire_response",
+             "indigenous_community"] if args.scenario == "all" \
+        else [args.scenario]
 
     results = []
     for name in names:
-        nodes, area = scenario(name)
+        nodes, area, ignition = scenario(name)
         sim = Sim(nodes, area=area, range_m=args.range)
+
         # traffic: alert broadcast at t=60; unicast ping to a bee at t=120;
         # second broadcast at t=300 tests store-forward after mobility
         bee = next(n.nid for n in nodes if n.kind == "bee")
@@ -308,6 +341,31 @@ def main():
                                      next(iter(s.nodes)), bee, "ping bee")),
             (300.0, lambda s: s.send(next(iter(s.nodes)), "*", "status poll")),
         ]
+        if ignition:
+            # wildfire response: at t=180 the ignition is detected —
+            # sensor/eye bees within 500 m task to the fire, relay bees
+            # move toward the brick nearest the fire to stretch backhaul
+            def ignite(s, ig=ignition):
+                # coordinator tasking msg propagates over the mesh —
+                # every capable bee responds, not just nearby ones
+                for n in s.nodes.values():
+                    if n.kind != "bee":
+                        continue
+                    if n.role in ("sensor", "eye"):
+                        n.alert_target = ig
+                        n.mission = f"{n.role}-response"
+                    elif n.role == "relay":
+                        # head to midpoint between fire and nearest brick
+                        brick = min((b for b in s.nodes.values()
+                                     if b.kind == "brick"),
+                                    key=lambda b: math.hypot(
+                                        b.x - ig[0], b.y - ig[1]))
+                        n.alert_target = ((ig[0] + brick.x) / 2,
+                                          (ig[1] + brick.y) / 2)
+                        n.mission = "relay-extend"
+                    # chargers stay docked — they're the recharge network
+                s.send("totem-1", "*", "IGNITION DETECTED — bees tasked")
+            events.append((180.0, ignite))
         cov_hist = sim.run(args.seconds, events)
 
         total = len(sim.msgs)
@@ -331,6 +389,13 @@ def main():
         final_cov = sim.coverage()
         avg_cov = sum(c for _t, c in cov_hist) / len(cov_hist) if cov_hist else 0
 
+        # swarm convergence: bees within 300 m of ignition at end of run
+        converged = ""
+        if ignition:
+            near = sum(1 for n in nodes if n.kind == "bee" and
+                       math.hypot(n.x - ignition[0], n.y - ignition[1]) < 300)
+            converged = f"{near}/{sum(1 for n in nodes if n.kind == 'bee')}"
+
         r = {
             "scenario": name,
             "nodes": n_nodes,
@@ -340,11 +405,14 @@ def main():
             "avg_latency_s": round(avg_lat, 1),
             "coverage_pct": round(100 * avg_cov, 1),
             "links": len(sim.links),
+            "converged": converged,
         }
         results.append(r)
+        extra = f" converged={converged}" if converged else ""
         print(f"{name:26s} nodes={r['nodes']:2d} msgs={r['msgs']:2d} "
               f"delivered={r['delivered']:2d} ({r['delivery_pct']}%) "
-              f"lat={r['avg_latency_s']}s cov={r['coverage_pct']}% links={r['links']}")
+              f"lat={r['avg_latency_s']}s cov={r['coverage_pct']}% "
+              f"links={r['links']}{extra}")
 
     out = Path(__file__).parent.parent / "docs" / "sim" / "report.html"
     out.parent.mkdir(exist_ok=True)

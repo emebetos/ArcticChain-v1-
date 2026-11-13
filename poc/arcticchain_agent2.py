@@ -24,18 +24,23 @@ Env:
   ARCTIC_VPORT      virtual radio port  (default: 9100)
 """
 
+import hashlib
+import hmac
 import json
 import os
 import socket
 import sqlite3
 import threading
 import time
-import hashlib
+import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 NODE_ID = os.environ.get("ARCTIC_NODE_ID", os.uname().nodename if hasattr(os, "uname") else "node-01")
 COMMUNITY = os.environ.get("ARCTIC_COMMUNITY", "default")
+COMMUNITY_KEY = os.environ.get("ARCTIC_KEY", "")      # HMAC key; empty = unsigned PoC
+BACKHAUL_URL = os.environ.get("ARCTIC_BACKHAUL", "")  # e.g. http://server:9000
+BACKHAUL_S = int(os.environ.get("ARCTIC_BACKHAUL_S", "30"))
 RADIO_KIND = os.environ.get("ARCTIC_RADIO", "virtual")
 HTTP_PORT = int(os.environ.get("ARCTIC_PORT", "8080"))
 VPORT = int(os.environ.get("ARCTIC_VPORT", "9100"))
@@ -182,7 +187,24 @@ class Engine(threading.Thread):
     def _frame(self, kind, **kw):
         f = {"t": kind, "node": NODE_ID, "community": COMMUNITY,
              "ts": time.time(), **kw}
+        if COMMUNITY_KEY:
+            f["sig"] = self._sign(f)
         return json.dumps(f).encode()
+
+    @staticmethod
+    def _sign(f):
+        """HMAC-SHA256 over canonical frame (sig field excluded)."""
+        body = {k: v for k, v in f.items() if k != "sig"}
+        canon = json.dumps(body, sort_keys=True, separators=(",", ":"))
+        return hmac.new(COMMUNITY_KEY.encode(), canon.encode(),
+                        hashlib.sha256).hexdigest()[:32]
+
+    @staticmethod
+    def _verify(f):
+        if not COMMUNITY_KEY:
+            return True                     # unsigned PoC mode
+        sig = f.get("sig", "")
+        return hmac.compare_digest(sig, Engine._sign(f))
 
     def beacon(self):
         return self._frame("beacon", battery=99)
@@ -200,6 +222,9 @@ class Engine(threading.Thread):
         except Exception:
             return
         if f.get("community") != COMMUNITY or f.get("node") == NODE_ID:
+            return
+        if not self._verify(f):
+            print(f"[mesh] rejected bad-signature frame from {f.get('node')}")
             return
         self.rx += 1
         peer = f.get("node", "?")
@@ -287,6 +312,74 @@ class Engine(threading.Thread):
             for rssi, payload in self.radio.poll():
                 self._handle(rssi, payload)
             time.sleep(0.1)
+
+
+# ---------------------------------------------------------------- backhaul
+
+def _http(url, data=None, timeout=5):
+    """Tiny JSON HTTP helper — GET when data=None, POST otherwise."""
+    if data is None:
+        with urllib.request.urlopen(url, timeout=timeout) as r:
+            return json.loads(r.read() or b"{}")
+    req = urllib.request.Request(
+        url, data=json.dumps(data).encode(),
+        headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read() or b"{}")
+
+
+class BackhaulBridge(threading.Thread):
+    """Connects the mesh to an internet-side community server.
+
+    Outbound: mesh-delivered messages are POSTed to {URL}/inbox once.
+    Inbound:  GET {URL}/outbox/{community} returns {to,text}[] which are
+              injected into the mesh as new messages.
+
+    The bridge node is just another mesh node — the server never talks
+    LoRa, it talks HTTP to whichever node has real internet (LTE/sat).
+    """
+
+    def __init__(self, engine):
+        super().__init__(daemon=True)
+        self.engine = engine
+        self.stop_event = threading.Event()
+        self.reported = set()
+        try:
+            conn.execute("ALTER TABLE messages ADD COLUMN uplinked INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+        conn.commit()
+
+    def run(self):
+        while not self.stop_event.is_set():
+            try:
+                self._uplink()
+                self._downlink()
+            except Exception as e:
+                print(f"[backhaul] {e}")
+            self.stop_event.wait(BACKHAUL_S)
+
+    def _uplink(self):
+        rows = conn.execute(
+            "SELECT id, from_node, to_node, text, ts FROM messages"
+            " WHERE state='delivered' AND (uplinked=0 OR uplinked IS NULL)"
+            " ORDER BY ts LIMIT 50").fetchall()
+        for mid_, frm, to, text, ts in rows:
+            _http(f"{BACKHAUL_URL}/inbox", {
+                "id": mid_, "from": frm, "to": to, "text": text,
+                "via": NODE_ID, "ts": ts})
+            conn.execute("UPDATE messages SET uplinked=1 WHERE id=?", (mid_,))
+            conn.commit()
+
+    def _downlink(self):
+        out = _http(f"{BACKHAUL_URL}/outbox/{COMMUNITY}")
+        for m in out.get("messages", []):
+            key = m.get("id", "")
+            if key and key in self.reported:
+                continue
+            if key:
+                self.reported.add(key)
+            self.engine.send_msg(m.get("to", "*"), m.get("text", ""))
 
 
 # ---------------------------------------------------------------- HTTP API
@@ -421,9 +514,14 @@ if __name__ == "__main__":
         radio.open()
     engine = Engine(radio)
     engine.start()
+    if BACKHAUL_URL:
+        bridge = BackhaulBridge(engine)
+        bridge.start()
+        print(f"[backhaul] bridging mesh <-> {BACKHAUL_URL} every {BACKHAUL_S}s")
     server = HTTPServer(("0.0.0.0", HTTP_PORT), Api)
     print(f"[arcticchain] v2 up — node={NODE_ID} community={COMMUNITY} "
-          f"radio={RADIO_KIND} http=:{HTTP_PORT} db={DB_PATH}")
+          f"radio={RADIO_KIND} http=:{HTTP_PORT} db={DB_PATH}"
+          f"{' signed' if COMMUNITY_KEY else ' UNSIGNED'}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

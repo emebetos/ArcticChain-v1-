@@ -45,10 +45,13 @@ def wait_for(port, timeout=15):
 
 def main():
     tmp = Path(tempfile.mkdtemp(prefix="acmesh_"))
+    key = "test-community-key-001"
     env_a = {**os.environ, "ARCTIC_NODE_ID": "node-a", "ARCTIC_PORT": "8091",
-             "ARCTIC_DB": str(tmp / "a.db"), "ARCTIC_VPORT": "9201"}
+             "ARCTIC_DB": str(tmp / "a.db"), "ARCTIC_VPORT": "9201",
+             "ARCTIC_KEY": key}
     env_b = {**os.environ, "ARCTIC_NODE_ID": "node-b", "ARCTIC_PORT": "8092",
-             "ARCTIC_DB": str(tmp / "b.db"), "ARCTIC_VPORT": "9201"}
+             "ARCTIC_DB": str(tmp / "b.db"), "ARCTIC_VPORT": "9201",
+             "ARCTIC_KEY": key}
     pa = subprocess.Popen([sys.executable, str(AGENT)], env=env_a,
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     pb = subprocess.Popen([sys.executable, str(AGENT)], env=env_b,
@@ -90,10 +93,26 @@ def main():
         assert flooded, "broadcast B->A NOT received in 15s"
         print("[4] broadcast B->A RECEIVED")
 
+        # forged frame with wrong key must be rejected
+        import socket as _sk, json as _js
+        bad = _js.dumps({"t": "msg", "id": "forged1", "node": "node-x",
+                         "community": "default", "from": "node-x", "to": "node-a",
+                         "text": "FORGED", "hops": 8, "ts": time.time(),
+                         "sig": "deadbeef"}).encode()
+        s = _sk.socket(_sk.AF_INET, _sk.SOCK_DGRAM)
+        s.setsockopt(_sk.SOL_SOCKET, _sk.SO_BROADCAST, 1)
+        s.sendto(bad, ("<broadcast>", 9201))
+        s.close()
+        time.sleep(1)
+        inbox_a = get(8091, "/inbox")["messages"]
+        assert not any(m["text"] == "FORGED" for m in inbox_a), \
+            "forged frame was accepted!"
+        print("[4b] forged frame REJECTED (HMAC verify works)")
+
         q = get(8091, "/queue")["pending"]
         st = get(8091, "/stats")
         print(f"[5] stats: {st} | A pending: {len(q)}")
-        print("\nALL CHECKS PASSED — mesh works end-to-end")
+        print("\nALL CHECKS PASSED — signed mesh works end-to-end")
     except AssertionError as e:
         ok = False
         print(f"\nFAIL: {e}")
