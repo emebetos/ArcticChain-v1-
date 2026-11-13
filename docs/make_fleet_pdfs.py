@@ -1281,16 +1281,16 @@ def phone():
         ["C", "Hybrid: Linux core + Android layer", "best of both", "longest dev time"],
     ], rh=56)
 
-    # capability set
-    s.h(ML + 10, 664, "CAPABILITY SET")
-    s.table(ML + 10, 692, [220, 760], ["Capability", "Implementation"], [
+    # capability set — left column, clears the title block (top edge y=896)
+    s.h(ML + 10, 650, "CAPABILITY SET")
+    s.table(ML + 10, 676, [280, 620], ["Capability", "Implementation"], [
         ["Mesh node", "SX1262 LoRa 915 + signed envelopes — every phone extends the network"],
         ["Satellite SOS", "L-band messenger module now; own constellation later"],
         ["Offline apps", "maps, manuals, forms, messaging EN/FR — useful with zero bars"],
         ["Cellular", "LTE Cat-1/4 when towers exist — proven path from L1"],
         ["Power", "replaceable battery + USB-C PD + solar trickle option"],
         ["Rugged", "IP68 · -30..+55 °C · glove UI · 1.5 m drop target"],
-    ], rh=36)
+    ], rh=30)
     out.append(s.svg(1, 7))
 
     # ---------------- 102 SPEC ----------------
@@ -1870,10 +1870,80 @@ def mite_mechanical():
 
 
 # ============================================================ MITE FINISH =====
+# ============================================================ MITE MISSIONS ====
+def mite_missions():
+    s = Sheet("AF-S-107", "MISSION PAYLOADS — MULTI-ROLE SWARM",
+              "ONE CARRIER · SWAPPABLE MISSION PODS · SENSE · ACT · REACH",
+              "S · MITE", rev="0", status="REV-C RESEARCH — SENSING FIRST")
+
+    s.h(ML + 10, 150, "MISSION TAXONOMY")
+    s.table(ML + 10, 178, [130, 270, 240, 160],
+            ["Mission class", "Example payloads", "TRL / status", "Buyer"], [
+        ["DETECT & MONITOR", "ENS160+SHT41, thermal IR, GPS, mic", "TRL 6–7 — prototype flies",
+         "fire/ag/municipal"],
+        ["ENVIRONMENTAL CLEANUP", "microplastic skimmer, sheen recovery, "
+         "invasive pull/sever tool, debris grab", "TRL 2–3 — actuation R&D",
+         "watershed/industry"],
+        ["RESEARCH — REACH", "gas sampler, water sampler, stereo imager, "
+         "contact sensor", "TRL 3–4 — payloads exist, miniaturize",
+         "universities/parks"],
+        ["TRANSPORT", "payload ferry between Anchors", "TRL 2 — concept",
+         "remote ops/industry"],
+    ], rh=58)
+
+    s.note(ML + 10, 480,
+          "Carrier is FIXED: ESP32-S3 + SX1262 + solar + perch + mesh identity. "
+          "Mission pods hot-swap on the top bay — same open-bay philosophy as "
+          "the ArcticPhone. A bee re-tasks by swapping a pod, not buying a new bee.",
+          size=12)
+
+    s.h(ML + 10, 560, "MISSION PODS (TOP-BAY MODULES)")
+    s.table(ML + 10, 586, [170, 300, 300], ["Pod", "Hardware delta", "Notes"], [
+        ["SENSE-POD", "ENS160 + SHT41 + mic + GPS", "base — every swarm needs this"],
+        ["EYE-POD", "AMG8833/MLX90640 thermal + lens", "confirm fixes visually/thermally"],
+        ["CLEAN-POD", "skimmer mesh / grabber / sever tool", "actuation — rev-C, gated"],
+        ["LAB-POD", "gas+water sampler, pH/conductivity", "research missions — rev-C"],
+        ["RELAY-POD", "8 dBi whip, sensors removed", "range extension over ridges"],
+        ["CHARGE-POD", "dock pads + beacon", "Anchor perch — rebroadcast node"],
+    ], rh=38)
+
+    # right column — pod mechanics
+    rx = 880
+    s.h(rx, 150, "POD MECHANICS (TOP VIEW)")
+    px, py = rx + 10, 190
+    s.rect(px, py, 300, 270, fill=FILL, stroke=INK, sw=1.4, r=18)
+    s.rect(px + 40, py + 40, 220, 140, fill="none", stroke=INK, sw=1.2, r=10, dash="8 4")
+    s.t(px + 150, py + 108, "MISSION POD", 14, "middle", weight="bold")
+    s.t(px + 150, py + 130, "pogo + guide pins", 10, "middle", SOFT)
+    # carrier beneath
+    s.rect(px + 60, py + 290, 180, 38, fill="#dfe9f5", stroke=INK, sw=1.2, r=8)
+    s.t(px + 150, py + 313, "CARRIER (fixed)", 11, "middle", weight="bold")
+    s.t(px + 150, py + 352, "pod face ~38×38 mm", 10, "middle", SOFT)
+
+    s.h(rx, 560, "MISSION SEQUENCING")
+    s.bullets(rx, 586, [
+        "Coordinator reads swarm capability flags + threat model.",
+        "Season map: fire → fuel breaks; melt → river corridors; "
+        "spills → water patrol; research → unreachable sites.",
+        "Pods pre-staged at Anchor — swap takes <60 s, hand tools only.",
+        "Failed pod = bee reverts to SENSE-POD and keeps watching.",
+        "Every mission logged on mesh — provenance for regulators.",
+    ], width=80)
+
+    s.h(rx, 790, "HONEST GATES")
+    s.bullets(rx, 816, [
+        "Sensing swarm flies FIRST — cleanup/research are payload programs.",
+        "Actuation payloads need their own safety review + pilot funding.",
+        "No promise of cleanup before the sensing mechanism is proven.",
+        "Transport is the furthest horizon — listed for platform completeness.",
+    ], width=80, color=RED)
+    return s.svg(7, 8)
+
+
 def mite_finish():
     return finish_sheet(
-        "AF-S-107", "S MITE", "FINAL LOOK — SWARM UNIT APPEARANCE",
-        "S · MITE", 7, 7,
+        "AF-S-108", "S MITE", "FINAL LOOK — SWARM UNIT APPEARANCE",
+        "S · MITE", 8, 8,
         renders=[{
             "w": 340, "h": 340, "d": 95, "color": "#4a6741", "rad": 16,
             "caption": "S MITE — SENSOR-BEE",
@@ -2554,7 +2624,7 @@ def cover():
             ["Node", "Name", "Role", "Envelope", "Power", "Finish", "Status"], [
         ["L1", "Brick", "field node — mailbox+repeater+bulletin+SOS", "160×80×24 mm", "4×18650/solar", "graphite PETG matte", "CAD ready"],
         ["E", "Totem", "community board — public E-Ink + mesh node", "~320×220×80+pole", "solar+LiFePO4", "charcoal PC IP66", "spec"],
-        ["S", "Mite", "swarm unit — perchable env sensor", "~90×90×35 mm", "solar+LiPo", "forest ASA matte", "CAD scripted"],
+        ["S", "Mite", "swarm unit — perchable multi-mission node", "~90×90×35 mm", "solar+LiPo", "forest ASA matte", "CAD scripted"],
         ["A", "Anchor", "charging station — dock+relay+backhaul", "~350×250×400+array", "20–60 W+LiFePO4", "charcoal powder-coat", "spec"],
         ["P", "ArcticPhone", "rural comms — mesh-native, sat SOS", "~145×72×14 mm", "replaceable+solar", "graphite PC+TPU", "concept"],
         ["D", "Seed", "degradable mote — seasonal sensing", "~20×20×5 mm", "printed+harvest", "cellulose — vanishes", "R&D"],
@@ -2575,7 +2645,7 @@ def cover():
     idx = [
         ("AF-000", "this sheet — fleet overview & index"),
         ("AF-L1-101…105", "L1 Brick — arrangement, parts/power, assembly, electronics, finish"),
-        ("AF-S-101…107", "S Mite — arrangement, parts, assembly, electronics, variants, mechanical, finish"),
+        ("AF-S-101…108", "S Mite — arrangement, parts, assembly, electronics, variants, mechanical, missions, finish"),
         ("AF-E-101…103", "E Totem — arrangement, parts/install, finish"),
         ("AF-A-101…103", "A Anchor — arrangement, parts/power, finish"),
         ("AF-P-101…107", "P ArcticPhone — concept, spec, definition, tri-radio, modules, UX, finish"),
@@ -2606,7 +2676,7 @@ ALL_SETS = {
     "00_Fleet_Overview": cover(),
     "01_L1_Brick": l1() + [l1_electronics(), l1_finish()],
     "02_S_Mite": mite() + [mite_electronics(), mite_variants(),
-                           mite_mechanical(), mite_finish()],
+                           mite_mechanical(), mite_missions(), mite_finish()],
     "03_E_Totem": totem() + [totem_finish()],
     "04_A_Anchor": anchor() + [anchor_finish()],
     "05_P_ArcticPhone": phone() + [phone_definition(), phone_triradio(),

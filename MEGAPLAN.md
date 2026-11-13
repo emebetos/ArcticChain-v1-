@@ -206,6 +206,35 @@ itself**. Architecture, honestly engineered:
   sensor-plus-drones, solar-perched by default, and integrated with the
   alert/bulletin layer towns actually see.
 
+#### The swarm is multi-mission — sense, act, and reach
+The platform is deliberately mission-agnostic: the carrier (ESP32-S3 + SX1262 +
+solar + perch) is fixed, and **mission payloads hot-swap on top** — the same
+open-bay philosophy as the ArcticPhone. One swarm, many jobs, sequenced by
+threat and season:
+
+- **Detect & monitor** (the base role): wildfire gas/thermal, flood level,
+  snowpack, air quality, permafrost, lightning, pest migration — the
+  environmental intelligence mesh of §4.8.
+- **Environmental cleanup**: microplastic skimming on water surfaces, oil-sheen
+  recovery in small spills, invasive-species removal (pull/sever, not spray),
+  remote debris/waste collection where no road reaches. Actuation payloads are
+  rev-C+ — honest TRL, gated on the sensing swarm proving itself first.
+- **Research where humans can't go**: cave/gorge/mineshaft/glacier/volcanic
+  gas sampling, under-canopy and under-ice monitoring, wildlife observation
+  without disturbance (a camera-trap that moves), glacial-lake outburst watch,
+  pollution-source tracking. Payloads: gas chromatograph-class sniffers,
+  water samplers, contact sensors, stereo imagers.
+- **Transport & logistics** (later): micro-payload ferry between Anchors —
+  filters, reagents, spare parts to sites with no road access.
+- **Resilience by design**: weather-sealed (rain, -30 °C, dust), perch-recoverable
+  (a downed bee lands and recharges rather than dying), hot-swap mission pods,
+  swarm task allocation that re-assigns roles when units fail, and store-forward
+  everywhere so a bee that loses mesh still completes its mission locally.
+
+Honest gate: sensing/monitoring flies first (payloads exist today); actuation
+and sampling payloads are rev-C research — each is a separately fundable
+milestone, never promised ahead of the mechanism that carries it.
+
 ### 4.8 The environmental intelligence mesh — more ideas in the same vein
 Once the mesh exists, every sensor that reports store-forward is an app:
 
@@ -221,6 +250,25 @@ Once the mesh exists, every sensor that reports store-forward is an app:
 - **Lightning & ignition mapping** — strike correlation with new fire starts.
 - **Space-weather citizen science** — magnetometer nodes tie the mesh to the satellite
   story: aurora alerts, grid-risk indices, and a uniquely Canadian cross-sell.
+- **Microplastic & water-quality patrols** — swarm skims remote lakes/rivers for
+  plastic, algae blooms, and contaminant plumes; reports source estimates upstream.
+- **Invasive species & pest early warning** — MPB acoustic traps generalize to
+  emerald ash borer, chronic wasting, zebra mussel veliger detection.
+- **Glacial & cryosphere watch** — ice-jam, glacier-outburst-lake, and snowpack
+  telemetry in terrain too dangerous for fixed installs or crews.
+
+#### Missions beyond sensing — the actuation horizon
+The swarm's carrier is mission-agnostic (§4.7), so "cleanup" and "reach the
+unreachable" are payload programs, not new platforms:
+
+- **Environmental cleanup**: microplastic skimming, small-spill sheen recovery,
+  invasive-plant removal by pull/sever (no herbicide drift), remote debris
+  collection. Each is a payload + a regulatory review — never a casual claim.
+- **Research in places humans can't go**: cave/gorge/mineshaft/glacier/volcanic
+  sampling, under-canopy ecology, glacial-lake outburst watch, pollution-source
+  tracking, wildlife observation without disturbance.
+- **Micro-logistics**: ferry filters, reagents, and spares between Anchors on
+  sites with no road — the same store-forward mesh carries the manifest.
 
 ---
 
