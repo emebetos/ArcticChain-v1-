@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rust:
+    name: Rust workspace tests (46 tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo test --workspace
+        run: cargo test --workspace
+
+  python-mesh:
+    name: Python mesh acceptance test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: two-node signed mesh test
+        run: python poc/test_mesh.py
+        timeout-minutes: 5
+
+  python-sim:
+    name: Mesh simulator smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: swarm scenario sim
+        run: python sim/mesh_sim.py --seconds 300 --scenario wildfire_response
+        timeout-minutes: 5
+
+  print-audit:
+    name: Print set regeneration sanity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install audit deps
+        run: pip install pymupdf
+      - name: audit existing PDFs (no Chrome needed)
+        run: python docs/audit_print.py
+        timeout-minutes: 5
