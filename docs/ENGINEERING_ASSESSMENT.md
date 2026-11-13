@@ -267,7 +267,7 @@ prototype work.
 
 | Claim | Verdict |
 |---|---|
-| 46 Rust tests | **46 `#[test]` fns exist; NOT executed here (no toolchain)** |
+| 46 Rust tests | **46 `#[test]` fns exist; attempted 2025-11-13 — rustup+stable-msvc installed and compiles, but linking fails: no MSVC linker (VS Build Tools requires interactive admin install, winget silent fails 1602). windows-gnu toolchain rustc fails to execute on this machine. Tests remain UNEXECUTED — need VS Build Tools or CI/Linux** |
 | Signed mesh, forged frames rejected | TRUE — `test_mesh.py` passes signed end-to-end |
 | Store-and-forward agent | TRUE — queue/gossip verified |
 | Backhaul bridge | TRUE — verified vs mock server both directions |
