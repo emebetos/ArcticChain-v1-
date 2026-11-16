@@ -51,7 +51,8 @@ def main():
              "ARCTIC_KEY": key, "ARCTIC_POS": "53.55,-113.49"}
     env_b = {**os.environ, "ARCTIC_NODE_ID": "node-b", "ARCTIC_PORT": "8092",
              "ARCTIC_DB": str(tmp / "b.db"), "ARCTIC_VPORT": "9201",
-             "ARCTIC_KEY": key, "ARCTIC_POS": "53.60,-113.40"}
+             "ARCTIC_KEY": key, "ARCTIC_POS": "53.60,-113.40",
+             "ARCTIC_ADMIN": "node-a"}   # node-a is the provisioned founding admin
     pa = subprocess.Popen([sys.executable, str(AGENT)], env=env_a,
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     pb = subprocess.Popen([sys.executable, str(AGENT)], env=env_b,
@@ -122,6 +123,54 @@ def main():
         assert not any(m["text"] == "FORGED" for m in inbox_a), \
             "forged frame was accepted!"
         print("[4b] forged frame REJECTED (HMAC verify works)")
+
+        # --- community roster: admin-signed enrollment propagates over mesh ---
+        roster_a = get(8091, "/roster")
+        assert any(m["node"] == "node-a" and m["role"] == "admin"
+                   for m in roster_a["members"]), f"A lost genesis admin: {roster_a}"
+        print("[6] A is genesis roster admin")
+
+        r = post(8091, "/roster", {"op": "add", "subject": "node-b",
+                                   "role": "member"})
+        assert r.get("ok"), f"admin roster add failed: {r}"
+        t0 = time.time()
+        propagated = False
+        while time.time() - t0 < 12:
+            rb = get(8092, "/roster")
+            if any(m["node"] == "node-b" and m["role"] == "member"
+                   for m in rb["members"]):
+                propagated = True
+                break
+            time.sleep(0.5)
+        assert propagated, "roster add never replicated to node-b"
+        print("[6b] roster add PROPAGATED A->B over the mesh")
+
+        # non-admin node cannot issue membership deltas
+        try:
+            r = post(8092, "/roster", {"op": "add", "subject": "node-c"})
+            denied = False
+        except urllib.error.HTTPError as e:
+            denied = (e.code == 403)
+        assert denied, "node-b (member, not admin) issued a roster op!"
+        print("[6c] non-admin roster op DENIED with 403")
+
+        # forged roster frame from a non-admin is ignored
+        import hmac as _hm, hashlib as _hl
+        body = {"community": "default", "issuer": "node-b", "node": "node-b",
+                "op": "add", "role": "admin", "seq": 99, "subject": "node-b",
+                "t": "roster", "ts": time.time()}
+        canon = _js.dumps(body, sort_keys=True, separators=(",", ":"))
+        body["sig"] = _hm.new(key.encode(), canon.encode(),
+                            _hl.sha256).hexdigest()[:32]
+        s = _sk.socket(_sk.AF_INET, _sk.SOCK_DGRAM)
+        s.setsockopt(_sk.SOL_SOCKET, _sk.SO_BROADCAST, 1)
+        s.sendto(_js.dumps(body).encode(), ("<broadcast>", 9201))
+        s.close()
+        time.sleep(1)
+        ra = get(8091, "/roster")
+        b = [m for m in ra["members"] if m["node"] == "node-b"][0]
+        assert b["role"] == "member", f"non-admin escalated itself: {b}"
+        print("[6d] privilege-escalation roster frame IGNORED")
 
         q = get(8091, "/queue")["pending"]
         st = get(8091, "/stats")

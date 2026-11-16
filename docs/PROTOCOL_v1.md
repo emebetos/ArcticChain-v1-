@@ -142,9 +142,9 @@ Dequeue order: `alert` > `control` > `data` > `telemetry`.
 |---|---|
 | Device identity | Ed25519 `Identity` per node (seed in secure element / TPM / sealed flash) |
 | Link privacy | X25519 pairwise → ChaCha20-Poly1305 (relays verify sig, cannot read) |
-| Community admission | `community` tag + optional community CA-signed node roster |
+| Community admission | `community` tag + replicated roster: admins issue signed `roster` deltas (add/revoke, seq-ordered); non-admin and stale ops are rejected |
 | Replay | `msg_id` monotonic per sender + `seen` set |
-| Key lifecycle | PLANNED: provisioning at manufacture, rotation via signed `keyupdate` control frame, revocation via signed roster delta — **not yet implemented** |
+| Key lifecycle | PARTIAL: community roster with admin-signed add/revoke deltas replicated as `roster` frames is **implemented** in agent2 (`ARCTIC_ADMIN` provisions the founding admin; `ARCTIC_ROSTER_ENFORCE=1` drops msgs from non-members). Rotation via `keyupdate` and per-device Ed25519 admin signatures remain **planned** (Rust path) |
 | Dev mode | `ARCTIC_KEY` HMAC = lab convenience only; MUST be absent in field units |
 
 ## 7. What changes where

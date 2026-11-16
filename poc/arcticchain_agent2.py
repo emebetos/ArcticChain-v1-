@@ -44,6 +44,8 @@ BACKHAUL_S = int(os.environ.get("ARCTIC_BACKHAUL_S", "30"))
 POS = os.environ.get("ARCTIC_POS", "")                # "lat,lon" for map display
 ROLE = os.environ.get("ARCTIC_ROLE", "")              # swarm role: sensor|eye|relay|charger|node
 BATT = int(os.environ.get("ARCTIC_BATT", "100"))      # battery % advertised in beacons
+GENESIS_ADMIN = os.environ.get("ARCTIC_ADMIN", "")    # provisioned founding admin; empty = self
+ROSTER_ENFORCE = os.environ.get("ARCTIC_ROSTER_ENFORCE", "") == "1"  # drop msgs from non-members
 RADIO_KIND = os.environ.get("ARCTIC_RADIO", "virtual")
 
 # message classes — queue priority per PROTOCOL_v1.md section 4
@@ -76,6 +78,10 @@ def db():
     conn.execute(
         "CREATE TABLE IF NOT EXISTS health ("
         "ts REAL, batt_mv INTEGER, temp_c REAL, tx INTEGER, rx INTEGER)")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS roster ("
+        "subject TEXT PRIMARY KEY, role TEXT, issuer TEXT,"
+        " seq INTEGER, ts REAL)")
     # v1 protocol columns — ALTER for pre-v1 databases
     for ddl in (
         "ALTER TABLE messages ADD COLUMN cls TEXT DEFAULT 'data'",
@@ -91,6 +97,30 @@ def db():
     return conn
 
 conn = db()
+
+# roster genesis — the provisioned founding admin seeds the membership list
+# (defaults to self for single-node/dev use; field units get ARCTIC_ADMIN).
+if not conn.execute("SELECT 1 FROM roster LIMIT 1").fetchone():
+    conn.execute("INSERT INTO roster VALUES (?,?,?,?,?)",
+                 (GENESIS_ADMIN or NODE_ID, "admin",
+                  GENESIS_ADMIN or NODE_ID, 0, START))
+    conn.commit()
+
+
+def roster_list():
+    return conn.execute(
+        "SELECT subject, role, issuer, seq, ts FROM roster"
+        " ORDER BY seq, subject").fetchall()
+
+
+def roster_role(node):
+    r = conn.execute(
+        "SELECT role FROM roster WHERE subject=?", (node,)).fetchone()
+    return r[0] if r else None
+
+
+def roster_is_admin(node):
+    return roster_role(node) == "admin"
 
 
 def mid():
@@ -252,6 +282,38 @@ class Engine(threading.Thread):
         return self.radio.send(self._frame(
             "ack", **{"id": m_id, "from": NODE_ID}))
 
+    # -- roster -----------------------------------------------------------
+    def roster_op(self, op, subject, role="member"):
+        """Issue a signed membership delta. Only roster admins may."""
+        if not roster_is_admin(NODE_ID):
+            return False
+        seq = int(conn.execute(
+            "SELECT COALESCE(MAX(seq),0)+1 FROM roster").fetchone()[0])
+        f = {"op": op, "subject": subject, "role": role,
+             "seq": seq, "issuer": NODE_ID}
+        if self._apply_roster(f):
+            self.radio.send(self._frame("roster", **f))
+            self.tx += 1
+            return True
+        return False
+
+    @staticmethod
+    def _apply_roster(f):
+        """Apply a membership delta if newer than stored state for subject."""
+        subj, seq = f["subject"], int(f.get("seq", 0))
+        row = conn.execute(
+            "SELECT seq FROM roster WHERE subject=?", (subj,)).fetchone()
+        if row and seq <= row[0]:
+            return False                 # stale/already applied — stops relay loop
+        role = "revoked" if f.get("op") == "revoke" else f.get("role", "member")
+        conn.execute(
+            "INSERT INTO roster VALUES (?,?,?,?,?)"
+            " ON CONFLICT(subject) DO UPDATE SET role=excluded.role,"
+            " issuer=excluded.issuer, seq=excluded.seq, ts=excluded.ts",
+            (subj, role, f.get("issuer"), seq, time.time()))
+        conn.commit()
+        return True
+
     # -- receive --------------------------------------------------------
     def _handle(self, rssi, payload):
         try:
@@ -282,7 +344,24 @@ class Engine(threading.Thread):
         t = f.get("t")
         if t == "beacon":
             pass
+        elif t == "roster":
+            # membership delta — issuer must be the sender and a roster admin
+            issuer = f.get("issuer") or f.get("node")
+            if issuer != f.get("node"):
+                print(f"[mesh] roster op claimed for {issuer} by {peer} — ignored")
+                return
+            if not roster_is_admin(issuer):
+                print(f"[mesh] roster op from non-admin {issuer} — ignored")
+                return
+            if self._apply_roster(f):
+                self.radio.send(payload)   # epidemic relay — raw frame keeps its sig
+                self.tx += 1
         elif t == "msg" or t == "task":
+            if ROSTER_ENFORCE:
+                src = f.get("from") or f.get("node")
+                if roster_role(src) in (None, "revoked"):
+                    print(f"[mesh] dropped {t} from non-member {src}")
+                    return
             if t == "task" and not f.get("text"):
                 # normalize bare task fields into the stored text payload
                 f = dict(f, text=json.dumps(
@@ -481,11 +560,18 @@ class Api(BaseHTTPRequestHandler):
                 {"node": r[0], "age_s": round(time.time() - r[1], 1),
                  "rssi": r[2],
                  "pos": json.loads(r[3]) if r[3] else None,
-                 "role": r[4], "batt": r[5]} for r in rows],
+                 "role": r[4], "batt": r[5],
+                 "member": roster_role(r[0]) or "non-member"} for r in rows],
                 "self": {"node": NODE_ID, "role": ROLE or "node",
                          "batt": BATT,
                          "pos": [float(v) for v in POS.split(",")]
                          if POS and "," in POS else None}})
+        elif self.path == "/roster":
+            self._json({"enforce": ROSTER_ENFORCE,
+                        "self_admin": roster_is_admin(NODE_ID),
+                        "members": [{"node": r[0], "role": r[1],
+                                     "issuer": r[2], "seq": r[3]}
+                                    for r in roster_list()]})
         elif self.path == "/queue":
             rows = all_pending()
             self._json({"pending": [
@@ -537,6 +623,15 @@ class Api(BaseHTTPRequestHandler):
             ok = engine.send_msg(to, json.dumps(payload), "control")
             return self._json({"queued": ok, "task_id": tid,
                                "cls": "control"})
+        if self.path == "/roster":
+            # community-admin-signed membership delta (enrollment/revocation)
+            op = data.get("op", "")
+            subject = data.get("subject", "")
+            if op not in ("add", "revoke") or not subject:
+                return self._json({"error": "need op=add|revoke + subject"}, 400)
+            if engine.roster_op(op, subject, data.get("role", "member")):
+                return self._json({"ok": True, "op": op, "subject": subject})
+            return self._json({"error": "not a roster admin or stale op"}, 403)
         self._json({"error": "not found"}, 404)
 
     def log_message(self, *a):
