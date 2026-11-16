@@ -42,6 +42,8 @@ COMMUNITY_KEY = os.environ.get("ARCTIC_KEY", "")      # HMAC key; empty = unsign
 BACKHAUL_URL = os.environ.get("ARCTIC_BACKHAUL", "")  # e.g. http://server:9000
 BACKHAUL_S = int(os.environ.get("ARCTIC_BACKHAUL_S", "30"))
 POS = os.environ.get("ARCTIC_POS", "")                # "lat,lon" for map display
+ROLE = os.environ.get("ARCTIC_ROLE", "")              # swarm role: sensor|eye|relay|charger|node
+BATT = int(os.environ.get("ARCTIC_BATT", "100"))      # battery % advertised in beacons
 RADIO_KIND = os.environ.get("ARCTIC_RADIO", "virtual")
 
 # message classes — queue priority per PROTOCOL_v1.md section 4
@@ -79,6 +81,8 @@ def db():
         "ALTER TABLE messages ADD COLUMN cls TEXT DEFAULT 'data'",
         "ALTER TABLE messages ADD COLUMN acked INTEGER DEFAULT 0",
         "ALTER TABLE neighbors ADD COLUMN pos TEXT",
+        "ALTER TABLE neighbors ADD COLUMN role TEXT",
+        "ALTER TABLE neighbors ADD COLUMN batt INTEGER",
     ):
         try:
             conn.execute(ddl)
@@ -226,13 +230,15 @@ class Engine(threading.Thread):
         return hmac.compare_digest(sig, Engine._sign(f))
 
     def beacon(self):
-        kw = {}
+        kw = {"battery": BATT}
         if POS:
             try:
                 kw["pos"] = [float(v) for v in POS.split(",")]
             except ValueError:
                 pass
-        return self._frame("beacon", battery=99, **kw)
+        if ROLE:
+            kw["role"] = ROLE
+        return self._frame("beacon", **kw)
 
     def send_msg(self, to, text, cls="data"):
         if cls not in CLS_ORDER:
@@ -262,19 +268,28 @@ class Engine(threading.Thread):
         pos = json.dumps(f["pos"]) if f.get("pos") else None
         conn.execute(
             "INSERT INTO neighbors (node_id, last_seen, rssi, heard_via,"
-            " msg_count, pos) VALUES (?,?,?,?,1,?)"
+            " msg_count, pos, role, batt) VALUES (?,?,?,?,1,?,?,?)"
             " ON CONFLICT(node_id) DO UPDATE SET"
             " last_seen=excluded.last_seen, rssi=excluded.rssi,"
             " msg_count=neighbors.msg_count+1,"
-            " pos=COALESCE(excluded.pos, neighbors.pos)",
-            (peer, time.time(), rssi, RADIO_KIND, pos))
+            " pos=COALESCE(excluded.pos, neighbors.pos),"
+            " role=COALESCE(excluded.role, neighbors.role),"
+            " batt=COALESCE(excluded.batt, neighbors.batt)",
+            (peer, time.time(), rssi, RADIO_KIND, pos,
+             f.get("role"), f.get("battery")))
         conn.commit()
 
         t = f.get("t")
         if t == "beacon":
             pass
         elif t == "msg" or t == "task":
-            self._on_msg(f if t == "msg" else {**f, "cls": "control"}, rssi)
+            if t == "task" and not f.get("text"):
+                # normalize bare task fields into the stored text payload
+                f = dict(f, text=json.dumps(
+                    {k: v for k, v in f.items()
+                     if k in ("task_id", "role", "target", "ttl_s")}))
+            self._on_msg(
+                f if t == "msg" else {**f, "cls": "control"}, rssi)
         elif t == "ack":
             # delivery receipt — mark our own originated message acked
             conn.execute(
@@ -460,14 +475,17 @@ class Api(BaseHTTPRequestHandler):
                  "hops": r[4], "rssi": r[5], "cls": r[6]} for r in rows]})
         elif self.path == "/peers":
             rows = conn.execute(
-                "SELECT node_id, last_seen, rssi, pos FROM neighbors"
-                " ORDER BY last_seen DESC").fetchall()
+                "SELECT node_id, last_seen, rssi, pos, role, batt"
+                " FROM neighbors ORDER BY last_seen DESC").fetchall()
             self._json({"peers": [
                 {"node": r[0], "age_s": round(time.time() - r[1], 1),
                  "rssi": r[2],
-                 "pos": json.loads(r[3]) if r[3] else None} for r in rows],
-                "self_pos": [float(v) for v in POS.split(",")]
-                if POS and "," in POS else None})
+                 "pos": json.loads(r[3]) if r[3] else None,
+                 "role": r[4], "batt": r[5]} for r in rows],
+                "self": {"node": NODE_ID, "role": ROLE or "node",
+                         "batt": BATT,
+                         "pos": [float(v) for v in POS.split(",")]
+                         if POS and "," in POS else None}})
         elif self.path == "/queue":
             rows = all_pending()
             self._json({"pending": [
@@ -504,12 +522,21 @@ class Api(BaseHTTPRequestHandler):
                                "id": "see /queue"})
         if self.path == "/task":
             # swarm/coordinator tasking frame (PROTOCOL_v1 §3.3)
+            # structured: {"role":"sensor","target":[x,y],"ttl":3600,"text":"..."}
             to = data.get("to", "*")
             text = data.get("text", "")
-            if not text:
-                return self._json({"error": "empty text"}, 400)
-            ok = engine.send_msg(to, text, "control")
-            return self._json({"queued": ok, "to": to, "cls": "control"})
+            if not text and not data.get("role"):
+                return self._json({"error": "need text or role"}, 400)
+            tid = mid()
+            payload = {"task_id": tid, "from": NODE_ID, "to": to,
+                       "role": data.get("role", "any"),
+                       "target": data.get("target"),
+                       "ttl_s": int(data.get("ttl", 3600)),
+                       "text": text or f"task:{data.get('role')}",
+                       "ts": time.time()}
+            ok = engine.send_msg(to, json.dumps(payload), "control")
+            return self._json({"queued": ok, "task_id": tid,
+                               "cls": "control"})
         self._json({"error": "not found"}, 404)
 
     def log_message(self, *a):
@@ -539,6 +566,11 @@ button{padding:8px 16px;border:0;border-radius:6px;background:#5eead4;color:#0d1
  style="background:#0a1018;border-radius:8px"></svg>
  <div class=dim id=mapnote>set ARCTIC_POS=lat,lon on nodes to plot positions</div></div>
 <h2>Inbox</h2><div id=inbox></div>
+<h2>Swarm / fleet</h2><div class=card><div id=swarm class=dim>—</div>
+ <form onsubmit="task(event)" style="margin-top:8px">
+  <input id=troleg placeholder="role: sensor|eye|relay|charger|any" style="max-width:170px">
+  <input id=ttxt placeholder="tasking message (e.g. IGITION sector 7)" >
+  <button>task</button></form></div>
 <h2>Peers</h2><div id=peers></div>
 <h2>Pending queue</h2><div id=queue></div>
 <script>
@@ -547,7 +579,7 @@ const CLSC={alert:'#ff6b6b',control:'#ffd166',data:'#5eead4',telemetry:'#7f92a8'
 function clsBadge(c){return '<span class=pill style="background:'+(CLSC[c]||'#1e3a5c')+'22;color:'+(CLSC[c]||'#7f92a8')+'">'+(c||'data')+'</span>'}
 function drawMap(p){
  let pts=[];
- if(p.self_pos)pts.push({n:'__NODE__',pos:p.self_pos,self:1});
+ if(p.self&&p.self.pos)pts.push({n:p.self.node,pos:p.self.pos,self:1});
  p.peers.forEach(x=>{if(x.pos)pts.push({n:x.node,pos:x.pos,rssi:x.rssi})});
  let svg=document.getElementById('map'),note=document.getElementById('mapnote');
  if(pts.length<2){svg.innerHTML='';note.textContent='need ≥2 positioned nodes (ARCTIC_POS=lat,lon)';return}
@@ -578,8 +610,15 @@ async function refresh(){
   '<div class=msg><b>'+m.from+'</b> → '+m.to+' '+clsBadge(m.cls)+' · '+new Date(m.ts*1000).toLocaleTimeString()+
   ' <span class=dim>rssi '+m.rssi+'</span><br>'+m.text+'</div>').join('')||'<div class=dim>empty</div>';
  let p=await j('/peers'); drawMap(p);
- document.getElementById('peers').innerHTML='<table><tr><th>node</th><th>age</th><th>rssi</th><th>pos</th></tr>'+
-  p.peers.map(x=>'<tr><td>'+x.node+'</td><td>'+x.age_s+'s</td><td>'+x.rssi+'</td><td>'+(x.pos?x.pos.join(', '):'—')+'</td></tr>').join('')+'</table>';
+ // swarm panel: fleet by role
+ let byRole={};
+ (p.peers||[]).forEach(x=>{let r=x.role||'node';byRole[r]=byRole[r]||[];byRole[r].push(x)});
+ let selfR=(p.self&&p.self.role)||'node';byRole[selfR]=byRole[selfR]||[];
+ document.getElementById('swarm').innerHTML=Object.keys(byRole).sort().map(r=>
+  '<div><b style="color:#5eead4">'+r+'</b> ('+byRole[r].length+'): '+
+  byRole[r].map(x=>x.node+(x.batt!=null?' '+x.batt+'%':'')).join(', ')+'</div>').join('')||'no fleet data';
+ document.getElementById('peers').innerHTML='<table><tr><th>node</th><th>role</th><th>batt</th><th>age</th><th>rssi</th><th>pos</th></tr>'+
+  p.peers.map(x=>'<tr><td>'+x.node+'</td><td>'+(x.role||'—')+'</td><td>'+(x.batt!=null?x.batt+'%':'—')+'</td><td>'+x.age_s+'s</td><td>'+x.rssi+'</td><td>'+(x.pos?x.pos.join(', '):'—')+'</td></tr>').join('')+'</table>';
  let q=await j('/queue');
  document.getElementById('queue').innerHTML='<table><tr><th>id</th><th>class</th><th>from→to</th><th>text</th><th>hops</th></tr>'+
   q.pending.map(x=>'<tr><td>'+x.id+'</td><td>'+clsBadge(x.cls)+'</td><td>'+x.from+'→'+x.to+'</td><td>'+x.text+'</td><td>'+x.hops+'</td></tr>').join('')+'</table>';
@@ -588,6 +627,11 @@ async function send(e){e.preventDefault();
  await j('/send',{method:'POST',headers:{'Content-Type':'application/json'},
   body:JSON.stringify({to:document.getElementById('to').value||'*',text:document.getElementById('t').value})});
  document.getElementById('t').value='';refresh()}
+async function task(e){e.preventDefault();
+ await j('/task',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({role:document.getElementById('troleg').value||'any',
+   text:document.getElementById('ttxt').value})});
+ document.getElementById('ttxt').value='';refresh()}
 refresh();setInterval(refresh,3000);
 </script></body></html>"""
 

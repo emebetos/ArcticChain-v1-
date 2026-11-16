@@ -30,7 +30,7 @@ pub enum EnvelopeError {
 }
 
 fn header(src: &NodeId, dst: &NodeId, msg_id: u64) -> Vec<u8> {
-    let mut h = b"MONOLITH-E2E-v1".to_vec();
+    let mut h = b"ARCTIC-E2E-v1".to_vec();
     h.extend_from_slice(&src.0);
     h.extend_from_slice(&dst.0);
     h.extend_from_slice(&msg_id.to_le_bytes());

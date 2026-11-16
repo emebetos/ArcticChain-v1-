@@ -21,7 +21,7 @@ pub struct LinkStateAdvert {
 }
 
 fn lsa_bytes(origin: &NodeId, seq: u64, links: &[(NodeId, LinkMetrics)]) -> Vec<u8> {
-    let mut m = b"MONOLITH-LSA-v1".to_vec();
+    let mut m = b"ARCTIC-LSA-v1".to_vec();
     m.extend_from_slice(&origin.0);
     m.extend_from_slice(&seq.to_le_bytes());
     for (n, l) in links {

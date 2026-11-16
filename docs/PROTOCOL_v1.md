@@ -51,10 +51,15 @@ ArcticPhone-class devices.
 
 ```
 { "t":"beacon", "node":<id>, "community":<name>, "ts":<unix>,
-  "pos":[lat,lon]|null, "batt":<pct>, "sig":<hmac|ed25519> }
+  "pos":[lat,lon]|null, "batt":<pct>, "role":<str>|null,
+  "sig":<hmac|ed25519> }
 ```
 
-Beacons are small, frequent, and may be unsigned in dev mode
+`role` advertises swarm/fleet function (`sensor|eye|relay|charger|
+node`) set via `ARCTIC_ROLE`; `batt` via `ARCTIC_BATT`. Both feed the
+coordinator's fleet registry (neighbors table → `/peers` + dashboard
+swarm panel). Beacons remain small, frequent, and may be unsigned in
+dev mode
 (`ARCTIC_KEY` empty). In production they carry an Ed25519 signature
 over canonical JSON — beacon forgery only enables bad neighbor tables,
 not mail injection, because mail is E2E-encrypted anyway.
@@ -75,9 +80,10 @@ Binary layout (unchanged from Rust):
   for diagnostics, not security-relevant)
 - Plaintext payload = UTF-8 JSON `{"class","text","reply_to",...}`
 
-Note: Rust domain separator currently reads `MONOLITH-E2E-v1` —
-**must be renamed `ARCTIC-E2E-v1`** when the envelope is adopted on-air
-(domain separation is a one-line change; flagged, not silently done).
+Note: Rust domain separators renamed `MONOLITH-*` → `ARCTIC-*`
+(`ARCTIC-E2E-v1`, `ARCTIC-DH-BINDING-v1`, `ARCTIC-LSA-v1`) — safe because
+nothing has been deployed on-air; any future wire change bumps the `-vN`
+suffix instead.
 
 ### 3.3 Control frames (agent2, JSON, HMAC or Ed25519-signed)
 
@@ -89,6 +95,22 @@ Note: Rust domain separator currently reads `MONOLITH-E2E-v1` —
 
 `task` frames are the swarm coordination primitive — signed, class
 `control`, highest priority, small TTL.
+
+**Implemented form (agent2):** tasking is issued via `POST /task` with
+`{"role","target","ttl","text","to"}`. It is emitted as a `msg` frame
+with `cls:"control"` whose `text` field carries a JSON payload:
+
+```json
+{"task_id":"<id>","from":"<node>","to":"<node|*>","role":"sensor",
+ "target":[x,y]|null,"ttl_s":3600,"text":"...","ts":<unix>}
+```
+
+A bare `t:"task"` frame (task fields at top level, no `text`) is also
+accepted on receive; its structured fields are folded into `text` as
+the same JSON shape and it is stored/forwarded with `cls:"control"`.
+Recipients distinguish tasking by parsing `text` as JSON and checking
+for `task_id` — task *execution* (movement, sensing) is firmware/agent
+behavior, not protocol.
 
 ## 4. Message classes & priority
 

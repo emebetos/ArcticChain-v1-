@@ -52,7 +52,7 @@ impl PublicIdentity {
 }
 
 fn binding_msg(dh_pk: &[u8; 32]) -> Vec<u8> {
-    let mut m = b"MONOLITH-DH-BINDING-v1".to_vec();
+    let mut m = b"ARCTIC-DH-BINDING-v1".to_vec();
     m.extend_from_slice(dh_pk);
     m
 }
