@@ -82,6 +82,8 @@ def db():
         "CREATE TABLE IF NOT EXISTS roster ("
         "subject TEXT PRIMARY KEY, role TEXT, issuer TEXT,"
         " seq INTEGER, ts REAL)")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)")
     # v1 protocol columns — ALTER for pre-v1 databases
     for ddl in (
         "ALTER TABLE messages ADD COLUMN cls TEXT DEFAULT 'data'",
@@ -121,6 +123,34 @@ def roster_role(node):
 
 def roster_is_admin(node):
     return roster_role(node) == "admin"
+
+
+def meta_get(k):
+    r = conn.execute("SELECT v FROM meta WHERE k=?", (k,)).fetchone()
+    return r[0] if r else None
+
+
+def meta_set(k, v):
+    conn.execute("INSERT INTO meta VALUES (?,?)"
+                 " ON CONFLICT(k) DO UPDATE SET v=excluded.v", (k, v))
+    conn.commit()
+
+
+# community key: explicit provisioning (ARCTIC_KEY) wins; else last
+# rotated key persists in meta so restarts keep the current key.
+if not COMMUNITY_KEY:
+    COMMUNITY_KEY = meta_get("key") or ""
+KEY_SEQ = int(meta_get("key_seq") or "0")
+
+
+def apply_key(new_key, seq):
+    """Rotate the community key locally and persist it."""
+    global COMMUNITY_KEY, KEY_SEQ
+    COMMUNITY_KEY = new_key
+    KEY_SEQ = seq
+    meta_set("key", new_key)
+    meta_set("key_seq", str(seq))
+    print(f"[mesh] community key rotated to seq {seq}")
 
 
 def mid():
@@ -356,6 +386,16 @@ class Engine(threading.Thread):
             if self._apply_roster(f):
                 self.radio.send(payload)   # epidemic relay — raw frame keeps its sig
                 self.tx += 1
+        elif t == "keyupdate":
+            # key rotation — admin-issued, signed with the OLD key so
+            # un-rotated members can still verify and relay it raw
+            issuer = f.get("issuer") or f.get("node")
+            if issuer != f.get("node") or not roster_is_admin(issuer):
+                return
+            if int(f.get("seq", 0)) > KEY_SEQ and f.get("new_key"):
+                self.radio.send(payload)
+                self.tx += 1
+                apply_key(f["new_key"], int(f["seq"]))
         elif t == "msg" or t == "task":
             if ROSTER_ENFORCE:
                 src = f.get("from") or f.get("node")
@@ -632,6 +672,21 @@ class Api(BaseHTTPRequestHandler):
             if engine.roster_op(op, subject, data.get("role", "member")):
                 return self._json({"ok": True, "op": op, "subject": subject})
             return self._json({"error": "not a roster admin or stale op"}, 403)
+        if self.path == "/keyupdate":
+            # rotate the community key mesh-wide (admin only)
+            nk = data.get("new_key", "")
+            if not roster_is_admin(NODE_ID):
+                return self._json({"error": "not a roster admin"}, 403)
+            if len(nk) < 8:
+                return self._json({"error": "new_key too short (min 8)"}, 400)
+            seq = KEY_SEQ + 1
+            # sign + send with the OLD key first, then rotate locally —
+            # members verify the frame under the key it was issued with
+            frame = engine._frame("keyupdate", issuer=NODE_ID,
+                                  seq=seq, new_key=nk)
+            ok = engine.radio.send(frame)
+            apply_key(nk, seq)
+            return self._json({"ok": ok, "key_seq": seq})
         self._json({"error": "not found"}, 404)
 
     def log_message(self, *a):
@@ -667,6 +722,13 @@ button{padding:8px 16px;border:0;border-radius:6px;background:#5eead4;color:#0d1
   <input id=ttxt placeholder="tasking message (e.g. IGITION sector 7)" >
   <button>task</button></form></div>
 <h2>Peers</h2><div id=peers></div>
+<h2>Community roster</h2><div class=card><div id=roster class=dim>—</div>
+ <form onsubmit="rosterOp(event)" style="margin-top:8px">
+  <input id=rsub placeholder="node-id" style="max-width:170px">
+  <input id=rrole placeholder="member|admin" style="max-width:110px" value="member">
+  <button name=op value="add">enroll</button>
+  <button name=op value="revoke" style="background:#ff6b6b">revoke</button></form>
+ <div class=dim id=rosterNote></div></div>
 <h2>Pending queue</h2><div id=queue></div>
 <script>
 async function j(u,o){let r=await fetch(u,o);return r.json()}
@@ -714,6 +776,13 @@ async function refresh(){
   byRole[r].map(x=>x.node+(x.batt!=null?' '+x.batt+'%':'')).join(', ')+'</div>').join('')||'no fleet data';
  document.getElementById('peers').innerHTML='<table><tr><th>node</th><th>role</th><th>batt</th><th>age</th><th>rssi</th><th>pos</th></tr>'+
   p.peers.map(x=>'<tr><td>'+x.node+'</td><td>'+(x.role||'—')+'</td><td>'+(x.batt!=null?x.batt+'%':'—')+'</td><td>'+x.age_s+'s</td><td>'+x.rssi+'</td><td>'+(x.pos?x.pos.join(', '):'—')+'</td></tr>').join('')+'</table>';
+ let R=await j('/roster');
+ document.getElementById('roster').innerHTML=R.members.map(m=>
+  '<div><b style="color:'+(m.role=='admin'?'#ffd166':m.role=='revoked'?'#ff6b6b':'#5eead4')+'">'+m.role+'</b> '+
+  m.node+' <span class=dim>seq '+m.seq+'</span></div>').join('')||'empty';
+ document.getElementById('rosterNote').textContent=
+  (R.self_admin?'this node is a roster admin':'read-only — not a roster admin')+
+  (R.enforce?' · roster ENFORCED':'');
  let q=await j('/queue');
  document.getElementById('queue').innerHTML='<table><tr><th>id</th><th>class</th><th>from→to</th><th>text</th><th>hops</th></tr>'+
   q.pending.map(x=>'<tr><td>'+x.id+'</td><td>'+clsBadge(x.cls)+'</td><td>'+x.from+'→'+x.to+'</td><td>'+x.text+'</td><td>'+x.hops+'</td></tr>').join('')+'</table>';
@@ -727,6 +796,12 @@ async function task(e){e.preventDefault();
   body:JSON.stringify({role:document.getElementById('troleg').value||'any',
    text:document.getElementById('ttxt').value})});
  document.getElementById('ttxt').value='';refresh()}
+async function rosterOp(e){e.preventDefault();
+ let op=e.submitter?e.submitter.value:'add';
+ await j('/roster',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({op:op,subject:document.getElementById('rsub').value,
+  role:document.getElementById('rrole').value||'member'})});
+ document.getElementById('rsub').value='';refresh()}
 refresh();setInterval(refresh,3000);
 </script></body></html>"""
 

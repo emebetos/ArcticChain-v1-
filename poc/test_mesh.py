@@ -172,6 +172,39 @@ def main():
         assert b["role"] == "member", f"non-admin escalated itself: {b}"
         print("[6d] privilege-escalation roster frame IGNORED")
 
+        # --- key rotation: admin rotates, new key propagates over the air ---
+        new_key = "test-community-key-002"
+        r = post(8091, "/keyupdate", {"new_key": new_key})
+        assert r.get("ok"), f"keyupdate rejected: {r}"
+        time.sleep(2)
+        post(8091, "/send", {"to": "node-b", "text": "post-rotation hello"})
+        t0 = time.time()
+        rot = False
+        while time.time() - t0 < 15:
+            if any(m["text"] == "post-rotation hello"
+                   for m in get(8092, "/inbox")["messages"]):
+                rot = True
+                break
+            time.sleep(0.5)
+        assert rot, "post-rotation unicast not delivered — B never rotated"
+        print("[7] keyupdate propagated — both nodes on new key, delivery OK")
+
+        # frames signed with the OLD key are now rejected
+        body = {"t": "msg", "id": "oldkey1", "node": "node-x",
+                "community": "default", "from": "node-x", "to": "*",
+                "text": "OLDKEY", "hops": 8, "ts": time.time()}
+        canon = _js.dumps(body, sort_keys=True, separators=(",", ":"))
+        body["sig"] = _hm.new(key.encode(), canon.encode(),
+                            _hl.sha256).hexdigest()[:32]
+        s = _sk.socket(_sk.AF_INET, _sk.SOCK_DGRAM)
+        s.setsockopt(_sk.SOL_SOCKET, _sk.SO_BROADCAST, 1)
+        s.sendto(_js.dumps(body).encode(), ("<broadcast>", 9201))
+        s.close()
+        time.sleep(1)
+        assert not any(m["text"] == "OLDKEY"
+                       for m in get(8092, "/inbox")["messages"]),             "old-key frame accepted after rotation!"
+        print("[7b] old-key frame REJECTED post-rotation")
+
         q = get(8091, "/queue")["pending"]
         st = get(8091, "/stats")
         print(f"[5] stats: {st} | A pending: {len(q)}")
