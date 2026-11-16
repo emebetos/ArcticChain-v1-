@@ -495,109 +495,288 @@ def view3(s, x, y, wpx, hpx, comps=None, label=None, hide_dims=False):
     return x0, y0, x1, y1
 
 
+# ============================================================ detail library
+# Reusable hardware details — screws, solar cells, antennas, vents, clips,
+# connectors, PCBs, cells, fasteners. Every figure uses the same vocabulary
+# so the whole set reads like one engineering language.
+
+import math
+
+
+def d_screw(s, x, y, r=5):
+    """Countersunk pan screw: head circle + drive slot."""
+    s.circ(x, y, r, fill="#e9e9e9", stroke=INK, sw=1)
+    s.ln(x - r * 0.55, y, x + r * 0.55, y, INK, 1.1)
+
+
+def d_solar(s, x, y, w, h, nx=3, ny=3, label=None):
+    """Solar cell window: blue-tinted area + cell bus grid."""
+    s.rect(x, y, w, h, fill="#dbe7f4", stroke=INK, sw=1.3)
+    for i in range(1, nx):
+        s.ln(x + i * w / nx, y + 3, x + i * w / nx, y + h - 3, SOFT, 0.9)
+    for j in range(1, ny):
+        s.ln(x + 3, y + j * h / ny, x + w - 3, y + j * h / ny, SOFT, 0.9)
+    if label:
+        s.t(x + w / 2, y + h + 16, label, 10, "middle", SOFT)
+
+
+def d_whip(s, x, y, h=60, lean=0):
+    """Antenna whip: tapered body + connector base. (x,y) = base top."""
+    s.rect(x - 5, y - 4, 10, 10, fill="#3a3a3a", stroke=INK, sw=1, r=2)
+    s.poly([(x - 3, y - 4), (x + 3, y - 4),
+            (x + 1.4 + lean, y - h), (x - 1.4 + lean, y - h)],
+           fill="#2a2a2a", stroke=INK, sw=0.8)
+
+
+def d_vent(s, x, y, w, n=6):
+    """Row of vent slots (ePTFE membrane zone)."""
+    for i in range(n):
+        s.rect(x + i * w / n, y, w / n * 0.45, 9,
+               fill="none", stroke=SOFT, sw=0.9, r=2)
+
+
+def d_usbc(s, x, y, scale=1.0):
+    """USB-C port face."""
+    w, h = 34 * scale, 13 * scale
+    s.rect(x - w / 2, y - h / 2, w, h, fill="none", stroke=INK, sw=1.2, r=h / 2)
+    s.rect(x - w * 0.32, y - h * 0.22, w * 0.64, h * 0.44,
+           fill=INK, r=h * 0.2)
+
+
+def d_btn(s, x, y, w, h, color="#3a3a3a"):
+    """Tactile key (side button)."""
+    s.rect(x, y, w, h, fill=color, stroke=INK, sw=1, r=min(5, h / 3))
+
+
+def d_led(s, x, y, r=4, color=ACC):
+    """Status LED + light-pipe bezel."""
+    s.circ(x, y, r + 2.5, fill="none", stroke=SOFT, sw=0.7)
+    s.circ(x, y, r, fill=color, stroke=INK, sw=0.8)
+
+
+def d_gland(s, x, y):
+    """Cable gland, bottom edge."""
+    s.rect(x - 9, y - 11, 18, 15, fill="none", stroke=INK, sw=1.2, r=3)
+    for i in range(3):
+        s.ln(x - 9, y - 7 + i * 4.5, x + 9, y - 7 + i * 4.5, SOFT, 0.7)
+
+
+def d_pogo(s, x, y, r=7):
+    """Pogo-pin dock contact pad."""
+    s.circ(x, y, r, fill="#e9e9e9", stroke=INK, sw=1.2)
+    s.circ(x, y, r * 0.45, fill="none", stroke=SOFT, sw=0.9)
+
+
+def d_pcb(s, x, y, w, h, label="PCB"):
+    """Circuit board with chips + trace hint."""
+    s.rect(x, y, w, h, fill="#e4ede0", stroke=INK, sw=1.1)
+    s.rect(x + w * 0.10, y + h * 0.18, w * 0.30, h * 0.30,
+           fill="#cdd6ca", stroke=INK, sw=0.8)
+    s.rect(x + w * 0.52, y + h * 0.14, w * 0.34, h * 0.24,
+           fill="#cdd6ca", stroke=INK, sw=0.8)
+    s.rect(x + w * 0.55, y + h * 0.55, w * 0.30, h * 0.18,
+           fill="#d8c88a", stroke=INK, sw=0.7)
+    for i in range(3):
+        s.ln(x + w * 0.10, y + h * (0.58 + i * 0.10),
+             x + w * 0.42, y + h * (0.58 + i * 0.10), SOFT, 0.6)
+    s.t(x + w / 2, y + h - 6, label, 9, "middle", SOFT)
+
+
+def d_cells(s, x, y, n=4, r=16, gap=8):
+    """Row of 18650 cells (end-on circles)."""
+    for i in range(n):
+        cx = x + i * (2 * r + gap) + r
+        s.circ(cx, y + r, r, fill="#e9e9e9", stroke=INK, sw=1)
+        s.circ(cx, y + r, 4.5, fill="none", stroke=INK, sw=0.8)
+
+
+def d_cam(s, x, y, r=10):
+    """Camera: outer ring + lens + glint."""
+    s.circ(x, y, r, fill="#151515", stroke=INK, sw=1.2)
+    s.circ(x, y, r * 0.55, fill="#2c3e50", stroke="#4a6a8a", sw=1)
+    s.circ(x - r * 0.2, y - r * 0.2, r * 0.15, fill="#aaccee", stroke="none")
+
+
+def d_grille(s, x, y, w=44, rows=2):
+    """Speaker/mic pinhole grille."""
+    for j in range(rows):
+        for i in range(int(w / 9)):
+            s.circ(x + i * 9, y + j * 9, 1.6, fill=INK)
+
+
+def d_latch(s, x, y):
+    """Enclosure draw-latch clasp."""
+    s.rect(x - 9, y - 13, 18, 26, fill="none", stroke=INK, sw=1.2, r=4)
+    s.rect(x - 5, y - 6, 10, 9, fill="#e9e9e9", stroke=INK, sw=0.8)
+
+
+def d_hinge(s, x, y, w=26):
+    """Door hinge knuckle: barrel + pin caps."""
+    s.rect(x, y - 8, w, 16, fill="none", stroke=INK, sw=1.2, r=6)
+    s.circ(x + 4, y, 3, fill="#e9e9e9", stroke=INK, sw=0.8)
+    s.circ(x + w - 4, y, 3, fill="#e9e9e9", stroke=INK, sw=0.8)
+
+
+def d_thumbs(s, x, y, r=9):
+    """Knurled thumb screw (module bay)."""
+    s.circ(x, y, r, fill="#e9e9e9", stroke=INK, sw=1.2)
+    for i in range(8):
+        a = i * math.pi / 4
+        s.ln(x + (r - 2.5) * math.cos(a), y + (r - 2.5) * math.sin(a),
+             x + r * math.cos(a), y + r * math.sin(a), INK, 0.7)
+    s.circ(x, y, 2.5, fill=INK)
+
+
+def d_branch(s, x, cy, w, r=26):
+    """Horizontal perch branch: woody band + end grain ring."""
+    s.rect(x, cy - r, w, 2 * r, fill="#cdbba0", stroke=INK, sw=1.2)
+    for i in range(3):
+        s.ln(x + w * (0.15 + i * 0.3), cy - r + 4,
+             x + w * (0.15 + i * 0.3), cy + r - 4, "#a89070", 1)
+
+
+def d_slab(s, x, y, w, d=20, h=15, color=FILL, sw=1.1):
+    """Exploded-view plate: front face + top face + side sliver."""
+    dx, dy = d * 0.45, -d * 0.42
+    if color != "none":
+        s.poly([(x, y), (x + dx, y + dy), (x + w + dx, y + dy), (x + w, y)],
+               fill=shade(color, 1.18), stroke=INK, sw=sw)
+        s.poly([(x + w, y), (x + w + dx, y + dy),
+                (x + w + dx, y + h + dy), (x + w, y + h)],
+               fill=shade(color, 0.72), stroke=INK, sw=sw)
+    s.rect(x, y, w, h, fill=color, stroke=INK, sw=sw)
+
+
+def figcap(s, cx, y, num, caption):
+    """'Fig. N — CAPTION' centered under a figure."""
+    s.t(cx, y, f"Fig. {num}", 13, "middle", weight="bold")
+    s.t(cx, y + 19, caption.upper(), 10.5, "middle", SOFT, spacing="0.8")
+
+
+def explode(s, x, y, w, layers, d=22, h=15, gap=30, callx=None):
+    """Vertical exploded stack. layers: [(name, color, detail)].
+    Returns bottom y. Callouts drawn at callx (default right side)."""
+    yy = y
+    if callx is None:
+        callx = x + w + d + 70
+    for i, (name, color, detail) in enumerate(layers):
+        d_slab(s, x, yy, w, d=d, h=h, color=color)
+        s.t(callx, yy + h / 2 + 4, name, 12, weight="bold")
+        s.t(callx, yy + h / 2 + 20, detail, 10, color=SOFT)
+        s.ln(x + w + d, yy + h / 2, callx - 8, yy + h / 2 + 4, SOFT, 0.7)
+        if i < len(layers) - 1:
+            s.ln(x + w / 2, yy + h, x + w / 2, yy + h + gap, SOFT, 0.8, "4 4")
+        yy += h + gap
+    return yy
+
+
 # ============================================================ L1 BRICK ====
 def l1():
     out = []
 
-    # ---------------- 101 GENERAL ARRANGEMENT ----------------
-    s = Sheet("AF-L1-101", "GENERAL ARRANGEMENT — ORTHOGRAPHIC VIEWS",
-              "FIELD NODE · HANDHELD MESH BRICK · 160×80×32 mm", "L1 · BRICK")
+    # ---------------- 101 GA — prototype figure sheet ----------------
+    s = Sheet("AF-L1-101", "GENERAL ARRANGEMENT — FIELD NODE",
+              "HANDHELD MESH BRICK · 160×80×32 mm", "L1 · BRICK")
 
-    # TOP VIEW  (plan: X horizontal 160, Y vertical 80)
-    vx, vy = 90, 170
-    s.h(vx, vy - 40, "TOP VIEW")
-    sc = 3.4
-    Wpx, Dpx = 160 * sc, 80 * sc          # 544 x 272
-    x0, y0 = vx, vy
-    s.plan(x0, y0, Wpx, Dpx)
-    # components (fractions)
-    comps = [
-        (0.04, 0.06, 0.16, 0.30, "LTE ANT"),
-        (0.80, 0.06, 0.16, 0.30, "LORA ANT"),
-        (0.34, 0.10, 0.32, 0.62, "E-INKE + CM5/HAT STACK"),
-        (0.10, 0.74, 0.80, 0.18, "BATTERY 4×18650"),
-    ]
-    for fx, fy, fw, fh, txt in comps:
-        rx, ry = x0 + fx * Wpx, y0 + fy * Dpx
-        s.rect(rx, ry, fw * Wpx, fh * Dpx, fill="none", stroke=INK, sw=0.9)
-        s.t(rx + fw * Wpx / 2, ry + fh * Dpx / 2 + 4, txt, 11, "middle", SOFT)
-    s.dimh(x0, x0 + Wpx, y0 + Dpx + 34, "160")
-    s.dimv(x0 - 26, y0, y0 + Dpx, "80")
-    s.t(x0 + Wpx / 2, y0 + Dpx + 62,
-       "scale: shown NTS · dims in mm", 11, "middle", SOFT)
+    # ===== Fig. 1 — hero: brick face-up, e-ink live =====
+    cx, cy = 520, 340
+    G = s.device(cx, cy, 470, 235, 44, "#39424c", rad=18)
+    # e-ink window on top face — the public surface
+    ex0, ey0 = s.tpt(G, 0.07, 0.12)
+    ex1, ey1 = s.tpt(G, 0.62, 0.12)
+    ex2, ey2 = s.tpt(G, 0.62, 0.88)
+    ex3, ey3 = s.tpt(G, 0.07, 0.88)
+    s.poly([(ex0, ey0), (ex1, ey1), (ex2, ey2), (ex3, ey3)],
+           fill="#e8ecdf", stroke=INK, sw=1.3)
+    for i, txt in enumerate(("ARCTIKCHAIN MESH", "3 NODES · 14 MSG",
+                             "FIRE BAN ACTIVE")):
+        lx, ly = s.tpt(G, 0.11, 0.26 + i * 0.24)
+        s.t(lx, ly, txt, 9 if i else 10, color="#3a4a3a",
+            weight="bold" if i == 0 else "normal")
+    # SOS key + status LED on top face right side
+    sox, soy = s.tpt(G, 0.79, 0.5)
+    s.circ(sox, soy, 22, fill="#a83c2e", stroke=INK, sw=1.3)
+    s.t(sox, soy + 4, "SOS", 10, "middle", "#f4d7d2", "bold")
+    d_led(s, *s.tpt(G, 0.92, 0.16), r=4)
+    # shell screws
+    for a, b in ((0.05, 0.08), (0.95, 0.08), (0.05, 0.92), (0.95, 0.92)):
+        d_screw(s, *s.tpt(G, a, b), r=5)
+    # whips exiting top edge (LTE + LoRa)
+    w1x, w1y = s.fpt(G, 0.10, 0.0)
+    w2x, w2y = s.fpt(G, 0.90, 0.0)
+    d_whip(s, w1x, w1y, 74, lean=-12)
+    d_whip(s, w2x, w2y, 74, lean=12)
+    # front edge: USB-C + lanyard anchor + pogo contacts
+    ucx, ucy = s.fpt(G, 0.30, 1.0)
+    d_usbc(s, ucx, ucy + 2, 0.8)
+    for i in range(2):
+        d_pogo(s, *s.fpt(G, 0.55 + i * 0.14, 1.0), r=5)
+    lx_, ly_ = s.fpt(G, 0.88, 1.0)
+    s.rect(lx_ - 10, ly_ - 2, 20, 10, fill="none", stroke=INK, sw=1.4, r=5)
+    # callouts
+    s.callout(ex1 - 30, ey1 + 8, 100, 130,
+              "7.5 E-INK — public bulletin, zero idle power")
+    s.callout(sox, soy, 950, 300, "SOS KEY — dedicated hardware")
+    s.callout(w2x, w2y - 70, 950, 170, "LORA WHIP — 915 MHz mesh")
+    s.callout(w1x, w1y - 70, 100, 165, "LTE WHIP — backhaul when towers exist")
+    s.callout(ucx, ucy, 950, 500, "USB-C PD — charge + flash")
+    s.callout(*s.fpt(G, 0.62, 1.0), 950, 420, "POGO — sled/dock contacts")
+    s.callout(*s.fpt(G, 0.08, 0.55), 100, 560, "PETG SHELL — printed, hand-fixable")
+    figcap(s, cx, 640, 1, "L1 BRICK — face-up, e-ink bulletin live")
 
-    # FRONT VIEW  (160 wide × ~32 tall)
-    fx_, fy_ = 700, 170
-    s.h(fx_, fy_ - 40, "FRONT VIEW")
-    fsc = 3.4
-    FWpx, FHpx = 160 * fsc, 32 * fsc    # 544 x 109
-    x1, y1 = fx_, fy_
-    s.elev(x1, y1, FWpx, FHpx)
-    fcomps = [
-        (0.06, 0.10, 0.20, 0.55, "E-INKE"),
-        (0.34, 0.20, 0.32, 0.40, "HAT STACK"),
-        (0.70, 0.10, 0.20, 0.55, ""),
-    ]
-    for fx2, fy2, fw2, fh2, txt in fcomps:
-        rx, ry = x1 + fx2 * FWpx, y1 + fy2 * FHpx
-        s.rect(rx, ry, fw2 * FWpx, fh2 * FHpx, fill="none", stroke=INK, sw=0.9)
-        if txt:
-            s.t(rx + fw2 * FWpx / 2, ry + fh2 * FHpx / 2 + 4, txt, 11, "middle", SOFT)
-    # SOS button + LED on front face
-    s.circ(x1 + 0.52 * FWpx, y1 + 0.16 * FHpx, 11, fill=INK)
-    s.t(x1 + 0.52 * FWpx, y1 + 0.16 * FHpx + 4, "SOS", 9, "middle", PAPER)
-    s.circ(x1 + 0.56 * FWpx, y1 + 0.16 * FHpx, 4, fill=ACC)
-    # USB-C port bottom edge
-    s.rect(x1 + 0.30 * FWpx, y1 + FHpx - 4, 0.10 * FWpx, 5, fill=INK)
-    # antenna whips
-    s.ln(x1 + 0.12 * FWpx, y1, x1 + 0.12 * FWpx, y1 - 30, INK, 2)
-    s.ln(x1 + 0.88 * FWpx, y1, x1 + 0.88 * FWpx, y1 - 30, INK, 2)
-    s.dimh(x1, x1 + FWpx, y1 + FHpx + 34, "160")
-    s.dimv(x1 - 34, y1, y1 + FHpx, "32")
+    # ===== Fig. 2 — top view (lid off: internals) =====
+    t2x, t2y, t2w, t2h = 1120, 150, 430, 215
+    s.rect(t2x, t2y, t2w, t2h, fill=FILL, stroke=INK, sw=1.6, r=16)
+    d_cells(s, t2x + 24, t2y + t2h * 0.62, n=4, r=15, gap=10)
+    s.t(t2x + 24 + 4 * 38 // 2, t2y + t2h * 0.62 + 44,
+        "4×18650 — 44 Wh", 10, "middle", SOFT)
+    d_pcb(s, t2x + 24, t2y + 20, t2w * 0.46, t2h * 0.34, "CM5 + HATS")
+    d_pcb(s, t2x + t2w * 0.55, t2y + 20, t2w * 0.30, t2h * 0.34, "SX1262")
+    s.rect(t2x + t2w * 0.88, t2y + 20, 24, 70, fill="#dbe7f4",
+           stroke=INK, sw=0.9)
+    s.t(t2x + t2w * 0.88 + 12, t2y + 96, "SIM7600", 8, "middle", SOFT)
+    for a in (0.06, 0.94):
+        s.rect(t2x + a * t2w - 8, t2y - 6, 16, 12, fill="#3a3a3a",
+               stroke=INK, sw=1, r=3)
+    s.callout(t2x + t2w * 0.06, t2y - 4, 950, 108, "ANTENNA BASES ×2")
+    s.dimh(t2x, t2x + t2w, t2y + t2h + 34, "160")
+    s.dimv(t2x - 30, t2y, t2y + t2h, "80")
+    figcap(s, t2x + t2w / 2, t2y + t2h + 70, 2, "Top — lid off, internals")
 
-    # SIDE VIEW  (80 × 32)
-    sx_, sy_ = 1280, 170
-    s.h(sx_, sy_ - 40, "SIDE VIEW")
-    ssc = 3.4
-    SWpx, SHpx = 80 * ssc, 32 * ssc     # 272 x 109
-    x2, y2 = sx_, sy_
-    s.elev(x2, y2, SWpx, SHpx)
-    # battery tray at bottom (hidden line)
-    s.rect(x2 + 8, y2 + SHpx * 0.72, SWpx - 16, SHpx * 0.24,
-           fill="none", stroke=SOFT, sw=0.9, dash="6 3")
-    s.t(x2 + SWpx / 2, y2 + SHpx * 0.86, "4×18650 TRAY", 10, "middle", SOFT)
-    # board stack lines
-    for i, yy in enumerate((0.30, 0.48, 0.66)):
-        s.ln(x2 + 6, y2 + SHpx * yy, x2 + SWpx - 6, y2 + SHpx * yy, SOFT, 0.7)
-    s.dimh(x2, x2 + SWpx, y2 + SHpx + 34, "80")
-    s.dimv(x2 - 34, y2, y2 + SHpx, "32")
+    # ===== Fig. 3 — side section =====
+    s3x, s3y, s3w, s3h = 1120, 470, 300, 100
+    s.rect(s3x, s3y, s3w, s3h, fill=FILL, stroke=INK, sw=1.5, r=10)
+    s.rect(s3x + 12, s3y + 12, s3w - 24, s3h * 0.30, fill="#e4ede0",
+           stroke=SOFT, sw=0.8, dash="5 3")
+    s.t(s3x + s3w / 2, s3y + 34, "HAT STACK — e-ink / LoRa / LTE", 9, "middle", SOFT)
+    s.rect(s3x + 12, s3y + s3h * 0.52, s3w - 24, s3h * 0.34,
+           fill="none", stroke=SOFT, sw=0.9, dash="5 3")
+    s.t(s3x + s3w / 2, s3y + s3h * 0.72, "CELL TRAY", 9, "middle", SOFT)
+    s.dimh(s3x, s3x + s3w, s3y + s3h + 30, "80")
+    s.dimv(s3x - 30, s3y, s3y + s3h, "32")
+    figcap(s, s3x + s3w / 2, s3y + s3h + 64, 3, "Section B-B — stack")
 
-    # FEATURES strip (left column, below views)
-    fy = 560
-    s.h(90, fy, "WHAT THIS NODE IS")
-    s.bullets(90, fy + 26, [
-        "Handheld brick = mailbox + mesh repeater + public bulletin (E-Ink) + SOS beacon.",
-        "Runs ArctikChain agent on :8080 — SQLite store-and-forward, signed Ed25519 envelopes.",
-        "LoRa 915 MHz mesh to neighbors; LTE backhaul only when a tower exists.",
-        "Works with zero connectivity — that is the product.",
-    ], width=62)
+    # ===== Fig. 4 — exploded =====
+    e4x, e4y = 90, 730
+    explode(s, e4x, e4y, 210, [
+        ("TOP SHELL + E-INK", "#39424c", "window + SOS key + seal"),
+        ("HAT STACK", "#e4ede0", "CM5 + LoRa + LTE HATs"),
+        ("CELL TRAY", "#f0e8d8", "4×18650 → 14.8→5 V buck"),
+        ("LOWER SHELL", "#e9e9e9", "PETG + pogo + lanyard boss"),
+    ], d=18, h=14, gap=19, callx=e4x + 280)
+    figcap(s, e4x + 105, e4y + 170, 4, "Exploded — four assemblies")
 
-    s.h(560, fy, "KEY FEATURES")
-    s.table(560, fy + 18, [250, 640], ["Feature", "Detail"], [
-        ["Display", "7.5in e-Paper 800×480 — sunlight readable, zero idle power"],
-        ["Mesh radio", "SX1262 LoRa 915 MHz on SPI1 (GPIO 16–21)"],
-        ["Backhaul", "SIM7600 LTE HAT (optional) + GNSS + BT"],
-        ["Power", "4×18650 → 14.8 V → 5 V USB-C PD · ~44 Wh"],
-        ["Enclosure", "160×80×32 mm printed PETG · ~450 g assembled"],
+    # ===== right column — features + acceptance =====
+    s.h(1050, 680, "KEY FEATURES")
+    s.table(1050, 704, [130, 300], ["Feature", "Detail"], [
+        ["Display", "7.5in e-Paper — sun readable"],
+        ["Mesh + backhaul", "SX1262 915 · SIM7600 LTE"],
+        ["Power", "44 Wh · USB-C PD"],
+        ["Agent", ":8080 — signed envelopes"],
     ], rh=30)
-
-    s.h(560, 780, "ACCEPTANCE TEST")
-    s.bullets(560, 800, [
-        "Unit A POST /message → Unit B GET /inbox — with LTE in airplane mode.",
-        "Mesh delivery with no towers = the whole pitch in one test.",
-    ], width=95)
+    s.note(1050, 872, "Mailbox + repeater + bulletin + SOS. Works with zero "
+           "connectivity — that is the product.", size=10)
     out.append(s.svg(1, 5))
-
     # ---------------- 102 PARTS & POWER ----------------
     s = Sheet("AF-L1-102", "PARTS LIST & POWER",
               "BILL OF MATERIALS · POWER TREE · GPIO", "L1 · BRICK")
@@ -727,96 +906,149 @@ def l1():
 def mite():
     out = []
 
-    # ---------------- 101 GA ----------------
+    # ---------------- 101 GA — prototype figure sheet ----------------
     s = Sheet("AF-S-101", "GENERAL ARRANGEMENT — SWARM UNIT",
               "PERCHABLE ENVIRONMENTAL SENSOR · 90×90×35 mm", "S · MITE")
 
-    # TOP VIEW puck
-    vx, vy = 110, 160
-    s.h(vx, vy - 40, "TOP VIEW")
-    sc = 3.6
-    Wpx, Dpx = 90 * sc, 90 * sc          # 324
-    s.plan(vx, vy, Wpx, Dpx)
-    # solar cell center (dashed window)
-    s.rect(vx + Wpx * 0.17, vy + Dpx * 0.17, Wpx * 0.66, Dpx * 0.66,
-           fill="none", stroke=SOFT, sw=1, dash="8 4")
-    s.t(vx + Wpx / 2, vy + Dpx / 2 + 4, "SOLAR 62×62", 12, "middle", SOFT, "bold")
-    # pcb + battery offset
-    s.rect(vx + Wpx * 0.62, vy + Dpx * 0.10, Wpx * 0.24, Wpx * 0.24,
-           fill="none", stroke=INK, sw=0.9)
-    s.t(vx + Wpx * 0.74, vy + Dpx * 0.22 + 4, "PCB", 10, "middle", SOFT)
-    s.rect(vx + Wpx * 0.08, vy + Dpx * 0.66, Wpx * 0.40, Dpx * 0.20,
-           fill="none", stroke=INK, sw=0.9, dash="6 3")
-    s.t(vx + Wpx * 0.28, vy + Dpx * 0.78 + 4, "LiPo", 10, "middle", SOFT)
-    # sensors
-    s.circ(vx + Wpx * 0.80, vy + Dpx * 0.72, 10, fill=FILL, stroke=INK, sw=0.9)
-    s.t(vx + Wpx * 0.80, vy + Dpx * 0.72 + 4, "SNS", 9, "middle", SOFT)
-    s.dimh(vx, vx + Wpx, vy + Dpx + 34, "90")
-    s.dimv(vx - 34, vy, vy + Dpx, "90")
+    # ===== Fig. 1 — hero: mite perched on branch, isometric + callouts =====
+    cx, cy = 560, 330
+    # branch cylinder behind device (diagonal)
+    s.el.append(
+        f'<g transform="rotate(-18 {cx} {cy + 150})">'
+        f'<rect x="{cx - 330}" y="{cy + 128}" width="660" height="46" rx="23" '
+        f'fill="#cdbba0" stroke="{INK}" stroke-width="1.5"/>'
+        f'<ellipse cx="{cx - 330}" cy="{cy + 151}" rx="10" ry="23" '
+        f'fill="#b5a284" stroke="{INK}" stroke-width="1.2"/>'
+        f'</g>')
+    # clip jaws wrapping branch (drawn under body)
+    s.poly([(cx - 96, cy + 92), (cx - 96, cy + 168), (cx - 62, cy + 196),
+            (cx - 30, cy + 182), (cx - 30, cy + 150), (cx - 62, cy + 158),
+            (cx - 62, cy + 96)], fill="#e9e9e9", stroke=INK, sw=1.5)
+    s.poly([(cx + 96, cy + 92), (cx + 96, cy + 168), (cx + 62, cy + 196),
+            (cx + 30, cy + 182), (cx + 30, cy + 150), (cx + 62, cy + 158),
+            (cx + 62, cy + 96)], fill="#e9e9e9", stroke=INK, sw=1.5)
+    # clip coil spring
+    for i in range(5):
+        s.circ(cx - 78, cy + 108 + i * 16, 6, fill="none", stroke=SOFT, sw=0.9)
+    for i in range(5):
+        s.circ(cx + 78, cy + 108 + i * 16, 6, fill="none", stroke=SOFT, sw=0.9)
+    # body — iso product shot
+    G = s.device(cx, cy, 330, 118, 130, "#3d4a42", rad=16)
+    fx, fy = G["fx"], G["fy"]
+    # top face: solar window + cell grid (mapped parallelogram)
+    tx0, ty0 = s.tpt(G, 0.18, 0.10)
+    tx1, ty1 = s.tpt(G, 0.82, 0.10)
+    tx2, ty2 = s.tpt(G, 0.82, 0.90)
+    tx3, ty3 = s.tpt(G, 0.18, 0.90)
+    s.poly([(tx0, ty0), (tx1, ty1), (tx2, ty2), (tx3, ty3)],
+           fill="#dbe7f4", stroke=INK, sw=1.2)
+    for a in (1 / 3, 2 / 3):
+        s.ln(*s.tpt(G, 0.18 + 0.64 * a, 0.10), *s.tpt(G, 0.18 + 0.64 * a, 0.90),
+             SOFT, 0.8)
+        s.ln(*s.tpt(G, 0.18, 0.10 + 0.80 * a), *s.tpt(G, 0.82, 0.10 + 0.80 * a),
+             SOFT, 0.8)
+    # lid screws on top corners
+    for a, b in ((0.08, 0.12), (0.92, 0.12), (0.08, 0.88), (0.92, 0.88)):
+        d_screw(s, *s.tpt(G, a, b), r=4.5)
+    # front face: gasket seam + sensor vent band + LED + pogo notch
+    sx0, sy0 = s.fpt(G, 0.05, 0.30)
+    sx1, sy1 = s.fpt(G, 0.95, 0.30)
+    s.ln(sx0, sy0, sx1, sy1, SOFT, 1, "7 4")
+    d_vent(s, *s.fpt(G, 0.10, 0.55), w=G["w"] * 0.34, n=6)
+    d_led(s, *s.fpt(G, 0.88, 0.18), r=4)
+    for i in range(2):
+        d_pogo(s, *s.fpt(G, 0.30 + i * 0.40, 0.86), r=6)
+    # side face: antenna stub + JST service notch
+    ax, ay = s.spt(G, 0.55, 0.75)
+    s.poly([(ax, ay), (ax + 26, ay - 34), (ax + 32, ay - 30), (ax + 8, ay + 4)],
+           fill="#2a2a2a", stroke=INK, sw=1)
+    # callouts — arc-reactor style leaders
+    s.callout(*s.tpt(G, 0.30, 0.28), 120, 150,
+              "SOLAR WINDOW 62×62 mm — under-film cell")
+    s.callout(*s.tpt(G, 0.88, 0.80), 950, 140,
+              "LID SCREWS ×4 — M2, service access")
+    s.callout(*s.fpt(G, 0.28, 0.62), 120, 480,
+              "SENSOR APERTURE — ePTFE vent (gas in, water out)")
+    s.callout(*s.fpt(G, 0.88, 0.18), 950, 250,
+              "STATUS LED — light pipe")
+    s.callout(*s.fpt(G, 0.50, 0.86), 940, 430,
+              "POGO PADS ×2 — Anchor dock")
+    s.callout(ax + 20, ay - 25, 940, 330, "LORA ANTENNA — 915 MHz whip")
+    s.callout(cx - 78, cy + 150, 120, 620,
+              "SPRING CLIP — steel, grips Ø10–40 branch")
+    figcap(s, cx, 622, 1, "S MITE — perched on branch (isometric)")
 
-    # FRONT VIEW (90 × 35)
-    fx_, fy_ = 640, 160
-    s.h(fx_, fy_ - 40, "FRONT VIEW")
-    fsc = 3.6
-    FWpx, FHpx = 90 * fsc, 35 * fsc     # 324 x 126
-    x1, y1 = fx_, fy_
-    s.elev(x1, y1, FWpx, FHpx)
-    # solar top line
-    s.ln(x1 + 4, y1 + 3, x1 + FWpx - 4, y1 + 3, INK, 2.5)
-    s.t(x1 + FWpx / 2, y1 - 14, "SOLAR CELL (under window)", 11, "middle", SOFT)
-    # clip below
-    s.ln(x1 + FWpx * 0.25, y1 + FHpx, x1 + FWpx * 0.25, y1 + FHpx + 40, INK, 2)
-    s.ln(x1 + FWpx * 0.75, y1 + FHpx, x1 + FWpx * 0.75, y1 + FHpx + 40, INK, 2)
-    s.ln(x1 + FWpx * 0.25, y1 + FHpx + 40, x1 + FWpx * 0.75, y1 + FHpx + 40, INK, 2)
-    s.circ(x1 + FWpx / 2, y1 + FHpx + 62, 22, fill="none", stroke=SOFT, sw=1, dash="5 3")
-    s.t(x1 + FWpx / 2, y1 + FHpx + 108, "PERCH CLIP — grips Ø10–40", 11, "middle", SOFT)
-    s.dimh(x1, x1 + FWpx, y1 + FHpx + 130, "90")
-    s.dimv(x1 - 34, y1, y1 + FHpx, "35")
+    # ===== Fig. 2 — top view =====
+    t2x, t2y, t2w = 1150, 150, 300
+    s.rect(t2x, t2y, t2w, t2w, fill=FILL, stroke=INK, sw=1.6, r=26)
+    d_solar(s, t2x + 52, t2y + 52, t2w - 104, t2w - 104, nx=3, ny=3)
+    for a, b in ((0.10, 0.10), (0.90, 0.10), (0.10, 0.90), (0.90, 0.90)):
+        d_screw(s, t2x + a * t2w, t2y + b * t2w, r=5)
+    d_led(s, t2x + t2w * 0.80, t2y + t2w * 0.16, r=4)
+    s.rect(t2x + t2w * 0.28, t2y + t2w - 8, t2w * 0.44, 12,
+           fill="none", stroke=SOFT, sw=0.9, dash="5 3")
+    s.t(t2x + t2w / 2, t2y + t2w + 16, "antenna + clip pivot (below)", 10, "middle", SOFT)
+    s.dimh(t2x, t2x + t2w, t2y + t2w + 40, "90")
+    s.dimv(t2x - 32, t2y, t2y + t2w, "90")
+    figcap(s, t2x + t2w / 2, t2y + t2w + 74, 2, "Top view — solar deck")
 
-    # SIDE VIEW
-    sx_, sy_ = 1100, 160
-    s.h(sx_, sy_ - 40, "SIDE VIEW")
-    ssc = 3.6
-    SWpx, SHpx = 90 * ssc, 35 * ssc
-    x2, y2 = sx_, sy_
-    s.elev(x2, y2, SWpx, SHpx)
-    s.rect(x2 + SWpx * 0.30, y2 + SHpx * 0.25, SWpx * 0.40, SHpx * 0.30,
-           fill="none", stroke=SOFT, sw=0.9, dash="6 3")
-    s.t(x2 + SWpx * 0.50, y2 + SHpx * 0.42 + 4, "PCB+RADIO", 10, "middle", SOFT)
-    s.rect(x2 + SWpx * 0.08, y2 + SHpx * 0.62, SWpx * 0.50, SHpx * 0.16,
-           fill="none", stroke=SOFT, sw=0.9, dash="6 3")
-    s.t(x2 + SWpx * 0.33, y2 + SHpx * 0.72 + 4, "BATTERY", 10, "middle", SOFT)
-    s.ln(x2 + SWpx * 0.25, y2 + SHpx, x2 + SWpx * 0.25, y2 + SHpx + 40, INK, 2)
-    s.ln(x2 + SWpx * 0.75, y2 + SHpx, x2 + SWpx * 0.75, y2 + SHpx + 40, INK, 2)
-    s.ln(x2 + SWpx * 0.25, y2 + SHpx + 40, x2 + SWpx * 0.75, y2 + SHpx + 40, INK, 2)
-    s.dimh(x2, x2 + SWpx, y2 + SHpx + 34, "90")
-    s.dimv(x2 - 34, y2, y2 + SHpx, "35")
+    # ===== Fig. 3 — front elevation: perched, section A-A hint =====
+    f3x, f3y, f3w, f3h = 90, 750, 300, 105
+    d_branch(s, f3x - 16, f3y + f3h + 72, f3w + 32, r=20)
+    s.poly([(f3x + 60, f3y + f3h), (f3x + 60, f3y + f3h + 72),
+            (f3x + 82, f3y + f3h + 90), (f3x + 104, f3y + f3h + 80),
+            (f3x + 104, f3y + f3h + 64), (f3x + 82, f3y + f3h + 68),
+            (f3x + 82, f3y + f3h)], fill="#e9e9e9", stroke=INK, sw=1.4)
+    s.poly([(f3x + 240, f3y + f3h), (f3x + 240, f3y + f3h + 72),
+            (f3x + 218, f3y + f3h + 90), (f3x + 196, f3y + f3h + 80),
+            (f3x + 196, f3y + f3h + 64), (f3x + 218, f3y + f3h + 68),
+            (f3x + 218, f3y + f3h)], fill="#e9e9e9", stroke=INK, sw=1.4)
+    s.rect(f3x, f3y, f3w, f3h, fill=FILL, stroke=INK, sw=1.6, r=14)
+    s.ln(f3x + 6, f3y + 26, f3x + f3w - 6, f3y + 26, SOFT, 1, "7 4")
+    d_vent(s, f3x + 22, f3y + 52, f3w * 0.42, n=6)
+    d_led(s, f3x + f3w * 0.86, f3y + 20, r=4)
+    for i in range(2):
+        d_pogo(s, f3x + f3w * (0.32 + i * 0.36), f3y + f3h - 14, r=6)
+    s.dimh(f3x, f3x + f3w, f3y - 30, "90")
+    s.dimv(f3x - 34, f3y, f3y + f3h, "35")
+    figcap(s, f3x + f3w / 2 + 8, f3y + f3h + 120, 3,
+           "Front elevation — perched")
 
-    # features
-    fy = 560
-    s.h(110, fy, "WHAT THIS NODE IS")
-    s.bullets(110, fy + 26, [
-        "One member of the fire-watch swarm — the swarm IS the sensor, not the individual bee.",
-        "Minimal on purpose: solar top, LoRa radio, temp/RH/VOC sensing, perch clip.",
-        "Default state = perched and reporting. Flight is a later role, not the power budget.",
-        "Same signed mesh identity as every ArctikChain node.",
-    ], width=110)
+    # ===== Fig. 4 — exploded stack =====
+    e4x, e4y = 560, 720
+    explode(s, e4x, e4y, 240, [
+        ("LID + SOLAR FILM", "#dbe7f4", "PC-ABS lid, 1 mm film under window"),
+        ("GASKET", "#f2f5f9", "die-cut TPU bead — IP65"),
+        ("CARRIER PCB + RADIO", "#e4ede0", "38×38 4-layer + SX1262 + ENS160"),
+        ("BATTERY BAY + LiPo", "#f0e8d8", "503450 2000 mAh, slide tray"),
+        ("LOWER SHELL", "#e9e9e9", "ASA 2.5 mm + clip pivot boss"),
+        ("CLIP ASSEMBLY", "#d8d8d8", "spring steel ×2 + pivot pin"),
+    ], d=20, h=16, gap=18, callx=e4x + 300)
+    figcap(s, e4x + 120, e4y + 234, 4, "Exploded stack — 6 parts, hand tools only")
 
-    s.h(640, fy, "SWARM ROLES (ASSIGNED BY MESH AI)")
-    s.table(640, fy + 18, [150, 300, 380], ["Role", "Payload", "Job"], [
-        ["Sensor-bee", "temp/RH + VOC", "sniff anomalies — primary detector"],
-        ["Eye-bee", "thermal/visual (rev-C)", "converge on fixes to confirm"],
-        ["Relay-bee", "LoRa only, high perch", "extend range over ridges"],
-        ["Charger-bee", "dock contacts", "perch at Anchor, top off, rebroadcast"],
-    ], rh=34)
+    # ===== Fig. 5 — dock landing detail =====
+    d5x, d5y = 1120, 680
+    s.h(d5x, d5y - 26, "ANCHOR DOCK INTERFACE", 13)
+    s.rect(d5x, d5y + 60, 300, 22, fill="#d8d8d8", stroke=INK, sw=1.3)
+    s.t(d5x + 150, d5y + 100, "DOCK RAIL (on Anchor top)", 10, "middle", SOFT)
+    for i in range(2):
+        s.rect(d5x + 74 + i * 128, d5y + 42, 24, 18, fill="#e9e9e9",
+               stroke=INK, sw=1.1)
+    s.poly([(d5x + 60, d5y - 4), (d5x + 240, d5y - 4), (d5x + 240, d5y + 18),
+            (d5x + 60, d5y + 18)], fill=FILL, stroke=INK, sw=1.3)
+    for i in range(2):
+        d_pogo(s, d5x + 86 + i * 128, d5y + 18, r=5)
+    s.arrow(d5x + 150, d5y - 34, d5x + 150, d5y - 8, ACC, 1.4)
+    s.t(d5x + 150, d5y - 42, "mite descends", 10, "middle", ACC)
+    s.t(d5x + 150, d5y + 136,
+        "pogo pads meet → charge + slot assignment over LoRa", 10, "middle", SOFT)
+    figcap(s, d5x + 150, d5y + 170, 5, "Dock detail — blind-land, pogo charge")
 
-    s.h(110, 800, "GEN-1 vs ROADMAP")
-    s.table(110, 818, [140, 340, 340], ["Stage", "What", "Gate"], [
-        ["Gen-1 (now)", "~90 mm puck, solar+LoRa+gas, perch clip", "orderable parts only"],
-        ["Gen-2", "smaller, printed antenna, lower cost", "volume + field data"],
-        ["Gen-3 (R&D)", "sub-bee perched motes, degradable", "transient-electronics — see D SEED"],
-    ], rh=34)
-    out.append(s.svg(1, 7))
+    # concept line — sits in the free band between Fig.2 and Fig.5
+    s.t(1120, 566, "Perched sensor, not a drone: solar top,", 11, color=SOFT)
+    s.t(1120, 586, "gas/RH/temp, LoRa mesh, clip or dock.", 11, color=SOFT)
+    s.t(1120, 606, "The swarm is the sensor.", 11, color=SOFT)
+    out.append(s.svg(1, 8))
 
     # ---------------- 102 PARTS & POWER ----------------
     s = Sheet("AF-S-102", "PARTS LIST & POWER",
@@ -882,7 +1114,7 @@ def mite():
     s.note(ML + 10, by + 90,
           "ESP32-S3 + SX1262 + ENS160 on 38×38 carrier; sensors on I2C; radio on private SPI.",
           size=12)
-    out.append(s.svg(2, 7))
+    out.append(s.svg(2, 8))
 
     # ---------------- 103 ASSEMBLY & ROLES ----------------
     s = Sheet("AF-S-103", "ASSEMBLY, FIRMWARE & ROLES",
@@ -929,7 +1161,7 @@ def mite():
         ["Perch", "clip holds Ø25 mm branch through wind-shake test"],
         ["False positive", "<1 smoke alarm/week/unit in dust/inversion"],
     ], rh=34)
-    out.append(s.svg(3, 7))
+    out.append(s.svg(3, 8))
     return out
 
 
@@ -941,84 +1173,108 @@ def totem():
     s = Sheet("AF-E-101", "GENERAL ARRANGEMENT — COMMUNITY BOARD",
               "POLE-MOUNTED PUBLIC E-INKE NOTICEBOARD + MESH NODE", "E · TOTEM")
 
-    # FRONT ELEVATION: pole + box
-    vx, vy = 140, 170
-    s.h(vx, vy - 40, "FRONT ELEVATION")
+    # ===== Fig. 1 — hero: totem on pole, board readable =====
+    hx, hy = 500, 330
     # pole
-    s.rect(vx + 300, vy - 60, 16, 560, fill="none", stroke=INK, sw=2)
-    # box 320x220 -> scale ~1.5 px/mm => 480x330
-    sc = 1.5
-    bw_, bh_ = 320 * sc, 220 * sc     # 480 x 330
-    bx, by = vx + 80, vy
-    s.rect(bx, by, bw_, bh_, fill=FILL, stroke=INK, sw=1.6)
-    # display window
-    s.rect(bx + bw_ * 0.10, by + bh_ * 0.14, bw_ * 0.80, bh_ * 0.56,
-           fill="none", stroke=INK, sw=1.2)
-    s.t(bx + bw_ / 2, by + bh_ * 0.46, "E-INKE DISPLAY", 14, "middle", weight="bold")
-    s.t(bx + bw_ / 2, by + bh_ * 0.46 + 20, "7–13 in class", 11, "middle", SOFT)
-    # lower vent/status
-    s.rect(bx + bw_ * 0.10, by + bh_ * 0.78, bw_ * 0.30, bh_ * 0.10,
-           fill="none", stroke=SOFT, sw=0.9)
-    s.t(bx + bw_ * 0.25, by + bh_ * 0.85 + 4, "VENT", 10, "middle", SOFT)
-    s.circ(bx + bw_ * 0.80, by + bh_ * 0.83, 6, fill=ACC)
-    # mount arms
-    s.ln(bx + bw_ * 0.5, by + bh_ * 0.85, vx + 308, by + bh_ * 0.85, INK, 2)
-    s.ln(bx + bw_ * 0.5, by + bh_ * 0.15, vx + 308, by + bh_ * 0.15, INK, 2)
-    # dims
-    s.dimh(bx, bx + bw_, by + bh_ + 40, "320")
-    s.dimv(bx - 40, by, by + bh_, "220")
-    s.t(bx + bw_ / 2, by + bh_ + 70,
-       "box ~320×220×100 mm · pole 3 m class · NTS vertically", 11, "middle", SOFT)
+    s.rect(hx + 210, hy - 190, 16, 620, fill="#d8d8d8", stroke=INK, sw=1.6)
+    # solar eyebrow on top of board
+    s.el.append(
+        f'<g transform="rotate(-14 {hx} {hy - 150})">'
+        f'<rect x="{hx - 150}" y="{hy - 176}" width="330" height="34" '
+        f'fill="#dbe7f4" stroke="{INK}" stroke-width="1.4"/>'
+        + "".join(
+            f'<line x1="{hx - 150 + i * 66}" y1="{hy - 176}" '
+            f'x2="{hx - 150 + i * 66}" y2="{hy - 142}" '
+            f'stroke="{SOFT}" stroke-width="0.8"/>'
+            for i in range(1, 5))
+        + '</g>')
+    # board cabinet — product shot
+    G = s.device(hx, hy, 380, 265, 60, "#3a3f45", rad=12)
+    # e-ink face on front — a real notice rendered
+    s.rect(*s.fpt(G, 0.07, 0.10), G["w"] * 0.86, G["h"] * 0.62,
+           fill="#e8ecdf", stroke=INK, sw=1.2)
+    nx, ny = s.fpt(G, 0.11, 0.14)
+    s.t(nx, ny + 14, "COMMUNITY NOTICE", 13, weight="bold", color="#2f3a2f")
+    s.t(nx, ny + 34, "Wildfire smoke advisory —", 10, color="#3a4a3a")
+    s.t(nx, ny + 50, "limit outdoor work today.", 10, color="#3a4a3a")
+    s.ln(nx, ny + 62, nx + G["w"] * 0.70, ny + 62, "#9aa89a", 0.8)
+    s.t(nx, ny + 78, "Posted: Band Office · verified", 9, color="#6b7c6b")
+    # vent + status LED + speaker
+    d_vent(s, *s.fpt(G, 0.10, 0.82), w=G["w"] * 0.3, n=7)
+    d_led(s, *s.fpt(G, 0.88, 0.86), r=4)
+    d_grille(s, *s.fpt(G, 0.62, 0.83), w=40, rows=2)
+    # mount arms to pole
+    for b in (0.18, 0.82):
+        mx, my = s.spt(G, 1.0, b)
+        s.rect(mx - 2, my - 9, hx + 226 - mx + 4, 18, fill="#e9e9e9",
+               stroke=INK, sw=1.2, r=5)
+        s.circ(hx + 218, my, 7, fill="none", stroke=INK, sw=1.2)
+    # whip + gland
+    awx, awy = s.tpt(G, 0.10, 0.10)
+    d_whip(s, awx, awy, 60, lean=-8)
+    for i in range(2):
+        d_gland(s, *s.fpt(G, 0.36 + i * 0.22, 0.99))
+    # callouts
+    s.callout(*s.fpt(G, 0.5, 0.40), 60, 130, "E-INK NOTICE — signed content only")
+    s.callout(hx - 150, hy - 176, 60, 190, "20-30 W PANEL — the eyebrow")
+    s.callout(awx, awy - 55, 950, 120, "LORA WHIP — it routes, it repeats")
+    s.callout(*s.fpt(G, 0.88, 0.86), 950, 460, "STATUS LED — mesh health")
+    s.callout(hx + 218, hy - 265, 950, 260, "STRAP MOUNTS — any pole")
+    s.callout(*s.fpt(G, 0.5, 0.99), 950, 580, "GLANDS — solar in, backhaul in")
+    s.callout(*s.fpt(G, 0.10, 0.85), 60, 560, "VENT — drip edge, no condensation")
+    figcap(s, hx + 30, 690, 1, "E TOTEM — the public surface IS a node")
 
-    # SIDE ELEVATION
-    sx_, sy_ = 800, 170
-    s.h(sx_, sy_ - 40, "SIDE ELEVATION")
-    ssc = 1.5
-    sd_ = 100 * ssc                    # depth 100mm -> 150px
-    s.rect(sx_ + 140, sy_, sd_, bh_, fill=FILL, stroke=INK, sw=1.6)
-    s.rect(sx_ + 140 + sd_ * 0.2, sy_ + bh_ * 0.14, sd_ * 0.6, bh_ * 0.56,
-           fill="none", stroke=SOFT, sw=0.9, dash="6 3")
-    s.t(sx_ + 140 + sd_ / 2, sy_ + bh_ * 0.46, "DEPTH", 11, "middle", SOFT)
-    s.rect(sx_ + 146, sy_ - 60, 10, 560, fill="none", stroke=INK, sw=2)
-    s.dimh(sx_ + 140, sx_ + 140 + sd_, sy_ + bh_ + 40, "100")
-    s.t(sx_ + 140 + sd_ / 2, sy_ + bh_ + 70, "pole-mounted", 11, "middle", SOFT)
+    # ===== Fig. 2 — door open: interior =====
+    i2x, i2y, i2w, i2h = 1130, 150, 330, 230
+    s.rect(i2x, i2y, i2w, i2h, fill=FILL, stroke=INK, sw=1.6, r=8)
+    s.rect(i2x + 14, i2y + 14, i2w - 28, i2h * 0.42, fill="#e8ecdf",
+           stroke=INK, sw=1.0)
+    s.t(i2x + i2w / 2, i2y + i2h * 0.26, "E-INK HAT (behind window)", 10,
+        "middle", SOFT)
+    d_pcb(s, i2x + 14, i2y + i2h * 0.52, i2w * 0.44, i2h * 0.34, "CM5 + LORA")
+    s.rect(i2x + i2w * 0.55, i2y + i2h * 0.52, i2w * 0.40, i2h * 0.34,
+           fill="#e9e9e9", stroke=INK, sw=1.0)
+    s.t(i2x + i2w * 0.75, i2y + i2h * 0.66, "LiFePO4 20 Ah", 10, "middle",
+        weight="bold")
+    s.t(i2x + i2w * 0.75, i2y + i2h * 0.76, "+ MPPT", 9, "middle", SOFT)
+    s.callout(i2x + 60, i2y + i2h * 0.6, 930, 230, "SAME CM5 AS L1 — common")
+    s.callout(i2x + i2w * 0.75, i2y + i2h * 0.6, 930, 330, "AUTONOMY CELL")
+    figcap(s, i2x + i2w / 2, i2y + i2h + 30, 2, "Door open — common guts")
 
-    # CONTENT PIPELINE diagram
-    px, py = 1100, 200
-    s.h(px, py - 30, "CONTENT PIPELINE")
-    steps_ = [
-        ("PUBLISHER", "community / agency signs content"),
-        ("MESH", "signed envelopes flood the network"),
-        ("TOTEM", "verify → render → E-Ink"),
-        ("PUBLIC", "sunlight-readable · zero idle power"),
-    ]
-    yy = py
-    for i, (nm, sub) in enumerate(steps_):
-        s.rect(px, yy, 400, 56, fill=FILL, stroke=INK, sw=1.2)
-        s.t(px + 14, yy + 24, nm, 14, weight="bold")
-        s.t(px + 14, yy + 44, sub, 11, color=SOFT)
-        if i < 3:
-            s.arrow(px + 200, yy + 56, px + 200, yy + 76)
-        yy += 80
+    # ===== Fig. 3 — exploded =====
+    e3x, e3y = 90, 780
+    explode(s, e3x, e3y, 210, [
+        ("DOOR + E-INK FACE", "#e8ecdf", "window + seal + notice"),
+        ("ELECTRONICS TRAY", "#e4ede0", "CM5 + LoRa + MPPT"),
+        ("BATTERY", "#f0e8d8", "LiFePO4 20 Ah"),
+        ("CABINET + MOUNTS", "#3a3f45", "PC IP66 + strap brackets"),
+    ], d=18, h=14, gap=19, callx=e3x + 280)
+    figcap(s, e3x + 105, e3y + 170, 3, "Exploded — four assemblies")
 
-    # use cases
-    fy = 620
-    s.h(110, fy, "USE CASES")
-    s.table(110, fy + 18, [220, 800], ["Use", "Detail"], [
-        ["Emergency alerts", "wildfire evacuation, weather — mesh-wide in minutes"],
-        ["Community notices", "council, school, clinic, events — the digital general-store board"],
-        ["Agency bulletins", "province, RCMP, health unit — signed content only"],
-        ["Local info", "road conditions, water advisories, powwow/community events"],
-        ["Mesh status", "optional node-health display — coverage made visible"],
-    ], rh=36)
+    # ===== Fig. 4 — mount detail =====
+    m4x, m4y = 660, 770
+    s.h(m4x, m4y - 24, "POLE MOUNT DETAIL", 13)
+    s.rect(m4x + 60, m4y, 60, 150, fill="#d8d8d8", stroke=INK, sw=1.4)
+    for b in (20, 70, 120):
+        s.rect(m4x + 16, m4y + b, 130, 16, fill="#e9e9e9", stroke=INK, sw=1.2,
+               r=5)
+        d_screw(s, m4x + 26, m4y + b + 8, r=4.5)
+        d_screw(s, m4x + 136, m4y + b + 8, r=4.5)
+    s.t(m4x + 90, m4y + 176, "band clamps x3 — two-person install", 10,
+        "middle", SOFT)
+    figcap(s, m4x + 90, m4y + 214, 4, "Mount — no concrete, no auger")
 
-    s.h(px, 580, "WHY IT'S UNIQUE")
-    s.bullets(px, 606, [
-        "Only public noticeboard that IS a network node — it routes, repeats, stores.",
-        "Signed content: every notice carries publisher identity — no anonymous flyers.",
-        "Works when grid AND cell network are both down — the blackout case.",
-        "EN/FR pipeline; community controls what appears — sovereignty in public space.",
-    ], width=56)
+    # right column — what it is
+    s.h(1130, 560, "WHY IT'S UNIQUE")
+    s.bullets(1130, 586, [
+        "Only noticeboard that IS a network node — routes, repeats, stores.",
+        "Every notice signed — no anonymous flyers, publisher identity carried.",
+        "Works when grid AND cell are down — the blackout case.",
+        "EN/FR pipeline; the community controls what appears.",
+    ], width=52)
+    s.t(1130, 810, "Council, school, clinic, RCMP bulletins —", 10, color=SOFT)
+    s.t(1130, 828, "the digital general-store board, owned", 10, color=SOFT)
+    s.t(1130, 846, "by the community.", 10, color=SOFT)
     out.append(s.svg(1, 3))
 
     # ---------------- 102 PARTS & INSTALL ----------------
@@ -1096,77 +1352,135 @@ def anchor():
     s = Sheet("AF-A-101", "GENERAL ARRANGEMENT — CHARGING STATION",
               "RENEWABLE STATION · SWARM DOCK + RELAY + BACKHAUL", "A · ANCHOR")
 
-    # FRONT ELEVATION
-    vx, vy = 140, 170
-    s.h(vx, vy - 40, "FRONT ELEVATION")
-    sc = 0.9
-    bw_, bh_ = 350 * sc, 250 * sc     # 315 x 225
-    bx, by = vx + 60, vy
-    s.rect(bx, by, bw_, bh_, fill=FILL, stroke=INK, sw=1.6)
-    # battery compartment (lower, hatch)
-    s.rect(bx + bw_ * 0.08, by + bh_ * 0.62, bw_ * 0.84, bh_ * 0.30,
-           fill="none", stroke=SOFT, sw=0.9, dash="7 4")
-    s.t(bx + bw_ / 2, by + bh_ * 0.80, "LiFePO4 50–100 Ah + BMS", 12, "middle", SOFT)
-    # upper: compute + radios
-    s.rect(bx + bw_ * 0.08, by + bh_ * 0.10, bw_ * 0.40, bh_ * 0.40,
-           fill="none", stroke=INK, sw=0.9)
-    s.t(bx + bw_ * 0.28, by + bh_ * 0.32 + 4, "CM5", 12, "middle", SOFT)
-    s.rect(bx + bw_ * 0.55, by + bh_ * 0.10, bw_ * 0.37, bh_ * 0.40,
-           fill="none", stroke=INK, sw=0.9)
-    s.t(bx + bw_ * 0.73, by + bh_ * 0.32 + 4, "RADIOS ×2", 12, "middle", SOFT)
-    # dock contacts on top edge
-    for i in range(4):
-        s.circ(bx + bw_ * (0.15 + i * 0.22), by - 4, 6, fill=ACC)
-    s.t(bx + bw_ / 2, by - 22, "POGO DOCK ×4 (top)", 11, "middle", SOFT)
-    # antenna ports
-    s.ln(bx + bw_ * 0.2, by, bx + bw_ * 0.2, by - 26, INK, 2)
-    s.ln(bx + bw_ * 0.8, by, bx + bw_ * 0.8, by - 26, INK, 2)
-    s.dimh(bx, bx + bw_, by + bh_ + 40, "350")
-    s.dimv(bx - 40, by, by + bh_, "250")
-    s.t(bx + bw_ / 2, by + bh_ + 56,
-       "box ~350×250×400 mm · antenna ports top: LoRa ×2 · LTE · GPS · NTS", 11, "middle", SOFT)
+    # ===== Fig. 1 — hero: station on pole, mites docked =====
+    hx, hy = 500, 300
+    # pole behind cabinet
+    s.rect(hx + 240, hy - 120, 18, 560, fill="#d8d8d8", stroke=INK, sw=1.6)
+    s.rect(hx + 236, hy - 120, 26, 14, fill="#e9e9e9", stroke=INK, sw=1.1, r=4)
+    # solar panel arm + panel (tilted)
+    s.ln(hx + 249, hy - 120, hx + 60, hy - 160, INK, 3)
+    s.el.append(
+        f'<g transform="rotate(-16 {hx + 60} {hy - 160})">'
+        f'<rect x="{hx - 140}" y="{hy - 186}" width="400" height="52" '
+        f'fill="#dbe7f4" stroke="{INK}" stroke-width="1.5"/>'
+        + "".join(
+            f'<line x1="{hx - 140 + i * 66}" y1="{hy - 186}" '
+            f'x2="{hx - 140 + i * 66}" y2="{hy - 134}" '
+            f'stroke="{SOFT}" stroke-width="0.9"/>'
+            for i in range(1, 6))
+        + f'</g>')
+    # cabinet body — product shot
+    G = s.device(hx, hy + 60, 300, 240, 70, "#3a4148", rad=10)
+    fx, fy = G["fx"], G["fy"]
+    # door seam + latches + hinges on front face
+    s.seam(G, 0.05, 0.05, 0.90, 0.90)
+    for yy in (0.28, 0.72):
+        d_latch(s, *s.fpt(G, 0.06, yy))
+    for yy in (0.25, 0.5, 0.75):
+        d_hinge(s, *s.fpt(G, 0.90, yy))
+    # vent louver + status LED + e-ink status window
+    d_vent(s, *s.fpt(G, 0.14, 0.80), w=G["w"] * 0.30, n=7)
+    d_led(s, *s.fpt(G, 0.80, 0.14), r=4)
+    s.rect(*s.fpt(G, 0.14, 0.12), G["w"] * 0.34, G["h"] * 0.14,
+           fill="#e8ecdf", stroke=INK, sw=0.9)
+    sx0, sy0 = s.fpt(G, 0.14, 0.12)
+    s.t(sx0 + G["w"] * 0.17, sy0 + G["h"] * 0.10, "MESH OK · 4 NODES", 9,
+        "middle", "#3a4a3a", "bold")
+    # dock rail on top face + 2 mites perched
+    dtx, dty = s.tpt(G, 0.08, 0.30)
+    dtx2, dty2 = s.tpt(G, 0.92, 0.30)
+    s.ln(dtx, dty, dtx2, dty2, INK, 2.5)
+    for i in (0, 1):
+        mx, my = s.tpt(G, 0.22 + i * 0.40, 0.30)
+        s.poly([(mx - 26, my), (mx + 26, my), (mx + 26, my - 30),
+                (mx - 26, my - 30)], fill="#3d4a42", stroke=INK, sw=1.2)
+        s.ln(mx - 18, my - 30, mx + 18, my - 30, "#dbe7f4", 4)
+    # antennas on top edge
+    a1x, a1y = s.tpt(G, 0.10, 0.05)
+    a2x, a2y = s.tpt(G, 0.88, 0.05)
+    d_whip(s, a1x, a1y, 64, lean=-8)
+    d_whip(s, a2x, a2y, 64, lean=8)
+    # cable glands bottom edge
+    for i in range(3):
+        d_gland(s, *s.fpt(G, 0.30 + i * 0.2, 0.99))
+    # pole clamps behind (visible at side)
+    for yy in (0.15, 0.80):
+        px, py = s.spt(G, 1.0, yy)
+        s.rect(px - 4, py - 8, 30, 16, fill="#e9e9e9", stroke=INK, sw=1.1, r=4)
+    # callouts
+    s.callout(*s.tpt(G, 0.42, 0.30), 60, 170, "SWARM DOCK RAIL — 4 pogo bays")
+    s.callout(a1x, a1y - 60, 60, 110, "LORA WHIP ×2 — node + backbone")
+    s.callout(hx - 140, hy - 186, 60, 200, "20–60 W PANEL — December-sized")
+    s.callout(*s.fpt(G, 0.80, 0.14), 880, 140, "STATUS LED + E-INK health")
+    s.callout(*s.fpt(G, 0.06, 0.28), 880, 300, "DRAW LATCH ×2 — glove-operable")
+    s.callout(*s.fpt(G, 0.30, 0.80), 880, 440, "VENT LOUVER — bottom, no top")
+    s.callout(*s.fpt(G, 0.5, 0.99), 880, 560, "CABLE GLANDS — solar/backhaul/power")
+    s.callout(*s.spt(G, 1.05, 0.5), 60, 640, "U-BOLT POLE MOUNT — 76 mm pole")
+    figcap(s, hx + 40, 690, 1, "A ANCHOR — field-deployed, two mites docked")
 
-    # solar array beside
-    sx_, sy_ = 760, 170
-    s.h(sx_, sy_ - 40, "SOLAR ARRAY (SEPARATE)")
-    s.rect(sx_ + 60, sy_ + 60, 380, 26, fill=FILL, stroke=INK, sw=1.4)
-    for i in range(1, 6):
-        s.ln(sx_ + 60 + i * 63, sy_ + 60, sx_ + 60 + i * 63, sy_ + 86, SOFT, 0.7)
-    s.t(sx_ + 250, sy_ + 110, "20–60 W poly panel", 12, "middle", SOFT)
-    s.ln(sx_ + 60, sy_ + 86, sx_ + 30, sy_ + 200, SOFT, 1.5)
-    s.ln(sx_ + 440, sy_ + 86, sx_ + 470, sy_ + 200, SOFT, 1.5)
-    s.ln(sx_ + 30, sy_ + 200, sx_ + 470, sy_ + 200, SOFT, 1.5)
-    s.t(sx_ + 250, sy_ + 228, "ground frame / pole mount", 11, "middle", SOFT)
-    s.t(sx_ + 250, sy_ + 258, "oversized for December sun", 11, "middle", SOFT)
+    # ===== Fig. 2 — door open: interior layout =====
+    i2x, i2y, i2w, i2h = 1130, 150, 330, 250
+    s.rect(i2x, i2y, i2w, i2h, fill=FILL, stroke=INK, sw=1.6, r=8)
+    s.rect(i2x + 12, i2y + 12, i2w - 24, i2h * 0.52, fill="#e4ede0",
+           stroke=INK, sw=1.1)
+    s.t(i2x + 24, i2y + 32, "DIN RAIL", 10, weight="bold", color=SOFT)
+    for i, nm in enumerate(("CM5", "LORA ×2", "MPPT", "CHARGE ×4", "TERM")):
+        w2 = 52
+        s.rect(i2x + 24 + i * 60, i2y + 44, w2, 60, fill="#cdd6ca",
+               stroke=INK, sw=0.9)
+        s.t(i2x + 24 + i * 60 + w2 / 2, i2y + 78, nm, 8, "middle", INK)
+    s.rect(i2x + 12, i2y + i2h * 0.60, i2w - 24, i2h * 0.30,
+           fill="#e9e9e9", stroke=INK, sw=1.1)
+    s.t(i2x + i2w / 2, i2y + i2h * 0.72, "LiFePO4 50–100 Ah + BMS", 12,
+        "middle", weight="bold")
+    s.t(i2x + i2w / 2, i2y + i2h * 0.80, "tray — slide-out on rails", 10,
+        "middle", SOFT)
+    for i in range(3):
+        d_gland(s, i2x + i2w * (0.3 + i * 0.2), i2y + i2h - 2)
+    s.callout(i2x + 60, i2y + 70, 930, 165, "COMPUTE + RADIOS on DIN rail")
+    s.callout(i2x + 30, i2y + i2h * 0.75, 930, 350,
+              "BATTERY TRAY — hot-swap")
+    figcap(s, i2x + i2w / 2, i2y + i2h + 30, 2, "Door open — serviceable guts")
 
-    # dock detail
-    dx_, dy_ = 760, 420
-    s.h(dx_, dy_ - 30, "SWARM DOCK DETAIL")
-    for i in range(4):
-        s.circ(dx_ + 40 + i * 90, dy_ + 20, 12, fill=FILL, stroke=INK, sw=1.2)
-        s.t(dx_ + 40 + i * 90, dy_ + 56, f"P{i+1}", 11, "middle", SOFT)
-    s.note(dx_, dy_ + 90,
-          "Mite bottom has 2 pogo pads + alignment notch — lands blind, charges, rebroadcasts. "
-          "Each dock ~5 V / 500 mA via CN3791-class controller.", size=12)
+    # ===== Fig. 3 — exploded =====
+    e3x, e3y = 90, 720
+    explode(s, e3x, e3y, 210, [
+        ("DOOR + GASKET", "#e9e9e9", "2 latches, 3 hinges, TPU seal"),
+        ("DOCK RAIL ASSY", "#d8d8d8", "4 pogo bays + CN3791 controllers"),
+        ("DIN CHASSIS", "#e4ede0", "CM5 + radios + MPPT + terminals"),
+        ("BATTERY TRAY", "#f0e8d8", "LiFePO4 + BMS on slide rails"),
+        ("CABINET SHELL", "#3a4148", "powder-coat, pole U-bolts"),
+    ], d=18, h=14, gap=19, callx=e3x + 280)
+    figcap(s, e3x + 105, e3y + 200, 3, "Exploded — five assemblies")
 
-    # roles
-    fy = 640
-    s.h(140, fy, "WHAT THE ANCHOR DOES")
-    s.table(140, fy + 18, [200, 900], ["Function", "Detail"], [
-        ["Swarm dock", "4 pogo-pin charge positions — Miters land, charge, rebroadcast"],
-        ["Long-range relay", "SX1262 at height + bigger antenna — extends mesh over ridges"],
-        ["Gateway", "LTE/Wi-Fi/sat backhaul when available — the mesh's door out"],
-        ["Anchor sensor", "own temp/RH/VOC + wind — fixed reference for swarm data"],
-        ["Status beacon", "E-Ink or LED shows mesh health — readable infrastructure"],
-    ], rh=38)
+    # ===== Fig. 4 — site install elevation =====
+    s4x, s4y = 700, 740
+    s.rect(s4x + 60, s4y + 30, 12, 170, fill="#d8d8d8", stroke=INK, sw=1.3)
+    s.el.append(
+        f'<g transform="rotate(-20 {s4x + 66} {s4y + 40})">'
+        f'<rect x="{s4x - 20}" y="{s4y + 26}" width="172" height="26" '
+        f'fill="#dbe7f4" stroke="{INK}" stroke-width="1.2"/></g>')
+    s.rect(s4x + 20, s4y + 66, 90, 70, fill="#3a4148", stroke=INK, sw=1.4, r=6)
+    s.ln(s4x + 66, s4y + 66, s4x + 66, s4y + 30, INK, 1.5)
+    d_whip(s, s4x + 30, s4y + 66, 34)
+    s.rect(s4x + 30, s4y + 190, 74, 8, fill="#b5a284", stroke=INK, sw=1)
+    s.dimv(s4x + 8, s4y + 30, s4y + 200, "3 m pole")
+    s.t(s4x + 190, s4y + 150, "cabinet chest-height —", 10, color=SOFT)
+    s.t(s4x + 190, s4y + 166, "service without a ladder", 10, color=SOFT)
+    figcap(s, s4x + 150, s4y + 230, 4, "Site install — pole + panel + cabinet")
 
-    s.h(dx_, 600, "WHY ANCHORS MATTER")
-    s.bullets(dx_, 626, [
-        "Docked Miters top off → perpetual patrol without battery swaps.",
-        "Elevated relay roughly doubles effective mesh diameter vs. ground nodes.",
-        "The visible, maintainable heart of the local mesh — trust infrastructure.",
-        "Gateways are what communities pay for — the swarm rides on top.",
-    ], width=62)
+    # ===== right column — role text =====
+    s.h(1130, 560, "WHAT THE ANCHOR DOES")
+    s.table(1130, 586, [140, 300], ["Function", "Detail"], [
+        ["Swarm dock", "4 pogo bays — land, charge, rebroadcast"],
+        ["Relay", "SX1262 at height — over ridges"],
+        ["Gateway", "LTE/Wi-Fi/sat — the mesh's door out"],
+        ["Beacon", "E-Ink status — readable infrastructure"],
+    ], rh=42)
+    s.t(1130, 810, "Docked mites top off → perpetual patrol.", 10, color=SOFT)
+    s.t(1130, 828, "The visible, maintainable heart of the", 10, color=SOFT)
+    s.t(1130, 846, "local mesh — communities pay for the", 10, color=SOFT)
+    s.t(1130, 864, "gateway; the swarm rides on top.", 10, color=SOFT)
     out.append(s.svg(1, 3))
 
     # ---------------- 102 PARTS & SYSTEM ----------------
@@ -1227,13 +1541,13 @@ def anchor():
         "All dock events signed + logged — swarm energy is mesh data.",
     ], width=118)
 
-    s.h(900, 800, "FIELD ACCEPTANCE")
-    s.bullets(900, 826, [
+    s.h(900, 788, "FIELD ACCEPTANCE")
+    s.bullets(900, 812, [
         "4 Miters dock, charge, undock on schedule — 72 h soak.",
         "≥10 signed msgs/min relayed through Anchor at 5 km spacing.",
         "LTE failover: drop → store-forward continues → auto-reconnect.",
         "Winter: -30 °C, panel snow-covered 3 days → still docks + relays.",
-    ], width=100)
+    ], width=95, lh=17)
     out.append(s.svg(2, 3))
     return out
 
@@ -1247,50 +1561,148 @@ def phone():
               "MESH-NATIVE PHONE FOR RURAL & REMOTE CANADA", "P · ARCTICPHONE",
               rev="0", status="CONCEPT — NOT FROZEN")
 
-    # phone outline
-    fx, fy = 150, 170
-    s.h(fx, fy - 40, "FRONT VIEW — TARGET FORM")
-    pw_, ph_ = 200, 400
-    s.rect(fx, fy, pw_, ph_, fill=FILL, stroke=INK, sw=1.8, r=22)
-    s.rect(fx + 14, fy + 26, pw_ - 28, ph_ - 90, fill="none", stroke=SOFT, sw=0.9, r=6)
-    s.t(fx + pw_ / 2, fy + ph_ * 0.45, "DISPLAY", 14, "middle", weight="bold")
-    s.t(fx + pw_ / 2, fy + ph_ * 0.45 + 20, "glove-friendly UI", 11, "middle", SOFT)
-    # camera dot + mesh marks
-    s.circ(fx + pw_ / 2, fy + 14, 5, fill=INK)
-    for i, yy in enumerate((0.55, 0.65, 0.75)):
-        s.ln(fx + pw_ * 0.12, fy + ph_ * yy, fx + pw_ * 0.30, fy + ph_ * yy, ACC, 1.5)
-        s.ln(fx + pw_ * 0.70, fy + ph_ * yy, fx + pw_ * 0.88, fy + ph_ * yy, ACC, 1.5)
-    s.t(fx + pw_ / 2, fy + ph_ + 34, "~145×72×14 mm · ~220 g · NTS", 12, "middle", SOFT)
-    s.t(fx + pw_ / 2, fy + ph_ + 56, "mesh radio marks shown in blue", 11, "middle", SOFT)
+    # ===== Fig. 1 — hero front, 3/4 slab with live screen =====
+    cx, cy = 480, 385
+    G = s.device(cx, cy, 235, 435, 26, "#2b3440", rad=26)
+    fx, fy, fw, fh = G["fx"], G["fy"], G["w"], G["h"]
+    # bumper pods — TPU corners proud of shell
+    for bx, by in ((0.015, 0.012), (0.795, 0.012), (0.015, 0.948), (0.795, 0.948)):
+        px, py = s.fpt(G, bx, by)
+        s.rect(px, py, fw * 0.19, fh * 0.045, fill="#4a5563",
+               stroke=INK, sw=1, r=8)
+    # screen: transflective UI — status bar + peer list + SOS tile
+    scrx, scry = s.fpt(G, 0.065, 0.075)
+    scrw, scrh = fw * 0.87, fh * 0.80
+    s.rect(scrx, scry, scrw, scrh, fill="#10151c", stroke=INK, sw=1.1, r=7)
+    s.rect(scrx, scry, scrw, 26, fill="#1a2230", r=7)
+    s.t(scrx + 8, scry + 17, "9:41", 11, color="#8fa3b5", weight="bold")
+    s.t(scrx + scrw - 8, scry + 17, "MESH ▮▮▮▯ 78%", 10, "end", color="#8fa3b5")
+    s.t(scrx + scrw / 2, scry + 46, "COMMUNITY MESH", 11, "middle", "#5fb878",
+        weight="bold", spacing="1")
+    for i, (nm, dist) in enumerate((("L1-BRICK-04", "0.4 km"),
+                                    ("E-TOTEM-01", "1.1 km"),
+                                    ("A-ANCHOR-02", "2.7 km"))):
+        ry = scry + 62 + i * 30
+        s.circ(scrx + 16, ry - 4, 3.5, fill="#5fb878")
+        s.t(scrx + 28, ry, nm, 11, color="#c9d4de")
+        s.t(scrx + scrw - 8, ry, dist, 10, "end", color="#8fa3b5")
+        s.ln(scrx + 12, ry + 8, scrx + scrw - 12, ry + 8, "#26303c", 0.7)
+    s.rect(scrx + 12, scry + scrh - 64, scrw - 24, 52, fill="#7a2418",
+           stroke=INK, sw=1, r=9)
+    s.t(scrx + scrw / 2, scry + scrh - 33, "SOS — HOLD 3 S", 13, "middle",
+        "#f4d7d2", weight="bold")
+    # earpiece + punch camera + mic pinhole
+    s.rect(*s.fpt(G, 0.32, 0.028), fw * 0.36, 5, fill="#15181d", r=3)
+    d_cam(s, *s.fpt(G, 0.5, 0.052), r=6)
+    s.circ(*s.fpt(G, 0.5, 0.935), 2.5, fill="#15181d")
+    # side face keys: volume rocker + power; SOS on far edge (red hint)
+    vx0, vy0 = s.spt(G, 0.55, 0.22)
+    d_btn(s, vx0 - 2, vy0, G["dx"] + 8, 40)
+    vx1, vy1 = s.spt(G, 0.55, 0.34)
+    d_btn(s, vx1 - 2, vy1, G["dx"] + 8, 26)
+    vx2, vy2 = s.spt(G, 0.12, 0.28)
+    d_btn(s, vx2 - 2, vy2, 8, 52, color="#a83c2e")
+    # bottom edge on side face: USB-C door + speaker holes
+    bx_, by_ = s.spt(G, 0.5, 0.90)
+    d_usbc(s, bx_ + 4, by_, 0.7)
+    s.callout(*s.fpt(G, 0.5, 0.30), 130, 175,
+              "TRANSFLECTIVE LCD — sun-readable, sips power")
+    s.callout(*s.fpt(G, 0.9, 0.06), 880, 165, "BUMPER PODS — TPU, replaceable")
+    s.callout(*s.fpt(G, 0.5, 0.86), 890, 640, "SOS TILE — one gloved press")
+    s.callout(vx2 + 3, vy2 + 20, 890, 350, "SOS KEY — hardware, not software")
+    s.callout(bx_ + 4, by_, 890, 520, "USB-C + SPEAKER — gasketed")
+    s.callout(*s.fpt(G, 0.12, 0.62), 130, 560,
+              "NO GLASS BACK — polycarbonate, -30 °C")
+    figcap(s, cx, 655, 1, "ArcticPhone — front, mesh UI live")
 
-    # what changed vs monolith
-    gx = 640
-    s.h(gx, 170, "WHAT CHANGED VS MONOLITH")
-    s.bullets(gx, 200, [
-        "Monolith = flagship research device (titanium spine, optical docks).",
-        "Wrong phone for a rancher in a -35 °C truck cab or a fly-in community.",
-        "ArcticPhone is rural-first: mesh-native, satellite SOS-ready, offline-first, repairable, community-owned.",
-        "Every ArcticPhone IS a node — calls, texts, data ride the community mesh.",
-    ], width=105)
+    # ===== Fig. 2 — rear view: camera + module bay =====
+    r2x, r2y, r2w, r2h = 1075, 150, 200, 390
+    s.rect(r2x, r2y, r2w, r2h, fill="#2b3440", stroke=INK, sw=1.6, r=24)
+    for bx, by in ((0.02, 0.02), (0.86, 0.02), (0.02, 0.955), (0.86, 0.955)):
+        s.rect(r2x + bx * r2w, r2y + by * r2h, r2w * 0.12, r2h * 0.03,
+               fill="#4a5563", stroke=INK, sw=0.9, r=6)
+    d_cam(s, r2x + r2w * 0.22, r2y + r2h * 0.08, r=16)
+    d_led(s, r2x + r2w * 0.22, r2y + r2h * 0.155, r=4, color="#f0e0a0")
+    # module bay cover — signature raised panel
+    s.rect(r2x + r2w * 0.12, r2y + r2h * 0.20, r2w * 0.76, r2h * 0.58,
+           fill="#222b36", stroke=INK, sw=1.2, r=10, dash=None)
+    s.t(r2x + r2w * 0.5, r2y + r2h * 0.27, "MODULE BAY", 11, "middle",
+        "#8fa3b5", weight="bold", spacing="1")
+    s.t(r2x + r2w * 0.5, r2y + r2h * 0.33, "sat-SOS · extra batt · sensor pod",
+        9, "middle", "#6b7c8c")
+    d_thumbs(s, r2x + r2w * 0.5, r2y + r2h * 0.68, r=9)
+    for i in range(4):
+        d_pogo(s, r2x + r2w * (0.26 + i * 0.16), r2y + r2h * 0.75, r=4)
+    s.t(r2x + r2w * 0.5, r2y + r2h * 0.81, "bay pogo bus ×4", 9, "middle", SOFT)
+    s.t(r2x + r2w * 0.5, r2y + r2h * 0.90, "ARCTICPHONE", 12, "middle",
+        "#8fa3b5", weight="bold", spacing="2")
+    s.t(r2x + r2w * 0.5, r2y + r2h * 0.945, "EMEBET INC.", 8, "middle", "#5b6a78",
+        spacing="1.5")
+    s.callout(r2x + r2w * 0.22, r2y + r2h * 0.08, 905, 120,
+              "CAMERA — ring + flash")
+    s.callout(r2x + r2w * 0.5, r2y + r2h * 0.68, 905, 470,
+              "THUMB SCREW — tool-light bay swap")
+    s.callout(r2x + r2w * 0.88, r2y + r2h * 0.40, 1330, 120,
+              "BAY COVER — 40% of rear")
+    figcap(s, r2x + r2w / 2, r2y + r2h + 30, 2,
+           "Rear — signature module bay")
 
-    # architecture options
-    s.h(gx, 430, "ARCHITECTURE OPTIONS (DECISION REQUIRED)")
-    s.table(gx, 456, [50, 280, 280, 240], ["Opt", "Approach", "Pros", "Cons"], [
-        ["A", "Rugged Android + ArctikChain mesh HAT", "fast to market, app ecosystem", "Android bloat, cert effort"],
-        ["B", "Custom Linux + mesh SoC (integrated SX1262)", "clean, sovereign, repairable", "OS work, smaller ecosystem"],
-        ["C", "Hybrid: Linux core + Android layer", "best of both", "longest dev time"],
-    ], rh=56)
+    # ===== Fig. 3 — side profiles (L/R) =====
+    p3x, p3y = 1380, 210
+    for k, (lbl, keys) in enumerate((("L", "sos"), ("R", "vol"))):
+        px = p3x + k * 100
+        s.rect(px, p3y, 42, 330, fill="#2b3440", stroke=INK, sw=1.4, r=14)
+        if keys == "sos":
+            d_btn(s, px - 7, p3y + 70, 8, 56, color="#a83c2e")
+            s.t(px + 21, p3y + 240, "SOS", 9, "middle", "#a83c2e", "bold")
+        else:
+            d_btn(s, px + 41, p3y + 60, 8, 44)
+            d_btn(s, px + 41, p3y + 118, 8, 26)
+            s.t(px + 21, p3y + 240, "VOL·PWR", 8, "middle", "#8fa3b5")
+        s.ln(px + 10, p3y + 318, px + 32, p3y + 318, SOFT, 0.8)
+        s.t(px + 21, p3y + 352, ["LEFT", "RIGHT"][k], 10, "middle", SOFT, "bold")
+    s.t(p3x + 50, p3y + 386, "keys proud of shell — gloved hands", 9, "middle", SOFT)
+    figcap(s, p3x + 50, p3y + 424, 3, "Edge profiles — hardware keys")
 
-    # capability set — left column, clears the title block (top edge y=896)
-    s.h(ML + 10, 650, "CAPABILITY SET")
-    s.table(ML + 10, 676, [280, 620], ["Capability", "Implementation"], [
-        ["Mesh node", "SX1262 LoRa 915 + signed envelopes — every phone extends the network"],
-        ["Satellite SOS", "L-band messenger module now; own constellation later"],
-        ["Offline apps", "maps, manuals, forms, messaging EN/FR — useful with zero bars"],
-        ["Cellular", "LTE Cat-1/4 when towers exist — proven path from L1"],
-        ["Power", "replaceable battery + USB-C PD + solar trickle option"],
-        ["Rugged", "IP68 · -30..+55 °C · glove UI · 1.5 m drop target"],
-    ], rh=30)
+    # ===== Fig. 4 — exploded assembly =====
+    e4x, e4y = 90, 680
+    explode(s, e4x, e4y, 170, [
+        ("FRONT FRAME", "#3a4452", "PC+TPU, bumper pods molded-in"),
+        ("TRANSFLECTIVE LCD", "#10151c", "5–6 in, sun-readable"),
+        ("MIDFRAME + PCB", "#e4ede0", "SoC + LoRa + L-band + antennas"),
+        ("BATTERY", "#f0e8d8", "4000 mAh pouch — tool-less swap"),
+        ("REAR SHELL", "#e9e9e9", "polycarbonate, no glass"),
+        ("BAY COVER", "#d8d8d8", "thumb screw + gasket + pogo bus"),
+    ], d=16, h=13, gap=17, callx=e4x + 226)
+    figcap(s, e4x + 85, e4y + 232, 4, "Exploded — repairable, not glued")
+
+    # ===== Fig. 5 — corner section: bumper + gasket + screw =====
+    c5x, c5y = 640, 690
+    s.h(c5x, c5y - 26, "CORNER SECTION — DROP PROTECTION", 13)
+    s.rect(c5x + 40, c5y + 10, 200, 110, fill="#2b3440", stroke=INK, sw=1.3,
+           r=10)
+    s.rect(c5x + 58, c5y + 28, 164, 74, fill="#10151c", stroke=SOFT, sw=0.9,
+           r=6)
+    s.rect(c5x + 16, c5y - 14, 52, 52, fill="#4a5563", stroke=INK, sw=1.2, r=14)
+    d_screw(s, c5x + 42, c5y + 12, r=6)
+    s.ln(c5x + 40, c5y + 10, c5x + 40 + 200, c5y + 10, SOFT, 0.8, "4 3")
+    s.callout(c5x + 42, c5y + 4, c5x + 30, c5y - 48, "TPU POD — crush zone")
+    s.callout(c5x + 130, c5y + 64, c5x + 250, c5y + 150,
+              "LCD floats 1.2 mm off face")
+    s.callout(c5x + 200, c5y + 118, c5x + 250, c5y + 190,
+              "GASKET LIP — IP68")
+    figcap(s, c5x + 140, c5y + 215, 5, "Section A — 1.5 m drop target")
+
+    # right column — decision context (kept compact, above title block)
+    s.h(1050, 650, "ARCHITECTURE DECISION")
+    s.table(1050, 674, [40, 240, 230], ["Opt", "Approach", "Trade"], [
+        ["A", "Rugged Android + mesh HAT", "fast — bloat + cert effort"],
+        ["B", "Custom Linux + mesh SoC", "clean — OS work"],
+        ["C", "Linux core + Android layer", "both — longest dev"],
+    ], rh=42)
+    s.t(1050, 850, "Rural-first, not flagship: mesh-native,", 10, color=SOFT)
+    s.t(1050, 867, "sat-SOS-ready, offline-first, repairable,", 10, color=SOFT)
+    s.t(1050, 884, "community-owned.", 10, color=SOFT)
     out.append(s.svg(1, 7))
 
     # ---------------- 102 SPEC ----------------
@@ -1404,7 +1816,7 @@ def seed():
         "Swarm architecture is the same — only the node shrinks.",
         "Do NOT promise motes to funders until Gate 2 demo exists.",
     ], width=92, color=RED)
-    out.append(s.svg(1, 3))
+    out.append(s.svg(1, 4))
     return out
 
 
@@ -1468,8 +1880,195 @@ def meridian():
         "This sheet is mission concept, not spacecraft design — payload inherits mesh crypto/routing.",
         "Every earlier rung funds and justifies this one — the trailhead is the ground network.",
     ], width=85, color=RED)
-    out.append(s.svg(1, 1))
+    out.append(s.svg(1, 2))
     return out
+
+
+def meridian_bus():
+    s = Sheet("AF-H-102", "BUS LAYOUT & DEPLOYMENT",
+              "CUBESAT CONCEPT — STORE-FORWARD PAYLOAD ON COMMERCIAL BUS",
+              "H · MERIDIAN", rev="0", status="VISION — EARNED")
+
+    # ===== Fig. 1 — CubeSat deployed, isometric =====
+    cx, cy = 480, 330
+    # solar wings
+    for sign in (-1, 1):
+        wx = cx + sign * 150
+        s.poly([(wx, cy - 60), (wx + sign * 190, cy - 60),
+                (wx + sign * 190, cy + 60), (wx, cy + 60)],
+               fill="#dbe7f4", stroke=INK, sw=1.4)
+        for i in range(1, 6):
+            gx = wx + sign * i * 31
+            s.ln(gx, cy - 60, gx, cy + 60, SOFT, 0.8)
+        s.ln(wx, cy - 60, wx, cy + 60, INK, 2)
+    # 3U bus — product shot
+    G = s.device(cx, cy, 130, 300, 90, "#8a8f96", rad=6)
+    # card rails + separation seams
+    for b in (0.33, 0.66):
+        px0, py0 = s.fpt(G, 0.03, b)
+        px1, py1 = s.fpt(G, 0.97, b)
+        s.ln(px0, py0, px1, py1, SOFT, 1.2)
+    # payload window + antenna + sun sensors + rail screw heads
+    s.rect(*s.fpt(G, 0.28, 0.38), G["w"] * 0.44, G["h"] * 0.20,
+           fill="#2c3e50", stroke=INK, sw=1.0)
+    tx0, ty0 = s.fpt(G, 0.28, 0.38)
+    s.t(tx0 + G["w"] * 0.22, ty0 + G["h"] * 0.11, "PAYLOAD", 9, "middle",
+        "#aaccee", "bold")
+    for a, b in ((0.06, 0.04), (0.94, 0.04), (0.06, 0.96), (0.94, 0.96)):
+        d_screw(s, *s.fpt(G, a, b), r=4)
+    # UHF dipole + GNSS patch on top face
+    ax_, ay_ = s.tpt(G, 0.5, 0.4)
+    s.poly([(ax_ - 70, ay_ - 10), (ax_ + 70, ay_ - 10),
+            (ax_ + 70, ay_ - 4), (ax_ - 70, ay_ - 4)],
+           fill="none", stroke=INK, sw=1.2)
+    d_led(s, *s.fpt(G, 0.85, 0.08), r=3.5)
+    # callouts
+    s.callout(*s.fpt(G, 0.5, 0.48), 60, 130,
+              "S/F PAYLOAD — mesh envelopes, store + relay")
+    s.callout(*s.tpt(G, 0.5, 0.4), 60, 220,
+              "UHF DIPOLE — deployable, talks to the mesh")
+    s.callout(*s.fpt(G, 0.5, 0.10), 950, 140,
+              "GNSS + BEACON — position + health")
+    s.callout(*s.fpt(G, 0.5, 0.80), 700, 470,
+              "BATTERIES + ADCS — momentum wheel class")
+    s.callout(cx + 340, cy - 60, 950, 500,
+              "DEPLOYABLE WINGS — body-mounted + panel pair")
+    s.callout(*s.spt(G, 0.9, 0.5), 60, 620,
+              "1U/3U BUS — GOMspace/EnduroSat class, not bespoke")
+    figcap(s, 560, 575, 1, "H MERIDIAN — store-forward CubeSat, deployed")
+
+    # ===== Fig. 2 — bus interior stack =====
+    e2x, e2y = 1050, 150
+    s.h(e2x, e2y - 26, "BUS INTERIOR — STACK", 13)
+    for i, (nm, sub) in enumerate((
+            ("PAYLOAD BOARD", "S/F radio + flash store"),
+            ("OBC + EPS", "computer + power mgmt"),
+            ("BATTERY PACK", "Li-ion, heater-wrapped"),
+            ("ADCS", "magnetorquers + sun sensors"),
+            ("STRUCTURE", "rails + separation ring"))):
+        yy = e2y + i * 56
+        s.rect(e2x, yy, 380, 44, fill=FILL if i % 2 else "#e4ede0",
+               stroke=INK, sw=1.1)
+        s.t(e2x + 14, yy + 19, nm, 12, weight="bold")
+        s.t(e2x + 14, yy + 36, sub, 10, color=SOFT)
+    figcap(s, e2x + 190, e2y + 310, 2, "Stack — commercial bus cards")
+
+    # ===== Fig. 3 — ground pass: sat over the mesh =====
+    p3x, p3y = 90, 700
+    s.h(p3x, p3y - 26, "GROUND PASS — THE MESH IS THE TERMINAL", 13)
+    s.el.append(
+        f'<path d="M {p3x} {p3y + 60} A 420 120 0 0 1 {p3x + 840} {p3y + 60}" '
+        f'fill="none" stroke="{SOFT}" stroke-width="1.2" stroke-dasharray="8 5"/>')
+    s.rect(p3x + 390, p3y - 40, 60, 40, fill="#8a8f96", stroke=INK, sw=1.2, r=4)
+    s.t(p3x + 420, p3y + 60, "H MERIDIAN", 10, "middle", SOFT, "bold")
+    for i in range(4):
+        nx_ = p3x + 60 + i * 220
+        s.circ(nx_, p3y + 190, 10, fill="#3d4a42", stroke=INK, sw=1.2)
+        s.ln(nx_, p3y + 180, nx_, p3y + 150, SOFT, 0.9, "3 3")
+    s.t(p3x + 420, p3y + 230,
+        "each pass: envelopes up, tasks down — minutes, not months", 11, "middle", SOFT)
+    figcap(s, p3x + 420, p3y + 270, 3, "Store-and-forward — one pass = mail run")
+
+    # right column — honest status
+    s.h(1130, 560, "WHAT MAKES IT CHEAP")
+    s.bullets(1130, 586, [
+        "Payload = mesh radio + flash — no bespoke instruments.",
+        "Bus = commercial 1U/3U — rideshare-ready.",
+        "Ground segment already deployed — the mesh is the terminal layer.",
+        "Coverage-first, not bandwidth — text/sensor tier only.",
+    ], width=52)
+    s.t(1130, 810, "Pathfinder: hosted payload → university", 10, color=SOFT)
+    s.t(1130, 828, "CubeSat (CSA) → dedicated smallsat.", 10, color=SOFT)
+    s.t(1130, 846, "Earned, not promised.", 10, color=SOFT)
+    return [s.svg(2, 2)]
+
+
+# ============================================================ D SEED FIGURE ==
+def seed_anatomy():
+    s = Sheet("AF-D-104", "MOTE ANATOMY & DEPLOYMENT",
+              "PRINTED MOTE — LAYER STACK · POD · FIELD DEPLOYMENT",
+              "D · SEED", rev="0", status="RESEARCH — NOT A PRODUCT")
+
+    # ===== Fig. 1 — exploded printed layer stack =====
+    e1x, e1y = 90, 160
+    s.h(e1x, e1y - 30, "MOTE LAYER STACK — ALL PRINTED", 13)
+    layers = [
+        ("ENCAPSULATION", "#e9e9e9", "biofilm — degrades on schedule"),
+        ("PRINTED ANTENNA", "#dbe7f4", "915 MHz coil or backscatter patch"),
+        ("SENSOR INK LAYER", "#e4ede0", "temp/RH/VOC printed sensors"),
+        ("LOGIC + COMMS", "#f0e8d8", "organic TFT or discrete µW die"),
+        ("PRINTED BATTERY", "#dcd0c0", "Zn/MnO2 + PV/TEG harvest"),
+        ("SUBSTRATE", "#d8d8d8", "cellulose / silk fibroin"),
+    ]
+    yy = e1y
+    for i, (nm, color, det) in enumerate(layers):
+        d_slab(s, e1x, yy, 300, d=18, h=13, color=color)
+        s.t(e1x + 400, yy + 11, nm, 11.5, weight="bold")
+        s.t(e1x + 400, yy + 27, det, 10, color=SOFT)
+        s.ln(e1x + 318, yy + 6, e1x + 392, yy + 10, SOFT, 0.7)
+        if i < len(layers) - 1:
+            s.ln(e1x + 150, yy + 13, e1x + 150, yy + 33, SOFT, 0.8, "3 3")
+        yy += 33
+    figcap(s, e1x + 150, yy + 34, 1, "Mote anatomy — six printed layers")
+
+    # ===== Fig. 2 — mote top view =====
+    m2x, m2y = 760, 170
+    s.h(m2x, m2y - 30, "TOP VIEW — Ø ~20 mm", 13)
+    s.circ(m2x + 110, m2y + 110, 100, fill="#efe9dd", stroke=INK, sw=1.4)
+    for r_ in (86, 66, 46):
+        s.circ(m2x + 110, m2y + 110, r_, fill="none", stroke=SOFT, sw=0.8)
+    s.circ(m2x + 110, m2y + 110, 26, fill="#e4ede0", stroke=INK, sw=1.0)
+    s.t(m2x + 110, m2y + 114, "DIE", 10, "middle", weight="bold")
+    s.callout(m2x + 110 + 66, m2y + 110 - 66, 1030, 120,
+              "PRINTED COIL ANTENNA")
+    s.callout(m2x + 110, m2y + 110, 1030, 240, "SENSOR + µW DIE")
+    s.dimh(m2x + 10, m2x + 210, m2y + 234, "20")
+    figcap(s, m2x + 110, m2y + 270, 2, "Mote face — coil, window, die")
+
+    # ===== Fig. 3 — deployment sequence =====
+    p3x, p3y = 90, 560
+    s.h(p3x, p3y - 30, "DEPLOYMENT — SEED → SPROUT → SENSOR", 13)
+    stages = [
+        ("POD DROP", "coated pod — ground/air drop"),
+        ("GERMINATION", "moisture opens pod — mote out"),
+        ("WAKE + SENSE", "harvest starts — reports to head"),
+        ("DEGRADE", "dissolves in <12 mo"),
+    ]
+    for i, (nm, sub) in enumerate(stages):
+        bx = p3x + i * 236
+        s.rect(bx, p3y, 210, 60, fill=FILL, stroke=INK, sw=1.1)
+        s.t(bx + 12, p3y + 25, nm, 12, weight="bold")
+        s.t(bx + 12, p3y + 44, sub, 9, color=SOFT)
+        if i < 3:
+            s.arrow(bx + 210, p3y + 30, bx + 234, p3y + 30)
+    figcap(s, p3x + 465, p3y + 130, 3, "Lifecycle — one fire season, then gone")
+
+    # ===== Fig. 4 — cluster relay =====
+    c4x, c4y = 90, 800
+    s.h(c4x, c4y - 28, "FIELD TOPOLOGY — MOTES → HEAD → MESH", 13)
+    for i in range(8):
+        mx = c4x + i * 78
+        s.circ(mx, c4y + 50, 9, fill="#efe9dd", stroke=INK, sw=1.0)
+    s.circ(c4x + 300, c4y + 130, 16, fill="#3d4a42", stroke=INK, sw=1.3)
+    s.t(c4x + 300, c4y + 168, "CLUSTER HEAD", 10, "middle", SOFT, "bold")
+    for i in range(8):
+        s.ln(c4x + i * 78, c4y + 58, c4x + 300, c4y + 118, SOFT, 0.5, "3 4")
+    s.t(c4x + 700, c4y + 130, "→ Anchor/Brick backbone", 12, color=SOFT)
+    s.t(c4x + 700, c4y + 165, "Motes whisper to heads; only", 11, color=SOFT)
+    s.t(c4x + 700, c4y + 183, "anomalies reach the backbone.", 11, color=SOFT)
+    s.t(c4x + 700, c4y + 201, "Density is free; backhaul is precious.", 11, color=SOFT)
+
+    # right column — honest status
+    s.h(1130, 560, "WHY THIS IS RESEARCH")
+    s.bullets(1130, 586, [
+        "TRL ~2 — concept + literature; no ArctikChain mote exists yet.",
+        "Precedent: DARPA/NSF computational-dust programs prove the physics.",
+        "Swarm architecture unchanged — only the node shrinks.",
+        "Do NOT promise motes to funders until Gate 2 lab demo exists.",
+    ], width=52, color=RED)
+    s.t(1130, 800, "Targets: <1 g · <$1 · one fire season", 10, color=SOFT)
+    s.t(1130, 818, "· degrade <12 mo. Earlier rungs first.", 10, color=SOFT)
+    return s.svg(4, 4)
 
 
 # ============================================================ L1 ELECTRONICS ==
@@ -1539,7 +2138,7 @@ def l1_electronics():
         "4. LTE HAT — AT init, signal query, data session.",
         "5. Agent — systemd up, /health green, acceptance test.",
     ], width=95)
-    return s.svg(4, 4)
+    return s.svg(4, 5)
 
 
 # ============================================================ L1 FINISH ======
@@ -1731,7 +2330,7 @@ def mite_electronics():
         "Dock pogo detect → charge mode + beacon boost.",
         "All wake sources logged — swarm energy is mesh data.",
     ], width=88)
-    return s.svg(4, 7)
+    return s.svg(4, 8)
 
 
 # ============================================================ MITE VARIANTS ====
@@ -1781,7 +2380,7 @@ def mite_variants():
         "Unit confirms, adopts payload profile, reports ready.",
         "Reassignment on battery/sensor failure — automatic.",
     ], width=85)
-    return s.svg(5, 7)
+    return s.svg(5, 8)
 
 
 # ============================================================ MITE MECHANICAL =
@@ -1829,7 +2428,7 @@ def mite_mechanical():
            size=12)
 
     # sealing + service
-    gx = 1100
+    gx = 1020
     s.h(gx, 160, "SEALING & SERVICE")
     s.table(gx, 184, [150, 420], ["Feature", "Detail"], [
         ["Gasket", "TPU bead around lid — IP65 splash"],
@@ -1866,7 +2465,7 @@ def mite_mechanical():
         "Carrier PCB: JLCPCB 4-layer ENIG — $15–30/pc at 10+.",
         "Assembly: hand-solderable — no BGA, no reflow oven needed.",
     ], width=105)
-    return s.svg(6, 7)
+    return s.svg(6, 8)
 
 
 # ============================================================ MITE FINISH =====
@@ -2428,7 +3027,7 @@ def seed_materials():
         "Cluster heads must be durable — motes feed THEM, not the backbone.",
         "Gate: lab demo (temp + 10 m report) before ANY field promise.",
     ], width=82, color=RED)
-    return s.svg(2, 3)
+    return s.svg(2, 4)
 
 
 def seed_protocol():
@@ -2442,7 +3041,7 @@ def seed_protocol():
         ["Cluster heads", "aggregate mote data, relay to backbone", "1 per ~100 motes"],
         ["Backbone", "Anchor/Brick/LTE/sat — the real mesh", "existing fleet"],
     ], rh=44)
-    s.note(ML + 10, 360,
+    s.note(ML + 10, 372,
           "Motes don't each shout — they whisper to their cluster head. Density is free; "
           "backhaul is precious. Same pattern as satellite constellations.", size=12)
 
@@ -2491,7 +3090,7 @@ def seed_protocol():
         "Biodegradation rate vs fire season length — materials tuning.",
         "Wake-up reliability — missed windows = missed detections.",
     ], width=85)
-    return s.svg(3, 3)
+    return s.svg(3, 4)
 
 
 # ============================================================ X MATRICES ======
@@ -2649,8 +3248,8 @@ def cover():
         ("AF-E-101…103", "E Totem — arrangement, parts/install, finish"),
         ("AF-A-101…103", "A Anchor — arrangement, parts/power, finish"),
         ("AF-P-101…107", "P ArcticPhone — concept, spec, definition, tri-radio, modules, UX, finish"),
-        ("AF-D-101…103", "D Seed — R&D brief, materials/degradation, cluster protocol"),
-        ("AF-H-101", "H Meridian — satellite mission concept"),
+        ("AF-D-101…104", "D Seed — R&D brief, materials, cluster protocol, mote anatomy"),
+        ("AF-H-101…102", "H Meridian — satellite mission + bus layout concept"),
         ("AF-X-101…102", "Component matrices — radios, compute, power, displays, enclosures"),
     ]
     yy = 590
@@ -2681,8 +3280,8 @@ ALL_SETS = {
     "04_A_Anchor": anchor() + [anchor_finish()],
     "05_P_ArcticPhone": phone() + [phone_definition(), phone_triradio(),
                                    phone_modules(), phone_ux(), phone_finish()],
-    "06_D_Seed": seed() + [seed_materials(), seed_protocol()],
-    "07_H_Meridian": meridian(),
+    "06_D_Seed": seed() + [seed_materials(), seed_protocol(), seed_anatomy()],
+    "07_H_Meridian": meridian() + meridian_bus(),
     "08_Component_Matrices": [radio_matrix(), platform_matrix()],
 }
 
