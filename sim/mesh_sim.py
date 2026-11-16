@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ArcticChain mesh simulator — nodes, mobile bees, store-forward delivery.
+"""ArctikChain mesh simulator — nodes, mobile bees, store-forward delivery.
 
 Simulates the fleet over a 2-D area with range-limited radio:
   - fixed nodes (L1 bricks, totems, anchors) at set positions
@@ -296,11 +296,11 @@ def report_html(results, out_path):
         f"<td>{r['links']}</td><td>{r.get('converged','—')}</td></tr>"
         for r in results)
     html = f"""<!doctype html><html><head><meta charset=utf-8>
-<title>ArcticChain Mesh Sim Report</title>
+<title>ArctikChain Mesh Sim Report</title>
 <style>body{{font-family:system-ui;background:#0d1420;color:#dfe7f0;padding:24px}}
 table{{border-collapse:collapse}}td,th{{padding:8px 14px;border-bottom:1px solid #2a3a50}}
 h1{{color:#5eead4}}.dim{{color:#7f92a8}}</style></head><body>
-<h1>◈ ArcticChain Mesh Simulator — Report</h1>
+<h1>◈ ArctikChain Mesh Simulator — Report</h1>
 <p class=dim>Generated {time.strftime('%Y-%m-%d %H:%M')} · range-limited LoRa model ·
 epidemic store-forward · mobile bees · wildfire_response tasks bees to ignition</p>
 <table><tr><th>scenario</th><th>msgs</th><th>delivered</th><th>delivery</th>

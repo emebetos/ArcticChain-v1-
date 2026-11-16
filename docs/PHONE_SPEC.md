@@ -47,7 +47,7 @@ Six differentiators (from AF-P-105):
 
 | Option | Approach | Verdict |
 |---|---|---|
-| A | Rugged Android + ArcticChain mesh HAT | fastest to market; Android bloat + cert effort |
+| A | Rugged Android + ArctikChain mesh HAT | fastest to market; Android bloat + cert effort |
 | B | Custom Linux + mesh SoC (integrated SX1262) | clean, sovereign, repairable; OS work |
 | C | Hybrid: Linux core + Android layer | best of both; longest dev |
 

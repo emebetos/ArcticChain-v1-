@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generate ArcticChain pitch document as .docx"""
+"""Generate ArctikChain pitch document as .docx"""
 from docx import Document
 from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -33,7 +33,7 @@ def para(text, bold=False, italic=False, size=None):
     return p
 
 # ---- Title ----
-t = doc.add_heading('ARCTICCHAIN', 0)
+t = doc.add_heading('ARCTIKCHAIN', 0)
 t.alignment = WD_ALIGN_PARAGRAPH.CENTER
 sub = doc.add_paragraph()
 sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -51,12 +51,12 @@ r.font.color.rgb = RGBColor(0x88, 0x88, 0x88)
 # ---- One-liner ----
 h('The One-Liner', 1)
 para('Starlink sells internet to people who can already afford it and see the sky. '
-     'ArcticChain gives a community its own network — messages, alerts, sensors, and '
+     'ArctikChain gives a community its own network — messages, alerts, sensors, and '
      'services — that works when nothing else does, and gets better every time a '
      'neighbour joins.', bold=True)
 
 para('Today that network is a ground mesh. The endgame is a sovereign Canadian '
-     'constellation — ArcticChain becomes the space-based network for rural and '
+     'constellation — ArctikChain becomes the space-based network for rural and '
      'remote places around the globe: reliable communications where towers do not '
      'exist and sky view is not guaranteed.', bold=True)
 
@@ -143,7 +143,7 @@ for b in [
     doc.add_paragraph(b, style='List Bullet')
 
 # ---- Moat ----
-h('Why ArcticChain Wins — The Moat', 1)
+h('Why ArctikChain Wins — The Moat', 1)
 for i, (t_, d_) in enumerate([
     ('Network effects', 'Every phone/node sold adds a repeater. The 100th user has better '
      'coverage than the 1st. Competitors cannot copy deployed density.'),
@@ -170,7 +170,7 @@ hdr[0].text = 'Stream'
 hdr[1].text = 'Anchor'
 for s_, a_ in [
     ('Hardware', 'Node kits $600–1,200 · hubs $5–15K — healthy margin on a $335–525 BOM'),
-    ('Software', 'ArcticChain OS dashboards/alerts — $10–40/node/month or community license'),
+    ('Software', 'ArctikChain OS dashboards/alerts — $10–40/node/month or community license'),
     ('Services', 'Managed wildfire/ag/asset monitoring — $2–10K/site/year'),
     ('Emergency retainers', 'Annual contracts with municipalities/counties'),
     ('Training', 'Student cohorts, technician certification'),
@@ -185,16 +185,16 @@ for s_, a_ in [
                 r.font.size = Pt(9.5)
 
 para('Capital efficiency is the pitch point: no tower capex, no licensed spectrum — '
-     'the two cost structures that kill rural telecom do not apply to ArcticChain.')
+     'the two cost structures that kill rural telecom do not apply to ArctikChain.')
 
 # ---- Roadmap ----
 h('Roadmap (Honest Gates)', 1)
 for b in [
     'Now — build 2 L1 Bricks (~$670–1,050), prove the mesh end-to-end.',
     'Year 1 — Tier-1 deployments + Totem/Anchor + first paying wildfire/ag pilot.',
-    'Year 2 — ArcticPhone + Mite swarm pilots (fire season) + ArcticChain OS.',
+    'Year 2 — ArcticPhone + Mite swarm pilots (fire season) + ArctikChain OS.',
     'Year 3–4 — Indigenous sovereignty programs, emergency backbone contracts, '
-    'first ArcticChain smallsats (borrowed launch).',
+    'first ArctikChain smallsats (borrowed launch).',
     'Year 5+ — sovereign polar constellation for messaging/IoT globally, '
     'NGSO broadband path, Canadian launch ecosystem — the ignition.',
 ]:
@@ -205,7 +205,7 @@ h('The Endgame — A New Space Network', 1)
 para('The satellite layer is not a pivot — it is the destination the ground network '
      'was built to reach:', bold=True)
 for b in [
-    'S1 — ArcticChain smallsats (yr 2–4): polar-inclination CubeSats and smallsats '
+    'S1 — ArctikChain smallsats (yr 2–4): polar-inclination CubeSats and smallsats '
     'doing store-and-forward messaging and IoT for Canada and partner regions. '
     'Polar orbits cover what Starlink\u2019s 53\u00b0 shells thin out on — the North.',
     'S2 — Sovereign NGSO broadband (yr 5+): the constellation grows into a genuine '
@@ -218,7 +218,7 @@ for b in [
     doc.add_paragraph(b, style='List Bullet')
 para('Physics note for technical reviewers: higher orbits win for latency-tolerant '
      'store-forward (coverage per satellite, fewer satellites needed); LEO wins for '
-     'broadband. ArcticChain\u2019s messaging/IoT constellation deliberately exploits '
+     'broadband. ArctikChain\u2019s messaging/IoT constellation deliberately exploits '
      'the orbit economics Starlink ignores — and that is the defensible wedge.',
      italic=True)
 
@@ -237,7 +237,7 @@ for t_, d_ in [
      'alerts, at node prices.'),
     ('Satellite operators & carriers', 'One uplink, a whole community: a single terminal '
      'feeding the mesh reaches hundreds of endpoints that could never justify their '
-     'own dish. ArcticChain grows revenue per site — and partners where copying '
+     'own dish. ArctikChain grows revenue per site — and partners where copying '
      'community ownership, Indigenous governance and deployment trust would take years.'),
 ]:
     p = doc.add_paragraph()
@@ -247,7 +247,7 @@ for t_, d_ in [
 
 # ---- Partnership play ----
 h('Built to Partner, Hard to Copy', 1)
-para('ArcticChain is deliberately complementary at the transport layer and sticky at '
+para('ArctikChain is deliberately complementary at the transport layer and sticky at '
      'the community layer. The offer to every network that could compete: we make '
      'your uplink worth more.', bold=True)
 for b in [
@@ -272,8 +272,8 @@ para('You are not asking anyone to believe a vision — you are showing them a w
      'protocol, a buildable BOM, a printed blueprint set, a market the giants '
      'abandoned on the ground, and a credible path to the sky. The pitch is not '
      '"we will beat Starlink at bandwidth." It is: rural and remote places deserve '
-     'communications as good as anyone\u2019s — and ArcticChain is building the '
+     'communications as good as anyone\u2019s — and ArctikChain is building the '
      'network that gets there, community-owned, Canadian, and inevitable.', bold=True)
 
-doc.save(r'C:\Users\user\New folder\arcticchain\docs\ARCTICCHAIN_PITCH_v2.docx')
+doc.save(r'C:\Users\user\New folder\arcticchain\docs\ARCTIKCHAIN_PITCH_v2.docx')
 print('saved')

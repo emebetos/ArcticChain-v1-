@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ArcticChain Level-1 agent — runs on Raspberry Pi CM5.
+"""ArctikChain Level-1 agent — runs on Raspberry Pi CM5.
 
 Bridges the four radios/services into one offline-first node:
   - 4G/LTE HAT   : voice/SMS/data when towers exist (via AT commands or QMI)
@@ -190,7 +190,7 @@ class MeshEngine(threading.Thread):
 # ---------------------------------------------------------------- HTTP API
 
 class Api(BaseHTTPRequestHandler):
-    server_version = "ArcticChain/0.1"
+    server_version = "ArctikChain/0.1"
 
     def _json(self, obj, code=200):
         body = json.dumps(obj).encode()
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     engine = MeshEngine(radio, conn)
     engine.start()
 
-    eink_status("ArcticChain v0.1 — booting")
+    eink_status("ArctikChain v0.1 — booting")
     server = HTTPServer(("0.0.0.0", HTTP_PORT), Api)
     print(f"[arcticchain] agent up on :{HTTP_PORT}, node={engine.node_id}")
     try:

@@ -1,4 +1,4 @@
-# ArcticChain — Key Lifecycle & Identity Design
+# ArctikChain — Key Lifecycle & Identity Design
 
 **Status:** DESIGN — not yet implemented · **Owner:** Emebet Inc.
 **Scope:** device identity, provisioning, rotation, revocation, admin

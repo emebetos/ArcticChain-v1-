@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ArcticChain node agent v2 — store-and-forward mesh node.
+"""ArctikChain node agent v2 — store-and-forward mesh node.
 
 Runs on Raspberry Pi CM5 (L1 Brick) or any Linux box for bench testing.
 Bridges radios into one offline-first node:
@@ -524,7 +524,7 @@ class BackhaulBridge(threading.Thread):
 # ---------------------------------------------------------------- HTTP API
 
 class Api(BaseHTTPRequestHandler):
-    server_version = "ArcticChain/2.0"
+    server_version = "ArctikChain/2.0"
 
     def _json(self, obj, code=200):
         body = json.dumps(obj).encode()
@@ -639,7 +639,7 @@ class Api(BaseHTTPRequestHandler):
 
 
 DASHBOARD_HTML = """<!doctype html><html><head><meta charset=utf-8>
-<title>ArcticChain — __NODE__</title><meta name=viewport content="width=device-width">
+<title>ArctikChain — __NODE__</title><meta name=viewport content="width=device-width">
 <style>
 body{font-family:system-ui;background:#0d1420;color:#dfe7f0;margin:0;padding:16px}
 h1{font-size:20px}h2{font-size:14px;color:#7fb2e0;margin:18px 0 6px}
@@ -653,7 +653,7 @@ form{display:flex;gap:8px;margin:10px 0}
 input{flex:1;padding:8px;border-radius:6px;border:1px solid #2a3a50;background:#0d1420;color:#dfe7f0}
 button{padding:8px 16px;border:0;border-radius:6px;background:#5eead4;color:#0d1420;font-weight:bold;cursor:pointer}
 </style></head><body>
-<h1>◈ ArcticChain <span class=pill>__NODE__</span> <span class=dim>community: __COMMUNITY__</span></h1>
+<h1>◈ ArctikChain <span class=pill>__NODE__</span> <span class=dim>community: __COMMUNITY__</span></h1>
 <div class=card id=health>loading…</div>
 <h2>Send message</h2>
 <form onsubmit="send(event)"><input id=t placeholder="message to mesh (broadcast if no 'to')"><input id=to placeholder="to: node-id or *" style="max-width:160px"><button>send</button></form>

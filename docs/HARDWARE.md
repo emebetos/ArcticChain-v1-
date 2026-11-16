@@ -1,7 +1,7 @@
-# ArcticChain Hardware Family — designed for rural & remote Canada
+# ArctikChain Hardware Family — designed for rural & remote Canada
 
 Status: design brief · supersedes Monolith-era assumptions for the product line
-Owner: Emebet Inc. / ArcticChain
+Owner: Emebet Inc. / ArctikChain
 
 > The old blueprint (`docs/blueprint.svg`, `cad/monolith_cad.py`) was a flagship
 > research device — titanium spine, optical docks, 10 Gb/s lanes. That program
@@ -13,8 +13,8 @@ Owner: Emebet Inc. / ArcticChain
 
 ## 1. Design DNA — the non-negotiables
 
-Every ArcticChain node inherits this spec. A part that fails one of these isn't
-ArcticChain hardware.
+Every ArctikChain node inherits this spec. A part that fails one of these isn't
+ArctikChain hardware.
 
 ### Climate envelope (Alberta → territories)
 
@@ -82,7 +82,7 @@ and runs solar-first. They differ in *role*, not in trust model.
 
 ---
 
-## 3. Each node, and what makes it *unique to ArcticChain*
+## 3. Each node, and what makes it *unique to ArctikChain*
 
 ### L1 "Brick" — the field node *(CAD ready)*
 

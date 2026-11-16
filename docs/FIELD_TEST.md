@@ -1,4 +1,4 @@
-# ArcticChain — Two-Node Field Test Checklist
+# ArctikChain — Two-Node Field Test Checklist
 
 **Purpose:** prove the mesh works end-to-end before any public deployment.
 **Equipment:** 2× L1 Brick (or 1 Brick + 1 phone running `arcticchain_agent2.py`),

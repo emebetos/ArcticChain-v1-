@@ -1,5 +1,5 @@
 // =====================================================================
-// ArcticChain S-Mite firmware — ESP32-S3 + SX1262 LoRa swarm node
+// ArctikChain S-Mite firmware — ESP32-S3 + SX1262 LoRa swarm node
 //
 // Role: perchable environmental sensing bee. Perch-and-report energy
 // model: deep sleep between measurement/report cycles, solar assist.

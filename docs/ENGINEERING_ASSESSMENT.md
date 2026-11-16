@@ -1,4 +1,4 @@
-# ArcticChain — Engineering Assessment (Master Directive §17)
+# ArctikChain — Engineering Assessment (Master Directive §17)
 
 **Prepared for:** Emebet Inc. / Surafel Negussie — Planner/Maker
 **Date:** 2025-11-13 · **Scope:** full repository audit per Directive §5/§17
@@ -63,8 +63,8 @@ re-run required on a Rust-capable machine/CI before citing as passing.
 
 33-sheet ANSI-B print set (9 PDFs, audit-verified 0 collisions),
 `HARDWARE.md`, `BUILD_GUIDE.md`, `ORDER_LIST.md`, `FIELD_TEST.md`,
-`feasibility.md`, `PHONE_SPEC.md`, `ARCTICCHAIN_EXPLAINER.docx`,
-`ARCTICCHAIN_PITCH*.docx`, `sim/report.html`, audit tooling.
+`feasibility.md`, `PHONE_SPEC.md`, `ARCTIKCHAIN_EXPLAINER.docx`,
+`ARCTIKCHAIN_PITCH*.docx`, `sim/report.html`, audit tooling.
 Status: IMPLEMENTED (documents), PLANNED (anything describing unbuilt hardware).
 
 ---
@@ -78,7 +78,7 @@ There are **two different mesh architectures** in the repo, and they do
 
 | | Rust `arcticchain_mesh` | Python `arcticchain_agent2` |
 |---|---|---|
-| Lineage | Monolith phone project (domain separators still `MONOLITH-*`) | ArcticChain fleet (new) |
+| Lineage | Monolith phone project (domain separators still `MONOLITH-*`) | ArctikChain fleet (new) |
 | Crypto | Per-pair E2E: X25519 static DH → ChaCha20-Poly1305, Ed25519 signatures, DH-key binding | Community symmetric: HMAC-SHA256 over JSON frames with one shared key |
 | Routing | Signed link-state adverts → Dijkstra, payload-aware cost, bidirectional confirmation | Epidemic broadcast + last-heard-next-hop unicast |
 | PHY model | LoRa **and 60 GHz mmWave** link budgets | LoRa only (virtual radio for dev) |

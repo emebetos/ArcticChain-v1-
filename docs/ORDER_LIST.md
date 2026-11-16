@@ -1,4 +1,4 @@
-# ArcticChain Level-1 — Order List & Build Checklist
+# ArctikChain Level-1 — Order List & Build Checklist
 
 Everything needed to build **two** nodes (the acceptance test requires two units
 mesh-messaging with LTE disabled). Prices are CAD, approximate — verify at checkout.

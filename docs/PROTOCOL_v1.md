@@ -1,4 +1,4 @@
-# ArcticChain Protocol v1 — Unified Wire Specification
+# ArctikChain Protocol v1 — Unified Wire Specification
 
 **Status:** DRAFT for approval · **Owner:** Emebet Inc. · **Supersedes:**
 nothing yet — this reconciles the two existing stacks.

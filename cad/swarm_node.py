@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ArcticChain S "Mite" — swarm node parametric CAD.
+"""ArctikChain S "Mite" — swarm node parametric CAD.
 
 Perchable environmental sensor for the fire-watch swarm. The swarm is the
 sensor; each Mite is minimal: solar top, LoRa radio, temp/RH/VOC sensing,

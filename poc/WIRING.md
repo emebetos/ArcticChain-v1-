@@ -1,4 +1,4 @@
-# ArcticChain Level-1 Wiring Guide
+# ArctikChain Level-1 Wiring Guide
 
 Bill of materials (orderable in Canada):
 

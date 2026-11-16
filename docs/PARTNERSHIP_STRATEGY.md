@@ -1,11 +1,11 @@
-# ArcticChain Partnership Strategy — Built to Partner, Hard to Copy
+# ArctikChain Partnership Strategy — Built to Partner, Hard to Copy
 
-*Canonical doctrine for how ArcticChain positions against every network that could
+*Canonical doctrine for how ArctikChain positions against every network that could
 compete with us. Complements `MEGAPLAN.md` §1–2 and §6 (S0).*
 
 ## The doctrine
 
-ArcticChain is **deliberately complementary at the transport layer** and
+ArctikChain is **deliberately complementary at the transport layer** and
 **deliberately sticky at the community layer**.
 
 The pitch to every operator that could crush us: *we make your uplink worth more.*
@@ -20,7 +20,7 @@ right to fly our own.
 
 ### Satellite operators (Starlink, Telesat, Kuiper, OneWeb, Iridium)
 
-- **One uplink, a whole community.** A single terminal feeding an ArcticChain mesh
+- **One uplink, a whole community.** A single terminal feeding an ArctikChain mesh
   reaches hundreds of endpoints — phones, sensors, totems, swarm motes — that could
   never justify their own dish. We grow revenue per site; we don't cannibalize the
   terminal market.
@@ -28,7 +28,7 @@ right to fly our own.
   cold, sub-watt power budgets, and indoor/community contexts where a dish can't
   go. That is additive inventory, not a threat.
 - **Channel entry, not confrontation.** S0 already assumes we *buy* capacity.
-  ArcticChain as authorized integrator/reseller is the polite door into every
+  ArctikChain as authorized integrator/reseller is the polite door into every
   operator's channel-partner program — exactly as MEGAPLAN §S0 prescribes.
 - **Polar gap.** Orbital shells optimized for mid-latitudes thin out over the
   North; our ground layer (and later our polar-inclination S1 payloads) covers

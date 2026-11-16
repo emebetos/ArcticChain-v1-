@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ArcticChain — plain-language explainer document (.docx)
+"""ArctikChain — plain-language explainer document (.docx)
 
 Not a pitch. An explanation for someone who has never heard of it:
 what it is, why it exists, how each piece works, what's real today.
@@ -42,7 +42,7 @@ def numbered(text):
     return doc.add_paragraph(text, style='List Number')
 
 # ============================ TITLE ============================
-t = doc.add_heading('ARCTICCHAIN', 0)
+t = doc.add_heading('ARCTIKCHAIN', 0)
 t.alignment = WD_ALIGN_PARAGRAPH.CENTER
 sub = doc.add_paragraph()
 sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -63,7 +63,7 @@ para('Most of Canada has good cell service. The rest — farms, cabins, '
      'expensive bar of signal that disappears the moment you leave the '
      'mailbox. The big carriers will not build towers there because the '
      'math does not work: too few customers per kilometre of cable.')
-para('ArcticChain is a different approach. Instead of one company building '
+para('ArctikChain is a different approach. Instead of one company building '
      'giant towers and selling access, each community builds its own small '
      'network out of simple, cheap, repairable devices that talk to each '
      'other directly — like a group chat that works with no phone signal at '
@@ -100,7 +100,7 @@ h('3. The core idea: a network that belongs to the community')
 para('Normal cell networks work like this: your phone talks to a tower; the '
      'tower talks to the carrier\'s core network; the carrier decides what '
      'you can do and what it costs. If the tower is not there, nothing works.')
-para('ArcticChain works differently at every level:')
+para('ArctikChain works differently at every level:')
 bullet('Devices talk to each other directly over a licence-free radio band '
        '(915 MHz in Canada — the same band used by many farm and industrial '
        'radios). No tower required for local communication.')
@@ -259,7 +259,7 @@ numbered('NOW — ground mesh for unserved communities (hardware exists, '
 numbered('NEAR — borrow satellite capacity (existing L-band messengers, '
          'Starlink/Iridium as backhaul) so remote nodes get an internet '
          'path without owning satellites.')
-numbered('MID — ArcticChain smallsats: a modest constellation of '
+numbered('MID — ArctikChain smallsats: a modest constellation of '
          'polar-leaning satellites handling alerts and IoT data. This '
          'needs kilobytes of capacity, not megabits — far fewer '
          'satellites than a broadband constellation, which is what makes '
@@ -330,7 +330,7 @@ para('Emebet Inc. (emebetos.ca, Edmonton) is the company and sole '
      'and fund the space program from demonstrated demand. The '
      '16-week student build program doubles as recruiting and public '
      'relations — every cohort is a pipeline of trained technicians.')
-para('The pitch documents (ARCTICCHAIN_PITCH.docx / _v2.docx in docs/) '
+para('The pitch documents (ARCTIKCHAIN_PITCH.docx / _v2.docx in docs/) '
      'cover the investor/government/university versions of this story.')
 
 # ============================ 11. GLOSSARY ============================
@@ -363,9 +363,9 @@ for term, definition in gloss:
 # ============================ FOOTER ============================
 doc.add_paragraph()
 para('— End of explainer —', italic=True)
-para('ArcticChain · Emebet Inc. · Proprietary & Confidential · '
+para('ArctikChain · Emebet Inc. · Proprietary & Confidential · '
      'SURAFEL NEGUSSIE — Planner/Maker', size=9)
 
-out = 'ARCTICCHAIN_EXPLAINER.docx'
+out = 'ARCTIKCHAIN_EXPLAINER.docx'
 doc.save(out)
 print('saved', out)

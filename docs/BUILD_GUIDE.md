@@ -1,6 +1,6 @@
-# ArcticChain v1 Build Guide
+# ArctikChain v1 Build Guide
 
-How to take ArcticChain from "promised on paper" to a working Level-1
+How to take ArctikChain from "promised on paper" to a working Level-1
 proof-of-concept in 2–4 weeks with a student team or makerspace.
 
 ## What exists today (this repo)

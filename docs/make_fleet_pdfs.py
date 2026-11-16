@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ArcticChain print set v2 — architectural-style blueprint PDFs.
+"""ArctikChain print set v2 — architectural-style blueprint PDFs.
 
 White paper, black ink, orthographic views (top / front / side) with
 dimension strings — styled after a real architectural drawing set.
@@ -447,7 +447,7 @@ class Sheet:
         self.rect(x, y, bw, bh, stroke=INK, sw=1.4)
         self.ln(x + 250, y, x + 250, y + bh, INK, 1)
         # left: owner / attribution
-        self.t(x + 12, y + 20, "ARCTICCHAIN — RURAL NODE FLEET", 13, weight="bold")
+        self.t(x + 12, y + 20, "ARCTIKCHAIN — RURAL NODE FLEET", 13, weight="bold")
         self.t(x + 12, y + 38, "EMEBET INC. · emebetos.ca", 12, weight="bold", color=ACC)
         self.t(x + 12, y + 57, "SOLE PROPRIETARY OWNER", 10, color=SOFT)
         self.t(x + 12, y + 71, "SURAFEL NEGUSSIE — PLANNER/MAKER", 10, color=SOFT)
@@ -577,7 +577,7 @@ def l1():
     s.h(90, fy, "WHAT THIS NODE IS")
     s.bullets(90, fy + 26, [
         "Handheld brick = mailbox + mesh repeater + public bulletin (E-Ink) + SOS beacon.",
-        "Runs ArcticChain agent on :8080 — SQLite store-and-forward, signed Ed25519 envelopes.",
+        "Runs ArctikChain agent on :8080 — SQLite store-and-forward, signed Ed25519 envelopes.",
         "LoRa 915 MHz mesh to neighbors; LTE backhaul only when a tower exists.",
         "Works with zero connectivity — that is the product.",
     ], width=62)
@@ -799,7 +799,7 @@ def mite():
         "One member of the fire-watch swarm — the swarm IS the sensor, not the individual bee.",
         "Minimal on purpose: solar top, LoRa radio, temp/RH/VOC sensing, perch clip.",
         "Default state = perched and reporting. Flight is a later role, not the power budget.",
-        "Same signed mesh identity as every ArcticChain node.",
+        "Same signed mesh identity as every ArctikChain node.",
     ], width=110)
 
     s.h(640, fy, "SWARM ROLES (ASSIGNED BY MESH AI)")
@@ -1214,7 +1214,7 @@ def anchor():
         ["LTE (SIM7600)", "$60–90", "any cell signal — most rural sites"],
         ["Starlink Mini/Res", "$300–600 + $/mo", "true dead zones — business case"],
         ["Iridium Certus/L-band", "OEM $500+", "polar/north — own-sat path"],
-        ["ArcticChain sats", "future", "the mesh IS the ground segment"],
+        ["ArctikChain sats", "future", "the mesh IS the ground segment"],
     ], rh=34)
 
     # dock protocol
@@ -1276,7 +1276,7 @@ def phone():
     # architecture options
     s.h(gx, 430, "ARCHITECTURE OPTIONS (DECISION REQUIRED)")
     s.table(gx, 456, [50, 280, 280, 240], ["Opt", "Approach", "Pros", "Cons"], [
-        ["A", "Rugged Android + ArcticChain mesh HAT", "fast to market, app ecosystem", "Android bloat, cert effort"],
+        ["A", "Rugged Android + ArctikChain mesh HAT", "fast to market, app ecosystem", "Android bloat, cert effort"],
         ["B", "Custom Linux + mesh SoC (integrated SX1262)", "clean, sovereign, repairable", "OS work, smaller ecosystem"],
         ["C", "Hybrid: Linux core + Android layer", "best of both", "longest dev time"],
     ], rh=56)
@@ -1399,7 +1399,7 @@ def seed():
 
     s.h(900, 736, "HONEST STATUS")
     s.bullets(900, 764, [
-        "TRL ~2 — concept + literature. No ArcticChain mote exists yet.",
+        "TRL ~2 — concept + literature. No ArctikChain mote exists yet.",
         "This sheet is a research brief, not a buildable BOM — deliberately.",
         "Swarm architecture is the same — only the node shrinks.",
         "Do NOT promise motes to funders until Gate 2 demo exists.",
@@ -1643,7 +1643,7 @@ def l1_finish():
                 ("port", 0.50, 0.92, 1.2),
                 ("whip", 0.16, 0.10, 58),
                 ("whip", 0.84, 0.10, 58),
-                ("logo", "ARCTICCHAIN", 0.5, 0.90, 9),
+                ("logo", "ARCTIKCHAIN", 0.5, 0.90, 9),
             ],
         }],
         materials=[
@@ -1661,7 +1661,7 @@ def l1_finish():
         notes=[
             "Matte texture = glare-free in sun, hides scratches, better grip with gloves.",
             "Hi-vis orange variant mandatory for fire-season deployments.",
-            "No painted logos — laser-etched 'ARCTICCHAIN · EMEBET INC.' on rear.",
+            "No painted logos — laser-etched 'ARCTIKCHAIN · EMEBET INC.' on rear.",
             "Color does NOT change internals — same BOM, different filament only.",
             "Rev-B: soft-touch TPU overmold option for consumer feel.",
         ])
@@ -2105,7 +2105,7 @@ def phone_definition():
         "is a feature regulators and communities both want.",
         "Module ecosystem: open bay spec → third parties build sat, thermal, "
         "battery modules → platform, not product.",
-        "The phone is the user terminal for the whole ArcticChain stack — "
+        "The phone is the user terminal for the whole ArctikChain stack — "
         "mesh, swarm, Totem, satellites. One device, the entire ecosystem.",
     ], width=80)
 
@@ -2114,7 +2114,7 @@ def phone_definition():
         "NOT a smartphone killer — it's for places smartphones fail.",
         "NOT a Starlink terminal — L-band messenger class for SOS/short messages.",
         "NOT a toy mesh radio — it's certified cellular + satellite + mesh, carrier-grade.",
-        "NOT locked to one community — joins any ArcticChain mesh, carries identity.",
+        "NOT locked to one community — joins any ArctikChain mesh, carries identity.",
     ], width=80)
     return s.svg(3, 7)
 
@@ -2422,7 +2422,7 @@ def seed_materials():
 
     s.h(880, 680, "HONEST GAPS")
     s.bullets(880, 710, [
-        "No working ArcticChain mote exists — this is a research brief.",
+        "No working ArctikChain mote exists — this is a research brief.",
         "Printed batteries at µW scale are lab-grade, not field-grade.",
         "LoRa radios don't degrade — antenna/comms is the hard part.",
         "Cluster heads must be durable — motes feed THEM, not the backbone.",
@@ -2543,7 +2543,7 @@ def radio_matrix():
     s.bullets(880, 510, [
         "Wi-Fi HaLow — promising but ecosystem immature; revisit rev-C.",
         "Meshtastic commodity modules — closed firmware, no signed envelopes.",
-        "Cellular-only 'solution' — fails exactly where ArcticChain lives.",
+        "Cellular-only 'solution' — fails exactly where ArctikChain lives.",
         "Satellite broadband for nodes — watts and dollars for kbps of need.",
         "Proprietary mesh radios — vendor lock-in kills community ownership.",
     ], width=82)
@@ -2616,7 +2616,7 @@ def platform_matrix():
 # ============================================================ COVER =======
 def cover():
     s = Sheet("AF-000", "FLEET OVERVIEW & DRAWING INDEX",
-              "ARCTICCHAIN RURAL NODE FAMILY — COMPLETE PRINT SET", "COVER",
+              "ARCTIKCHAIN RURAL NODE FAMILY — COMPLETE PRINT SET", "COVER",
               status="MASTER INDEX")
 
     s.h(ML + 10, 150, "THE FLEET — ONE NETWORK, MANY SHAPES")

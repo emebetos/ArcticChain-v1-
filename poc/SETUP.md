@@ -1,6 +1,6 @@
-# ArcticChain Level-1 Setup Guide (Raspberry Pi CM5)
+# ArctikChain Level-1 Setup Guide (Raspberry Pi CM5)
 
-Goal: from a blank CM5 IO Board to a running ArcticChain agent in under 2 hours.
+Goal: from a blank CM5 IO Board to a running ArctikChain agent in under 2 hours.
 
 ## 1. Flash the OS
 
@@ -24,7 +24,7 @@ sudo apt install -y git python3-pip python3-venv i2c-tools libgpiod-dev \
 ## 3. Enable interfaces (`/boot/firmware/config.txt` — CM5 uses `firmware` not `boot`)
 
 ```ini
-# --- ArcticChain interfaces ---
+# --- ArctikChain interfaces ---
 dtparam=i2c_arm=on
 dtparam=spi=on
 dtparam=uart0=on          # 4G/LTE HAT UART (GPIO 14/15)
@@ -53,7 +53,7 @@ ls /dev/serial*
 ls /dev/spidev*
 ```
 
-## 5. Build the ArcticChain agent
+## 5. Build the ArctikChain agent
 
 ```bash
 # Rust toolchain (if building from this repo)

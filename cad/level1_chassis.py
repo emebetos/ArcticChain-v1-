@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ArcticChain Level-1 chassis: parametric 3D-printable handheld brick.
+"""ArctikChain Level-1 chassis: parametric 3D-printable handheld brick.
 
 House a Raspberry Pi Compute Module 5 on its IO Board carrier, two HATs
 (4G/LTE + E-Ink display), a Semtech SX1262 LoRa module, and a USB-C

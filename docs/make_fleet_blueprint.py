@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render docs/fleet_blueprint.svg — the ArcticChain rural node fleet sheet.
+"""Render docs/fleet_blueprint.svg — the ArctikChain rural node fleet sheet.
 
 Pure Python (no CAD kernel needed). One sheet showing every node type with
 envelope dims, role, key features, and design status. See docs/HARDWARE.md.
@@ -35,7 +35,7 @@ a(f'<rect width="{W}" height="{H}" fill="{BG}"/><rect width="{W}" height="{H}" f
 rrect(10, 10, W - 20, H - 20, 0, fill="none", stroke=LINE, stroke_width=2)
 
 # ---------------- header ----------------
-text(60, 70, "ARCTICCHAIN NODE FLEET — RURAL &amp; REMOTE CANADA", 22, weight="bold")
+text(60, 70, "ARCTIKCHAIN NODE FLEET — RURAL &amp; REMOTE CANADA", 22, weight="bold")
 text(60, 96, "every node: signed mesh identity · store-and-forward · solar-first · IP65 · -45..+70 °C · community-owned", 12, color=DIM)
 
 # ---------------- design DNA strip ----------------
@@ -178,7 +178,7 @@ rrect(tx, ty, tw, th, 0, fill="none", stroke=LINE, stroke_width=1.5)
 for yy2 in (38, 76, 114):
     a(f'<line x1="{tx}" y1="{ty + yy2}" x2="{tx + tw}" y2="{ty + yy2}" stroke="{LINE}"/>')
 a(f'<line x1="{tx + 380}" y1="{ty + 38}" x2="{tx + 380}" y2="{ty + th}" stroke="{LINE}"/>')
-text(tx + 12, ty + 25, "ARCTICCHAIN — RURAL NODE FLEET", 14, weight="bold")
+text(tx + 12, ty + 25, "ARCTIKCHAIN — RURAL NODE FLEET", 14, weight="bold")
 text(tx + 12, ty + 62, "DWG AF-FLEET-001 · NODE FAMILY OVERVIEW", 11)
 text(tx + 392, ty + 62, "REV A", 11)
 text(tx + 12, ty + 98, "DESIGN BASIS: rural & remote Canada — climate, culture, sovereignty", 11)

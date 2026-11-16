@@ -1,4 +1,4 @@
-# ArcticChain
+# ArctikChain
 
 A sovereign Canadian rural connectivity platform: a community-owned ground mesh (seven device families from the L1 Brick to the S-Mite swarm) plus a satellite roadmap. Complementary to satellite and cellular — a backhaul-agnostic distribution layer that turns one uplink into a whole community — and community-owned so it cannot be replicated by the carriers it partners with. See `docs/PARTNERSHIP_STRATEGY.md` for the coopetition doctrine and `MEGAPLAN.md` for the full plan.
 

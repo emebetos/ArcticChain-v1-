@@ -1,4 +1,4 @@
-# ArcticChain Megaplan
+# ArctikChain Megaplan
 
 **Sovereign rural connectivity for Canada — the mesh layer that makes everything else work.**
 
@@ -16,9 +16,9 @@ claim to. The telecom giants (Rogers, Bell, Telus) won't economically light up t
 a cell tower costs ~$250k–$1M and pays back only where density is high. **That gap — the last
 10–20% of Canada — is the entire market.**
 
-ArcticChain wins by owning a layer nobody else wants to serve:
+ArctikChain wins by owning a layer nobody else wants to serve:
 
-| Layer | Who owns it today | ArcticChain's answer |
+| Layer | Who owns it today | ArctikChain's answer |
 |---|---|---|
 | Broadband pipe | Starlink, cellular, fibre | **Not our fight.** We interoperate — a node can use Starlink/Iridium/LTE as *backhaul*. |
 | Critical messaging | Nothing reliable off-grid | **Store-and-forward mesh**: alerts, SMS, email, sensor data — works with zero bars. |
@@ -27,7 +27,7 @@ ArcticChain wins by owning a layer nobody else wants to serve:
 | Ownership | Foreign satellites, foreign cloud | **Community-owned infrastructure**, Canadian stack, open hardware. |
 
 **One-line pitch:** *Starlink gives you internet if you can afford it and see the sky.
-ArcticChain gives a community its own network — alerts, messages, sensors, and services —
+ArctikChain gives a community its own network — alerts, messages, sensors, and services —
 that works when nothing else does, and gets better every time a neighbour joins.*
 
 This is also the grant-winning frame: not "competing with Starlink" (funders get nervous),
@@ -72,7 +72,7 @@ carried over). The megaplan assigns it a product role instead of letting it floa
 │  modem, sensor pack, E-Ink, projector. A phone that IS a    │
 │  mesh node. Premium device + developer platform.            │
 ├─────────────────────────────────────────────────────────────┤
-│  TIER 2 — ARCTICCHAIN OS + APPLIANCES (year 1)              │
+│  TIER 2 — ARCTIKCHAIN OS + APPLIANCES (year 1)              │
 │  Community hub: multi-node mesh, backhaul (LTE/Starlink/    │
 │  fibre), dashboards, alert gateway, e-ink bulletin, apps.   │
 ├─────────────────────────────────────────────────────────────┤
@@ -139,13 +139,13 @@ bulletin boards (free clinic days, road closures, events).
 
 ### 4.6 Energy & microgrid telemetry — *the SDTC angle*
 Solar+battery node telemetry, community microgrid monitoring, net-zero storytelling.
-Positions ArcticChain for Sustainable Development Technology Canada and cleantech grants.
+Positions ArctikChain for Sustainable Development Technology Canada and cleantech grants.
 
 ### 4.7 Fire-watch swarm — the "nano-bee" layer
 The wildfire wedge grows eyes — and the sensor isn't any single bee, it's **the swarm
 itself**. Architecture, honestly engineered:
 
-- **Bees are ArcticChain nodes with wings**: same signed mesh, same store-forward,
+- **Bees are ArctikChain nodes with wings**: same signed mesh, same store-forward,
   LoRa reporting. Individually they're minimal — a solar cell, a tiny MCU, one sensor
   role — but *collectively* they form a distributed sensing aperture. One bee doesn't
   need to be a sensor; a hundred cooperating bees are a sensor network.
@@ -281,7 +281,7 @@ unreachable" are payload programs, not new platforms:
 | Stream | What | Price anchor |
 |---|---|---|
 | **Hardware** | Tier-1 node kits (assembled, tested) → Tier-2 hubs → Tier-3 Monolith | $600–1,200 / node; $5–15k / hub |
-| **Software** | ArcticChain OS: dashboards, alert routing, sensor apps, bulletin CMS | $10–40/node/month or per-community license |
+| **Software** | ArctikChain OS: dashboards, alert routing, sensor apps, bulletin CMS | $10–40/node/month or per-community license |
 | **Monitoring services** | Wildfire mesh, ag analytics, asset tracking — managed | $2–10k/site/year |
 | **Emergency retainer** | Priority alert backbone for municipalities/counties | annual contract |
 | **Training** | Student build-kit cohorts, technician certification | program fees / sponsored |
@@ -295,14 +295,14 @@ spectrum — the two cost structures that kill rural telecom economics don't app
 
 ## 6. The space layer: satellites as a phase, not a leap
 
-**North star:** ArcticChain is not trying to *be* Canada's space program — it is designed
+**North star:** ArctikChain is not trying to *be* Canada's space program — it is designed
 to be the **demand-side anchor that makes one worth building**. That is the Telesat
 model: a Canadian company with a national mission that government, capital, and
 institutions coalesce around. Canada already has the pedigree — GHGSat flies commercial
 methane smallsats, Kepler built an IoT constellation, RADARSAT Constellation and Sapphire
 (space situational awareness) are Canadian, the CSA flies, and 14+ Canadian astronauts
 have ridden to orbit. What the ecosystem lacks is an anchor tenant with a continental
-mission. ArcticChain is built to be that tenant: rural connectivity is the one market
+mission. ArctikChain is built to be that tenant: rural connectivity is the one market
 where sovereign Canadian space infrastructure has an obvious, fundable customer.
 
 The endgame ambition — **igniting orbital launch capability on Canadian soil** and a
@@ -316,7 +316,7 @@ Satellites are layered onto a working ground network, not launched ahead of it.
 Three stages, each independently fundable:
 
 ### S0 — Borrow capacity (now → yr 2): be a customer, not a competitor
-Aggregate existing satellite backhaul as a *service* inside ArcticChain hubs:
+Aggregate existing satellite backhaul as a *service* inside ArctikChain hubs:
 - **Telesat Lightspeed** — Canadian (Ottawa), polar-orbit LEO built specifically for
   Canadian/Arctic coverage. Wholesale/enterprise agreements are the natural first call.
 - **OneWeb/Eutelsat, Amazon Kuiper** — wholesale broadband capacity for hubs that need it.
@@ -327,7 +327,7 @@ Aggregate existing satellite backhaul as a *service* inside ArcticChain hubs:
 At this layer we never compete — we *resell and integrate*, which is also the polite entry
 into every satellite operator's channel-partner program.
 
-### S1 — ArcticChain smallsats (yr 2–4): "our own satellites" as a real milestone
+### S1 — ArctikChain smallsats (yr 2–4): "our own satellites" as a real milestone
 A constellation sized for the **messaging/IoT layer, not broadband**:
 - **6U–12U CubeSats → 50–100 kg smallsats**, S-band/UHF store-and-forward payloads.
 - **Polar inclinations** — Canada's population and resources stretch past 80°N; Starlink's
@@ -358,9 +358,9 @@ The realistic paths, in order of probability:
    national program; the anchor-tenant role described above).
 2. **Wholesale→retail aggregation**: broker capacity across Telesat/OneWeb/Kuiper/Starlink
    into one Canadian rural service — the "Canada roaming" play, no constellation needed.
-3. **National program**: pitch ArcticChain as the demand-side anchor for a Canadian
+3. **National program**: pitch ArctikChain as the demand-side anchor for a Canadian
    broadband constellation — the role Telesat played for Canada, now for the mesh era.
-   If that program ever stands up, ArcticChain is its first customer and its OS.
+   If that program ever stands up, ArctikChain is its first customer and its OS.
 
 **Physics correction worth stating publicly:** to compete on bandwidth you fly **LEO
 (~550 km shells, like Starlink)** — higher orbit means more path loss, worse latency,
@@ -387,7 +387,7 @@ logic is deliberate and demand-led:
    money follows demonstrated demand. Electron-class small launchers are a ~$50–150M
    R&D program, not a moonshot; Canada has the engineering base (MDA space robotics,
    defense propulsion supply chains).
-4. **The flywheel**: Canadian launch → cheaper Canadian sats → more ArcticChain capacity
+4. **The flywheel**: Canadian launch → cheaper Canadian sats → more ArctikChain capacity
    → more demand → bigger launcher. That is what "igniting a space program" actually
    means mechanically — not a flag, a demand loop.
 
@@ -450,7 +450,7 @@ limits), the simulator dashboard (they can *see* the network), and a live pilot 
 | **1 — Anchor pilot** | mo 1–3 | 10–25 nodes in ONE real site: wildfire sensor pilot (recommended) or ag co-op | Signed pilot LOI + deployed |
 | **2 — OS v1 + first revenue** | mo 3–9 | Store-forward apps, e-ink bulletin, alert gateway, dashboards; paid pilot | Revenue or paid LOI |
 | **3 — Productize** | mo 6–12 | ISED cert, small-batch manufactured node (PCBA), 100+ nodes, 2–3 paid pilots | Unit economics proven |
-| **4 — Monolith module ecosystem** | yr 2 | Tier-3 dev-kit: modular spine running ArcticChain OS; developer program | Tier-1/2 network has proven value |
+| **4 — Monolith module ecosystem** | yr 2 | Tier-3 dev-kit: modular spine running ArctikChain OS; developer program | Tier-1/2 network has proven value |
 | **5 — Provincial mesh + S1 smallsats** | yr 2–4 | County/regional backbone partnerships; Indigenous deployments; CubeSat pathfinder constellation (store-forward backhaul) | Mesh revenue + anchor funding |
 | **6 — International + S2/S3 vision** | yr 4+ | Global South licensing; ground-segment/aggregation strategy on Canadian NGSO capacity; Canadian launch-horizon program (domestic small launch anchored by our constellation demand) | Series A / strategic partner / national program |
 
@@ -478,7 +478,7 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 - **Wildfire pilot**: detection lead-time vs satellite baseline; zero missed alerts.
 - **Deployments**: 100 nodes / 3 paid pilots by end of year 1.
 - **Grant pull**: SR&ED + 2–3 non-dilutive grants by month 12.
-- **Space milestone**: first ArcticChain smallsat on orbit (S1 pathfinder) by yr 3–4 —
+- **Space milestone**: first ArctikChain smallsat on orbit (S1 pathfinder) by yr 3–4 —
   Canada's next NewSpace anchor, if the ground network earns it.
 - **The headline**: *"Canada's community-owned rural network — built by students,
   powered by sun, working when everything else is down."*
@@ -517,15 +517,15 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 
 "Be like SpaceX" decomposes into a sequence, not a slogan: **anchor demand → flight
 heritage → launch demand → domestic capacity.** SpaceX ignited because NASA *needed*
-cheap cargo before the rockets existed. ArcticChain improves on that: we build Canadian
+cheap cargo before the rockets existed. ArctikChain improves on that: we build Canadian
 demand from the ground up, so when launch capacity is needed it already exists.
 Ordered by cost-to-orbit:
 
 1. **University CubeSat feeder (cheapest path to "our tech on orbit").** The CSA
-   CubeSat Initiative funds Canadian university smallsats. ArcticChain supplies the
+   CubeSat Initiative funds Canadian university smallsats. ArctikChain supplies the
    payload (our store-forward radio *is* a satellite payload) and — uniquely — the
    ground segment: our mesh network is literally the satellite's user-terminal layer.
-   Result: an ArcticChain payload on a Canadian university CubeSat around yr 2 for
+   Result: an ArctikChain payload on a Canadian university CubeSat around yr 2 for
    ~$50–500k, plus a pipeline of student teams who become our engineers.
 2. **Hosted payload shortcut.** Fly the same radio as a hosted payload on GHGSat,
    MDA, or university satellites — months to orbit instead of years, proving
@@ -545,7 +545,7 @@ Ordered by cost-to-orbit:
 7. **Never skip rungs.** Flight heritage (1–2) precedes dedicated constellation (S1),
    which precedes launch demand (S3). Each rung is a fundable milestone — skipping
    straight to "we'll build a rocket" is how space dreams die; walking the ladder is
-   how SpaceX — and now ArcticChain — actually ignites.
+   how SpaceX — and now ArctikChain — actually ignites.
 
 ---
 

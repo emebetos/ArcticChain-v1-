@@ -1,5 +1,5 @@
 [Unit]
-Description=ArcticChain Level-1 mesh/cellular agent
+Description=ArctikChain Level-1 mesh/cellular agent
 After=network.target
 # Start even with no network — the whole point is offline operation
 Wants=network.target

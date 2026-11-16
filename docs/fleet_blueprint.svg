@@ -2,7 +2,7 @@
 <defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0 L0 0 0 20" fill="none" stroke="#1a5288" stroke-width="0.6"/></pattern></defs>
 <rect width="1600" height="1560" fill="#0b3a66"/><rect width="1600" height="1560" fill="url(#g)"/>
 <rect x="10.00" y="10.00" width="1580.00" height="1540.00" rx="0.00" fill="none" stroke="#d8ecff" stroke-width="2"/>
-<text x="60.0" y="70.0" font-size="22" text-anchor="start" fill="#d8ecff" font-weight="bold">ARCTICCHAIN NODE FLEET — RURAL &amp; REMOTE CANADA</text>
+<text x="60.0" y="70.0" font-size="22" text-anchor="start" fill="#d8ecff" font-weight="bold">ARCTIKCHAIN NODE FLEET — RURAL &amp; REMOTE CANADA</text>
 <text x="60.0" y="96.0" font-size="12" text-anchor="start" fill="#8fc1ea" font-weight="normal">every node: signed mesh identity · store-and-forward · solar-first · IP65 · -45..+70 °C · community-owned</text>
 <text x="60.0" y="130.0" font-size="12" text-anchor="start" fill="#ffd479" font-weight="bold">CLIMATE</text>
 <text x="170.0" y="130.0" font-size="11" text-anchor="start" fill="#8fc1ea" font-weight="normal">-45..+70 °C · IP65+ · UV-stable · LiFePO4 · December-sized solar</text>
@@ -143,7 +143,7 @@
 <line x1="1010" y1="1451" x2="1580" y2="1451" stroke="#d8ecff"/>
 <line x1="1010" y1="1489" x2="1580" y2="1489" stroke="#d8ecff"/>
 <line x1="1390" y1="1413" x2="1390" y2="1520" stroke="#d8ecff"/>
-<text x="1022.0" y="1400.0" font-size="14" text-anchor="start" fill="#d8ecff" font-weight="bold">ARCTICCHAIN — RURAL NODE FLEET</text>
+<text x="1022.0" y="1400.0" font-size="14" text-anchor="start" fill="#d8ecff" font-weight="bold">ARCTIKCHAIN — RURAL NODE FLEET</text>
 <text x="1022.0" y="1437.0" font-size="11" text-anchor="start" fill="#d8ecff" font-weight="normal">DWG AF-FLEET-001 · NODE FAMILY OVERVIEW</text>
 <text x="1402.0" y="1437.0" font-size="11" text-anchor="start" fill="#d8ecff" font-weight="normal">REV A</text>
 <text x="1022.0" y="1473.0" font-size="11" text-anchor="start" fill="#d8ecff" font-weight="normal">DESIGN BASIS: rural & remote Canada — climate, culture, sovereignty</text>
