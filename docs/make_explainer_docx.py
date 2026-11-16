@@ -275,6 +275,12 @@ para('The strategic point often missed: Starlink\'s economics require '
      'incumbent cannot copy without abandoning its own model. That — '
      'not "beat Starlink at bandwidth" — is the credible version of the '
      'ambition, and it is the version used in every pitch document.')
+para('Until we are the constellation, we are the distribution layer: '
+     'every satellite terminal, LTE tower or fibre drop feeding a mesh '
+     'reaches endpoints that could never justify their own link. '
+     'PARTNERSHIP_STRATEGY.md details the per-actor offer and why '
+     'partnering beats replicating — the short version: radios are '
+     'commodity, community ownership and deployment trust are not.')
 
 # ============================ 9. WHAT IS REAL TODAY ============================
 h('9. What is real today — the honest inventory')

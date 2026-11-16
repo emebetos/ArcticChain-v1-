@@ -52,6 +52,10 @@ Anyone can buy a LoRa board. The moat is the **integrated system + the data netw
 5. **Data network effects**: every deployed node makes the mesh more valuable (more relay
    paths, more sensor coverage, more local content). Telecoms can't copy this without building
    the physical layer.
+6. **Structural moat — partnering beats replicating**: community-ownership agreements,
+   Indigenous data governance, emergency-services integration and Canadian ownership each
+   take years (or are impossible for foreign operators) to recreate. The full doctrine and
+   the offer-per-actor-class is `docs/PARTNERSHIP_STRATEGY.md`.
 
 ---
 

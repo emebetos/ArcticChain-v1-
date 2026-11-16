@@ -235,11 +235,36 @@ for t_, d_ in [
      'feature, not a slogan.'),
     ('Industry (ag, resource)', 'Connectivity where towers are not — telemetry, tracking, '
      'alerts, at node prices.'),
+    ('Satellite operators & carriers', 'One uplink, a whole community: a single terminal '
+     'feeding the mesh reaches hundreds of endpoints that could never justify their '
+     'own dish. ArcticChain grows revenue per site — and partners where copying '
+     'community ownership, Indigenous governance and deployment trust would take years.'),
 ]:
     p = doc.add_paragraph()
     r = p.add_run(f'{t_}: ')
     r.bold = True
     p.add_run(d_)
+
+# ---- Partnership play ----
+h('Built to Partner, Hard to Copy', 1)
+para('ArcticChain is deliberately complementary at the transport layer and sticky at '
+     'the community layer. The offer to every network that could compete: we make '
+     'your uplink worth more.', bold=True)
+for b in [
+    'For satellite operators: one terminal feeding the mesh serves hundreds of '
+    'endpoints — phones, sensors, totems — that no dish could ever reach '
+    'economically. We add inventory; we do not threaten the terminal market.',
+    'For carriers and ISPs: we carry messaging, telemetry and emergency traffic '
+    'where tower economics fail — and hand broadband-grade load back wherever '
+    'their network reaches.',
+    'Why partnering beats replicating: radios are commodity; community-ownership '
+    'agreements, Indigenous data governance, emergency-services integration and '
+    'Canadian ownership are not. Each takes years — or is structurally impossible '
+    'for a foreign operator — so signing is faster than stealing.',
+    'Backhaul-agnostic by design: gateways bridge mesh to satellite, LTE or fibre '
+    'today and whatever arrives tomorrow. Integrate once; every network gains reach.',
+]:
+    doc.add_paragraph(b, style='List Bullet')
 
 # ---- Close ----
 h('The Close', 1)
