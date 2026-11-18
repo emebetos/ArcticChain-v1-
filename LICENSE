@@ -1,0 +1,53 @@
+ArctikChain — Licensing
+Copyright (c) 2026 Emebet Inc. All rights reserved except as granted below.
+
+This repository is dual-scoped. Which terms apply depends on the path.
+
+------------------------------------------------------------------------
+1. OPEN SOFTWARE — Apache License, Version 2.0
+------------------------------------------------------------------------
+
+The following are licensed under the Apache License, Version 2.0
+(full text in LICENSE-APACHE; attribution in NOTICE):
+
+  firmware-hal/          hot-swap hardware abstraction layer (Rust)
+  mesh-net/              signed mesh networking stack (Rust)
+  compositor/            display compositor (Rust)
+  simulator/             simulation engine (Rust/WASM) and web dashboard
+  poc/*.py, poc/*.service   Level-1 node agent software and service unit
+  docs/PROTOCOL_v1.md    mesh protocol specification
+  docs/KEY_LIFECYCLE.md  key management specification
+
+You may use, modify and distribute these under the Apache-2.0 terms.
+
+------------------------------------------------------------------------
+2. PROPRIETARY HARDWARE DESIGNS — Emebet Inc., all rights reserved
+------------------------------------------------------------------------
+
+Everything not listed in section 1 is proprietary to Emebet Inc. and is
+NOT licensed for use, reproduction, manufacture or distribution without a
+written agreement with Emebet Inc. This includes, without limitation:
+
+  cad/                   parametric CAD generators and generated models
+  docs/print/            engineering drawing set (AF-* sheets)
+  docs/make_fleet_*.py, docs/make_blueprint.py, docs/*.svg
+                         drawing generators and blueprints
+  poc/WIRING.md, poc/SETUP.md, docs/BUILD_GUIDE.md, docs/HARDWARE.md,
+  docs/ORDER_LIST.md, docs/PHONE_SPEC.md
+                         bills of materials, wiring, assembly and build
+                         documentation
+  MEGAPLAN.md, docs/PARTNERSHIP_STRATEGY.md, docs/*.docx and other
+  strategy, pitch and business documents
+  The ARCTIKCHAIN name and device-family names (trademarks — the
+  Apache-2.0 grant in section 1 does not include trademark rights;
+  see Apache-2.0 section 6)
+
+Drawing sheets marked "PUBLIC PRESENTATION" may be viewed and shared
+unmodified for evaluation and press purposes, with attribution. They grant
+no right to manufacture. Sheets marked "PROPRIETARY & CONFIDENTIAL" are
+shared only under a signed non-disclosure agreement.
+
+Build partners, student cohorts and other contributors receive access to
+section 2 materials under a written agreement with Emebet Inc.
+
+Contact: hello@emebetos.ca

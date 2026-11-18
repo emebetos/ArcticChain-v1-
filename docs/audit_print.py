@@ -47,7 +47,7 @@ def audit(pdf):
         for s in sorted(sp, key=lambda s: (s[1], s[0])):
             merged = False
             for w in words:
-                if abs(s[1] - w[1]) < 4 and s[0] - w[2] < 30:
+                if abs(s[1] - w[1]) < 4 and -4 <= s[0] - w[2] < 30:
                     w[2] = max(w[2], s[2]); w[3] = max(w[3], s[3])
                     w[4] += " " + s[4]; merged = True; break
             if not merged:

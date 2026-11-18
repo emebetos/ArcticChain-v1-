@@ -24,7 +24,7 @@ ArctikChain wins by owning a layer nobody else wants to serve:
 | Critical messaging | Nothing reliable off-grid | **Store-and-forward mesh**: alerts, SMS, email, sensor data — works with zero bars. |
 | Rural IoT | Prohibitive cost per site | **$335–525 node** + multi-year battery + solar option. |
 | Local services | Cloud-dependent apps | **Offline-first OS**: bulletin boards, records sync, learning content. |
-| Ownership | Foreign satellites, foreign cloud | **Community-owned infrastructure**, Canadian stack, open hardware. |
+| Ownership | Foreign satellites, foreign cloud | **Community-owned infrastructure**, Canadian stack, open mesh protocol. |
 
 **One-line pitch:** *Starlink gives you internet if you can afford it and see the sky.
 ArctikChain gives a community its own network — alerts, messages, sensors, and services —
@@ -47,7 +47,8 @@ Anyone can buy a LoRa board. The moat is the **integrated system + the data netw
    offline, syncs opportunistically. This is the product — the radio is just transport.
 3. **E-Ink public surface**: zero-power display = community bulletin board, emergency alerts,
    market prices, clinic notices — usable by people who'll never own a smartphone data plan.
-4. **Open hardware + student pipeline**: 16-week build kit means the bill of materials is a
+4. **Open software + student pipeline**: the mesh stack is Apache-2.0, and the 16-week build
+   kit (shared with cohorts under a contributor agreement) means the bill of materials is a
    *training program*. Every cohort of students is a recruiting funnel and a PR engine.
 5. **Data network effects**: every deployed node makes the mesh more valuable (more relay
    paths, more sensor coverage, more local content). Telecoms can't copy this without building
@@ -465,8 +466,9 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
 - **Student build kit** (`docs/BUILD_GUIDE.md`): 16-week cohort = trained builders +
   recruiters + press. Partner with NAIT/SAIT/U of A/U of C engineering capstones.
 - **Mitacs** accelerators embed grad students on mesh/security/energy problems.
-- **Open-source hardware**: published CAD + firmware = global contributor pool and the
-  sovereignty story funders love. (License decision needed — see §12.)
+- **Open-source software**: published mesh stack + firmware HAL (Apache-2.0) = global
+  contributor pool and the sovereignty story funders love. Hardware designs stay
+  proprietary (licence decided — see §12 and `LICENSE`).
 - **Emebet Inc.** is the company vehicle; structure spin-out/IP cleanly before Series A.
 
 ---
@@ -498,9 +500,12 @@ layer — mesh, store-forward, E-Ink alerts, dashboards — in one deployment.
   company if it jumps the queue. Tier-3 stays parked until Tiers 1–2 prove revenue.
 - **"Demonopolize" is narrative, not engineering**: use it in pitch decks and op-eds;
   the actual wedge is serving customers the giants rationally ignore.
-- **Open-source vs IP**: decide the license *before* the first paid pilot — hardware
-  open (CERN OHL), mesh protocol possibly open, OS/apps proprietary. Mixed model is
-  standard and defensible.
+- **Open-source vs IP — DECIDED 2026-11-17**: split licence (see `LICENSE`). Software
+  (mesh stack, HAL, compositor, simulator, node agent, protocol spec) is Apache-2.0;
+  hardware designs (CAD, drawing set, BOMs, wiring/build docs) and the ARCTIKCHAIN
+  marks stay proprietary, shared under NDA / contributor agreement. This reverses the
+  earlier sketch (open hardware, proprietary OS): the open protocol drives adoption and
+  grant fit, while the buildable hardware is the defensible asset.
 - **Constellation capital**: S1 smallsats are a $10–30M program and S2 broadband is
   sovereign-scale — neither is fundable from mesh revenue alone. Sequence them behind
   proven deployments and anchor funding (CSA, strategic partners); never let the space
@@ -536,8 +541,8 @@ Ordered by cost-to-orbit:
    comms is exactly the dual-use story IDEaS exists for.
 4. **Procurement early.** Get on CanadaBuys and provincial supplier lists while contracts
    are small — every PO is legitimacy, references, and revenue that compounds.
-5. **Open the ground segment.** Open-source mesh protocol, agent, CAD, and build guides
-   (the Meshtastic playbook): a global builder community, undeniable demand signal,
+5. **Open the ground segment.** Open-source mesh protocol, agent and firmware (the
+   Meshtastic playbook — CAD and build guides stay under NDA per `LICENSE`): a global builder community, undeniable demand signal,
    and the sovereignty story funders repeat back to us.
 6. **Student space kit.** Extend the 16-week phone-node build kit into a flat-sat +
    ground-station-emulator kit for universities — the talent engine every space
